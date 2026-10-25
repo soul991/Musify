@@ -180,3 +180,33 @@ a[href*="netlify.com"] {
   );
   animation: shimmer 1.8s infinite;
 }
+
+/* 3D Vinyl Turntable Spin Animation */
+@keyframes spinVinyl {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-vinyl {
+  animation: spinVinyl 14s linear infinite;
+}
+
+.animate-spin-vinyl-paused {
+  animation: spinVinyl 14s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Gradient Mask for Smooth Scroll & Lyrics Edge Fade */
+.mask-gradient {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+
+.titanium-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+

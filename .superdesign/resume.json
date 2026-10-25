@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/": {
+      "targetKind": "existing-ui",
+      "projectId": "315e4513-b3c6-4972-b4dc-f3b43709d914",
+      "baselineDraftId": "adc3fe4f-87dd-40ba-bed7-82ae36dbb9db",
+      "activeDraftId": "adc3fe4f-87dd-40ba-bed7-82ae36dbb9db",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "frontend/src/pages/Home.tsx",
+        "frontend/src/components/navigation/TopBar.tsx",
+        "frontend/src/components/navigation/FloatingNavBar.tsx",
+        "frontend/src/components/player/FloatingMiniPlayer.tsx",
+        "frontend/src/index.css"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "A1638B3761E299A08F77BFAA2A6D68FD8CA474F4684B2FDDD0295674F8B99A2B",
+        "frontend/src/pages/Home.tsx": "2C3AF71D5A90D768E85949C64AC0A40172BB4A39352CCF93CFA1D3E5ACFADCEC",
+        "frontend/src/components/navigation/TopBar.tsx": "7D50379789B68E19DE862170645B5E2EB9A767DF77254492DB4CA56C06B122A1",
+        "frontend/src/components/navigation/FloatingNavBar.tsx": "9FE42DEABE9349A8FC2CD7546070B455E5A0B64570F5785C4319518A2CF7117C",
+        "frontend/src/components/player/FloatingMiniPlayer.tsx": "41B4E2E98E2A7B6D7FEF87B7E04701CCA2B2ACAEB164AA2BA15203F882F657CD",
+        "frontend/src/index.css": "3F99D5762A27BEBACC6AF2C2CF920B0AF90D57D57285F64174A1BCE689C83454"
+      },
+      "drafts": {
+        "adc3fe4f-87dd-40ba-bed7-82ae36dbb9db": {
+          "title": "Current Musify Home",
+          "visualDirection": "baseline ground truth",
+          "currentVersion": 1
+        },
+        "54214fca-7b6b-4665-8b7a-87cbb92cf1ce": {
+          "title": "Obsidian Liquid Glass Desktop Player",
+          "visualDirection": "Obsidian Liquid Glass 3-Pane Desktop Stage with Vinyl & Lyrics",
+          "parentDraftId": "adc3fe4f-87dd-40ba-bed7-82ae36dbb9db",
+          "currentVersion": 1
+        },
+        "706cca45-4a4e-4979-8a67-0ac6474f10c9": {
+          "title": "Musify Cyber-Acoustic Studio",
+          "visualDirection": "Cyber-Acoustic Studio & Minimalist Luxury Stage",
+          "parentDraftId": "adc3fe4f-87dd-40ba-bed7-82ae36dbb9db",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-10-25T21:55:00Z"
+    }
+  }
+}

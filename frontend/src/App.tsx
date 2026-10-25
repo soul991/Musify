@@ -5,6 +5,8 @@ import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { Sidebar } from './components/navigation/Sidebar';
 import { FloatingNavBar, NavTab } from './components/navigation/FloatingNavBar';
 import { TopBar } from './components/navigation/TopBar';
+import { DesktopDockPlayer } from './components/player/DesktopDockPlayer';
+import { NowPlayingCompanion } from './components/player/NowPlayingCompanion';
 import { FullPlayer } from './components/player/FullPlayer';
 import { Home } from './pages/Home';
 import { Explore } from './pages/Explore';
@@ -35,6 +37,7 @@ type ViewMode =
 const MusifyMain: React.FC = () => {
   const { colors } = useTheme();
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
+  const [isCompanionOpen, setIsCompanionOpen] = useState(true);
 
   const currentView = viewHistory[viewHistory.length - 1];
 
@@ -185,24 +188,26 @@ const MusifyMain: React.FC = () => {
   };
 
   const activeNavTab: NavTab = currentView.type === 'tab' ? currentView.tab : 'home';
-  const canGoBack = viewHistory.length > 1;
 
   return (
     <div
       className="flex h-screen w-screen overflow-hidden bg-[var(--bg-primary)] text-white transition-colors duration-700"
       style={{ background: colors.gradientBackground }}
     >
-      {/* Desktop Navigation Sidebar */}
+      {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar
         activeTab={activeNavTab}
         onTabChange={handleTabChange}
         onOpenSearch={() => pushView({ type: 'search' })}
         onOpenSettings={() => pushView({ type: 'settings' })}
+        onOpenListenTogether={() => pushView({ type: 'listen_together' })}
+        onOpenEqualizer={() => pushView({ type: 'equalizer' })}
+        onOpenStats={() => pushView({ type: 'stats' })}
       />
 
-      {/* Main Content Area */}
+      {/* 2. Main Center Audio Canvas & 3. Right Live Companion Stage */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* TopBar rendered on top-level tabs that don't have their own navigation header (Explore, Library) */}
+        {/* TopBar on Explore / Library tabs */}
         {currentView.type === 'tab' && (currentView.tab === 'explore' || currentView.tab === 'library') && (
           <TopBar
             title={getPageTitle()}
@@ -212,12 +217,31 @@ const MusifyMain: React.FC = () => {
           />
         )}
 
-        <main className="flex-1 flex flex-col overflow-hidden relative">
-          {renderActiveView()}
-        </main>
+        <div className="flex-1 flex flex-row h-full overflow-hidden relative">
+          {/* Active View Container */}
+          <main className="flex-1 flex flex-col overflow-hidden relative">
+            {renderActiveView()}
+          </main>
 
-        {/* Floating Bottom Bar with Docked Accessory MiniPlayer (Echo Music AppFloatingNavBar.kt) */}
+          {/* Right Live Companion Stage (3D Spinning Vinyl + Synchronized Karaoke Lyrics + Queue) */}
+          {isCompanionOpen && (
+            <NowPlayingCompanion
+              onClose={() => setIsCompanionOpen(false)}
+              className="hidden xl:flex"
+            />
+          )}
+        </div>
+
+        {/* Desktop Persistent Audio Dock Bar (Obsidian Liquid Glass Pill) */}
+        <DesktopDockPlayer
+          onOpenListenTogether={() => pushView({ type: 'listen_together' })}
+          isCompanionOpen={isCompanionOpen}
+          onToggleCompanion={() => setIsCompanionOpen(!isCompanionOpen)}
+        />
+
+        {/* Mobile Floating Bottom Bar with Docked MiniPlayer */}
         <FloatingNavBar
+          className="md:hidden"
           activeTab={activeNavTab}
           onTabChange={handleTabChange}
           onOpenSearch={() => pushView({ type: 'search' })}
