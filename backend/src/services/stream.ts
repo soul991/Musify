@@ -19,6 +19,14 @@ interface CachedStream {
 const streamUrlCache = new Map<string, CachedStream>();
 
 function findYtDlpBinary(): string {
+  if (process.platform === 'win32') {
+    const winBin = path.resolve(process.cwd(), 'bin/yt-dlp.exe');
+    if (fs.existsSync(winBin)) {
+      return winBin;
+    }
+    return 'yt-dlp';
+  }
+
   // Check local bin directory inside backend for Linux container deployment
   const linuxBin = path.resolve(process.cwd(), 'bin/yt-dlp_linux');
   if (fs.existsSync(linuxBin)) {
@@ -34,7 +42,7 @@ function findYtDlpBinary(): string {
     } catch {}
     return genericBin;
   }
-  // Default to system PATH (Windows or pre-installed Linux)
+  // Default to system PATH
   return 'yt-dlp';
 }
 
