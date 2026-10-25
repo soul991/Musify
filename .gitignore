@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production build outputs
+dist/
+*/dist/
+dist-ssr/
+
+# Logs
+*.log
+logs/
+catalyst-debug.log
+
+# Environment and local configs
+.env.local
+.env.*.local
+
+# Reference APK & external repo
+EchoMusic.apk
+echo-repo/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

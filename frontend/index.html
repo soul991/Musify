@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Musify — Liquid Glass Music</title>
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <meta name="application-name" content="Musify" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Musify" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0B0B0C" />
+    
+    <!-- Icons & Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/icons/musify-icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Google Fonts Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Neutralize Netlify Injected Badge & HUD Script -->
+    <script>
+      (function() {
+        // Prevent Netlify HUD script from executing by removing dataset attributes and removing script
+        var removeHud = function() {
+          var s = document.querySelector('script[data-nf-variant], script[src*="/.netlify/scripts/hud"]');
+          if (s) {
+            delete s.dataset.nfVariant;
+            s.remove();
+          }
+          var frames = document.querySelectorAll('#nl-badge-frame, #nl-hud-frame, iframe[src*="netlify"], [class*="netlify"], [id*="netlify"], a[href*="netlify.com"]');
+          frames.forEach(function(el) {
+            if (el.tagName === 'IFRAME' || el.tagName === 'A') {
+              el.remove();
+            }
+          });
+        };
+        removeHud();
+        if (typeof MutationObserver !== 'undefined') {
+          var obs = new MutationObserver(removeHud);
+          obs.observe(document.documentElement, { childList: true, subtree: true });
+        }
+        window.addEventListener('DOMContentLoaded', removeHud);
+        window.addEventListener('load', removeHud);
+      })();
+    </script>
+  </head>
+  <body class="bg-[#0B0B0C] text-white selection:bg-[#ED5564] selection:text-white">
+    <!-- Sentinel elements that force Netlify HUD to early-exit without rendering -->
+    <div id="nl-badge-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>
+    <div id="nl-hud-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register service worker for PWA support
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.log('ServiceWorker registration error:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

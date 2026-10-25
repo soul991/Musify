@@ -1,0 +1,15 @@
+{
+  "client": {
+    "source": "frontend/dist",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ]
+  },
+  "appsail": [
+    {
+      "name": "musify-backend",
+      "source": "backend"
+    }
+  ]
+}

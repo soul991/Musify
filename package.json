@@ -1,0 +1,29 @@
+{
+  "name": "musify",
+  "version": "1.0.0",
+  "description": "Musify - Modern Liquid Glass Web Music Player & PWA",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run preview",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "deploy:catalyst": "npm run build && catalyst deploy",
+    "deploy:appsail": "npm run build:backend && catalyst deploy --only appsail",
+    "deploy:client": "npm run build:frontend && catalyst deploy --only client"
+  },
+  "keywords": [
+    "music",
+    "player",
+    "liquid-glass",
+    "echo-music",
+    "pwa",
+    "streaming"
+  ],
+  "author": "Istak",
+  "license": "UNLICENSED",
+  "private": true
+}

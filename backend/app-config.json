@@ -1,0 +1,12 @@
+{
+  "command": "node dist/index.js",
+  "build_path": "./",
+  "stack": "node20",
+  "env_variables": {
+    "NODE_ENV": "production"
+  },
+  "memory": 512,
+  "scripts": {
+    "preserve": "npm run build"
+  }
+}

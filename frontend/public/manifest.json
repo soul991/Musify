@@ -1,0 +1,30 @@
+{
+  "short_name": "Musify",
+  "name": "Musify — Liquid Glass Music Player",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/musify-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["music", "entertainment", "audio"],
+  "description": "Experience your music with Liquid Glassmorphism, real-time synced lyrics, and ad-free playback."
+}
