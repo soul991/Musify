@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
+  Search,
   MoreVertical,
   History,
   Radio,
@@ -99,6 +100,7 @@ interface CommunityPlaylistData {
 }
 
 export const Home: React.FC<HomeProps> = ({
+  onOpenSearch,
   onOpenHistory,
   onOpenStats,
   onOpenListenTogether,
@@ -228,73 +230,66 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 pt-safe pb-56 text-white no-scrollbar select-none">
+    <div className="flex-1 overflow-y-auto px-6 py-6 pb-36 text-white min-h-0 select-none">
       {/* =========================================================================
-          1. TOP APP BAR (Echo Music MainActivity TopAppBar + Greeting)
+          1. FIGMA TOP BAR: Search Pill + Profile Avatar
           ========================================================================= */}
-      <header className="flex items-center justify-between h-16 pt-1 mb-3">
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold text-white/50 tracking-wider uppercase">
-            {greeting}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-center gap-2">
-            <span>Musify</span>
-          </h1>
-        </div>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={onOpenSearch}
+          className="flex-1 h-11 rounded-full bg-white/[0.07] hover:bg-white/[0.11] border border-white/[0.08] px-4.5 flex items-center gap-3 text-sm text-[#A7A7A7] transition-all cursor-pointer group text-left"
+          title="Search songs, albums, artists"
+          aria-label="Search songs, albums, artists"
+        >
+          <Search size={18} className="text-[#A7A7A7] group-hover:text-white transition-colors" />
+          <span className="font-normal truncate">Search songs, albums, artists</span>
+        </button>
 
-        {/* Action icons row: History, Stats, Equalizer, Listen Together, Settings */}
+        {/* Action icons shortcut (History, Listen Together, Settings) */}
         <div className="flex items-center gap-2">
-          {/* History Action Button */}
-          <button
-            onClick={onOpenHistory}
-            title="Listening History"
-            aria-label="Listening History"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <History size={18} />
-          </button>
+          {onOpenListenTogether && (
+            <button
+              onClick={onOpenListenTogether}
+              title="Listen Together Room"
+              aria-label="Listen Together Room"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors"
+            >
+              <Users size={17} />
+            </button>
+          )}
 
-          {/* Stats Button */}
-          <button
-            onClick={onOpenStats}
-            title="Listening Statistics"
-            aria-label="Listening Statistics"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <Radio size={18} />
-          </button>
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              title="Settings"
+              aria-label="Settings"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors"
+            >
+              <SettingsIcon size={17} />
+            </button>
+          )}
 
-          {/* Equalizer Button */}
-          <button
-            onClick={onOpenEqualizer}
-            title="Audio Equalizer"
-            aria-label="Audio Equalizer"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
+          {/* User Profile Avatar Pill matching Figma */}
+          <div
+            className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E5303D] to-[#B8222E] flex items-center justify-center font-bold text-sm text-white shadow-md shadow-[#E5303D]/25 shrink-0"
+            title="Musify Account"
           >
-            <Sliders size={18} />
-          </button>
-
-          {/* Listen Together Button */}
-          <button
-            onClick={onOpenListenTogether}
-            title="Listen Together Room"
-            aria-label="Listen Together Room"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <Users size={18} />
-          </button>
-
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            title="Settings & Appearance"
-            aria-label="Settings"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <SettingsIcon size={18} />
-          </button>
+            M
+          </div>
         </div>
-      </header>
+      </div>
+
+      {/* =========================================================================
+          2. FIGMA GREETING
+          ========================================================================= */}
+      <div className="mb-6">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          {greeting}
+        </h1>
+        <p className="text-sm text-[#A7A7A7] font-normal mt-1">
+          Pick up where you left off
+        </p>
+      </div>
 
       {/* =========================================================================
           SKELETON SHIMMER LOADER (When initially loading)
@@ -304,10 +299,10 @@ export const Home: React.FC<HomeProps> = ({
       ) : (
         <>
           {/* =========================================================================
-              2. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
+              3. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
               ========================================================================= */}
-          <section className="mb-6 -mx-4 px-4 overflow-x-auto no-scrollbar py-1">
-            <div className="flex items-center gap-2.5 min-w-max">
+          <section className="mb-6 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-2 min-w-max px-0.5">
               {MOOD_CHIPS.map((mood) => {
                 const isSelected = activeMood === mood.label;
                 return (
@@ -316,7 +311,7 @@ export const Home: React.FC<HomeProps> = ({
                     onClick={() => handleMoodSelect(mood)}
                     whileTap={{ scale: 0.94 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 400 }}
-                    className={`relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
+                    className={`relative px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
                       isSelected
                         ? 'text-white border-white/40 shadow-lg'
                         : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'

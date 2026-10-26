@@ -119,7 +119,15 @@ async function extractWithYtDlp(videoId: string, quality?: string): Promise<Cach
     const format = getYtDlpFormat(quality);
     const { stdout } = await execFilePromise(
       bin,
-      ['-g', '-f', format, `https://www.youtube.com/watch?v=${videoId}`],
+      [
+        '--no-playlist',
+        '--no-warnings',
+        '--no-check-certificates',
+        '-g',
+        '-f',
+        format,
+        `https://www.youtube.com/watch?v=${videoId}`
+      ],
       {
         timeout: 20000,
         maxBuffer: 10 * 1024 * 1024
@@ -129,20 +137,10 @@ async function extractWithYtDlp(videoId: string, quality?: string): Promise<Cach
     const url = urls[urls.length - 1];
     if (!url) return null;
 
-    const headRes = await fetch(url, {
-      method: 'HEAD',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    }).catch(() => null);
-
-    const mime = headRes?.headers?.get('content-type') || 'audio/mp4';
-    const clen = parseInt(headRes?.headers?.get('content-length') || '0', 10);
-
     return {
       url,
-      mimeType: mime.split(';')[0],
-      contentLength: clen,
+      mimeType: 'audio/mp4',
+      contentLength: 0,
       expiresAt: Date.now() + 5 * 3600 * 1000
     };
   } catch (e: any) {
@@ -162,14 +160,7 @@ export async function resolveStreamUrl(videoId: string, quality?: string): Promi
     return cached;
   }
 
-  // 1. Primary: yt-dlp (uses VISIONOS/whole-file iOS compatible aac/m4a & opus with JS challenges solved)
-  const ytdlpStream = await extractWithYtDlp(videoId, quality);
-  if (ytdlpStream) {
-    setCachedStream(cacheKey, ytdlpStream);
-    return ytdlpStream;
-  }
-
-  // 2. Fallback: Innertube decipher
+  // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
   try {
     const yt = await getInnertube();
     const info = await yt.music.getInfo(videoId);
@@ -201,7 +192,14 @@ export async function resolveStreamUrl(videoId: string, quality?: string): Promi
       }
     }
   } catch (err) {
-    console.warn(`Innertube fallback failed for ${videoId}:`, err);
+    console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
+  }
+
+  // 2. Fallback: yt-dlp binary extraction
+  const ytdlpStream = await extractWithYtDlp(videoId, quality);
+  if (ytdlpStream) {
+    setCachedStream(cacheKey, ytdlpStream);
+    return ytdlpStream;
   }
 
   throw new Error('Unable to extract playable audio stream for ' + videoId);

@@ -99,7 +99,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
 
   return (
     <aside
-      className={`w-[360px] xl:w-[400px] shrink-0 rounded-[28px] glass-panel flex flex-col z-20 overflow-hidden select-none h-full ${className}`}
+      className={`w-[360px] xl:w-[400px] shrink-0 rounded-[28px] glass-panel flex flex-col z-20 overflow-hidden select-none h-full min-h-0 ${className}`}
     >
       {/* Top Header Controls */}
       <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">

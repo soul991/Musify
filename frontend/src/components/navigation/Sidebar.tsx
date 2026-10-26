@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-[240px] h-full shrink-0 rounded-[28px] glass-panel p-4 text-white select-none z-20 overflow-hidden">
+    <aside className="hidden md:flex flex-col w-[240px] h-full shrink-0 rounded-[28px] glass-panel p-4 text-white select-none z-20 overflow-hidden min-h-0">
       {/* Brand Logo & Identity */}
       <div className="flex items-center gap-3 px-2 py-2 mb-4">
         <div

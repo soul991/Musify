@@ -111,6 +111,12 @@ const MusifyMain: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentTrack, currentTime, duration, volume, togglePlay, seek, nextTrack, prevTrack, setVolume, toggleLike]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   const currentView = viewHistory[viewHistory.length - 1];
 
   const pushView = (view: ViewMode) => {
@@ -262,7 +268,7 @@ const MusifyMain: React.FC = () => {
   const activeNavTab: NavTab = currentView.type === 'tab' ? currentView.tab : 'home';
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700">
+    <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
       {/* Ambient Blurred Crossfade Orbs (10-18% opacity) */}
       <div
         className="pointer-events-none absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-[140px] opacity-15 transition-all duration-700"
@@ -285,7 +291,7 @@ const MusifyMain: React.FC = () => {
       />
 
       {/* 2. Main Center Audio Canvas (glass-panel, 28px radius) */}
-      <div className="flex-1 rounded-[28px] glass-panel overflow-hidden relative flex flex-col h-full z-10">
+      <div className="flex-1 rounded-[28px] glass-panel overflow-hidden relative flex flex-col h-full min-h-0 z-10">
         {/* TopBar on Explore / Library tabs */}
         {currentView.type === 'tab' && (currentView.tab === 'explore' || currentView.tab === 'library') && (
           <TopBar
@@ -296,7 +302,7 @@ const MusifyMain: React.FC = () => {
           />
         )}
 
-        <main className="flex-1 overflow-hidden relative flex flex-col">
+        <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
           <Suspense fallback={<ViewLoader />}>
             {renderActiveView()}
           </Suspense>
