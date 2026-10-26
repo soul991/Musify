@@ -16,7 +16,7 @@ import {
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLibrary } from '../../context/LibraryContext';
-import { SquigglySlider } from './SquigglySlider';
+import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { FlowerPlayButton } from './FlowerPlayButton';
 import { HeartBurstIcon } from './HeartBurstIcon';
 
@@ -85,7 +85,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className="w-full max-w-[1200px] h-[78px] rounded-full bg-[#101117]/90 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center px-6 gap-6 pointer-events-auto select-none"
+        className="w-full max-w-[1200px] h-[78px] rounded-full bg-[#121212]/90 backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none"
       >
         {/* Left Section: Track Info & Room Status */}
         <div className="flex items-center gap-3.5 w-64 lg:w-72 shrink-0 min-w-0">
@@ -138,7 +138,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             <button
               onClick={toggleShuffle}
               className={`transition-colors ${
-                isShuffled ? 'text-[#ED5564]' : 'text-white/40 hover:text-white'
+                isShuffled ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
               aria-label="Toggle shuffle"
@@ -156,13 +156,13 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               <SkipBack size={18} />
             </button>
 
-            {/* Scalloped Flower Play/Pause Button */}
+            {/* Scalloped Flower Play/Pause Button - Restrained Musify Red */}
             <FlowerPlayButton
               isPlaying={isPlaying}
               onClick={togglePlay}
               size={44}
-              color="#FFFFFF"
-              iconColor="#000000"
+              color="#E5303D"
+              iconColor="#FFFFFF"
               iconSize={18}
             />
 
@@ -180,7 +180,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             <button
               onClick={toggleRepeat}
               className={`transition-colors ${
-                repeatMode !== 'off' ? 'text-[#ED5564]' : 'text-white/40 hover:text-white'
+                repeatMode !== 'off' ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
               aria-label={`Repeat mode: ${repeatMode}`}
@@ -196,11 +196,11 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             </span>
 
             <div className="flex-1">
-              <SquigglySlider
+              <AdaptiveSeekbar
                 value={currentTime}
                 max={duration || 100}
                 isPlaying={isPlaying}
-                accentColor={colors.primary}
+                accentColor="#E5303D"
                 onSeek={seek}
               />
             </div>
@@ -216,10 +216,10 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {/* Live Equalizer Animation Bars */}
           {isPlaying && (
             <div className="flex items-end gap-1 h-5 px-2">
-              <span className="w-1 bg-[#ED5564] rounded-full h-3 animate-[bounce_0.6s_ease-in-out_infinite]" />
-              <span className="w-1 bg-[#ED5564] rounded-full h-5 animate-[bounce_0.8s_ease-in-out_0.2s_infinite]" />
-              <span className="w-1 bg-[#ED5564] rounded-full h-2 animate-[bounce_0.5s_ease-in-out_0.4s_infinite]" />
-              <span className="w-1 bg-[#ED5564] rounded-full h-4 animate-[bounce_0.7s_ease-in-out_0.1s_infinite]" />
+              <span className="w-1 bg-[#E5303D] rounded-full h-3 animate-[bounce_0.6s_ease-in-out_infinite]" />
+              <span className="w-1 bg-[#E5303D] rounded-full h-5 animate-[bounce_0.8s_ease-in-out_0.2s_infinite]" />
+              <span className="w-1 bg-[#E5303D] rounded-full h-2 animate-[bounce_0.5s_ease-in-out_0.4s_infinite]" />
+              <span className="w-1 bg-[#E5303D] rounded-full h-4 animate-[bounce_0.7s_ease-in-out_0.1s_infinite]" />
             </div>
           )}
 
@@ -240,7 +240,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               step="0.01"
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-16 lg:w-20 h-1 accent-[#ED5564] bg-white/10 rounded-full cursor-pointer"
+              className="w-16 lg:w-20 h-1 accent-[#E5303D] bg-white/10 rounded-full cursor-pointer"
             />
           </div>
 
@@ -268,7 +268,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               title="Listen Together Room"
               aria-label="Listen Together Room"
             >
-              <Users size={13} className="text-[#ED5564]" />
+              <Users size={13} className="text-[#E5303D]" />
               <span className="hidden lg:inline">Room</span>
             </button>
           )}

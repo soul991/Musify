@@ -30,6 +30,8 @@ interface LibraryContextType {
   addToHistory: (track: Track) => void;
   clearHistory: () => void;
   playStats: Record<string, TrackPlayStat>;
+  exportLibraryData: () => string;
+  importLibraryData: (jsonStr: string) => boolean;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
@@ -181,6 +183,40 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setHistory([]);
   };
 
+  const exportLibraryData = (): string => {
+    const backup = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      likedSongs,
+      playlists,
+      history,
+      playStats
+    };
+    return JSON.stringify(backup, null, 2);
+  };
+
+  const importLibraryData = (jsonStr: string): boolean => {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (Array.isArray(parsed.likedSongs)) {
+        setLikedSongs(parsed.likedSongs);
+      }
+      if (Array.isArray(parsed.playlists)) {
+        setPlaylists(parsed.playlists);
+      }
+      if (Array.isArray(parsed.history)) {
+        setHistory(parsed.history);
+      }
+      if (parsed.playStats && typeof parsed.playStats === 'object') {
+        setPlayStats(parsed.playStats);
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to import library data:', e);
+      return false;
+    }
+  };
+
   return (
     <LibraryContext.Provider
       value={{
@@ -197,7 +233,9 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         history,
         addToHistory,
         clearHistory,
-        playStats
+        playStats,
+        exportLibraryData,
+        importLibraryData
       }}
     >
       {children}

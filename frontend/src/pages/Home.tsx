@@ -1,22 +1,16 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
-  Pause,
   MoreVertical,
-  Heart,
   History,
   Radio,
   Users,
   Sliders,
   Settings as SettingsIcon,
-  Sparkles,
   ListPlus,
-  Share2,
-  Check,
   Disc,
-  Bookmark,
-  Volume2
+  Bookmark
 } from 'lucide-react';
 import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -24,6 +18,7 @@ import { useLibrary } from '../context/LibraryContext';
 import { useTheme } from '../context/ThemeContext';
 import { Track } from '../types';
 import { HeartBurstIcon } from '../components/player/HeartBurstIcon';
+import { HomeFeedSkeleton } from '../components/common/SkeletonLoader';
 
 export interface HomeProps {
   onSelectAlbum?: (id: string) => void;
@@ -104,15 +99,11 @@ interface CommunityPlaylistData {
 }
 
 export const Home: React.FC<HomeProps> = ({
-  onSelectAlbum,
-  onSelectArtist,
-  onSelectPlaylist,
-  onOpenSearch,
-  onOpenSettings,
   onOpenHistory,
   onOpenStats,
   onOpenListenTogether,
-  onOpenEqualizer
+  onOpenEqualizer,
+  onOpenSettings
 }) => {
   const { playTrack, currentTrack, isPlaying, addToQueue, playNextInQueue } = usePlayer();
   const { isLiked, toggleLike } = useLibrary();
@@ -127,14 +118,14 @@ export const Home: React.FC<HomeProps> = ({
   const [loading, setLoading] = useState(true);
   const [activeMenuTrackId, setActiveMenuTrackId] = useState<string | null>(null);
 
-  // Dynamic time-of-day greeting (Echo Music MainActivity TopAppBar)
-  const getGreeting = () => {
+  // Dynamic time-of-day greeting (computed once on mount)
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Good morning';
     if (hour >= 12 && hour < 17) return 'Good afternoon';
     if (hour >= 17 && hour < 21) return 'Good evening';
     return 'Late night';
-  };
+  });
 
   // Close context menu on outside click
   useEffect(() => {
@@ -227,18 +218,6 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // Helper to chunk an array into 4 rows for LazyHorizontalGrid
-  const chunkInto4Rows = (items: Track[]) => {
-    const rows: Track[][] = [[], [], [], []];
-    items.forEach((item, index) => {
-      rows[index % 4].push(item);
-    });
-    return rows;
-  };
-
-  const quickPickRows = chunkInto4Rows(quickPicks.slice(0, 16));
-  const forgottenRows = chunkInto4Rows(forgottenFavorites.slice(0, 16));
-
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.currentTarget;
     if (target.src.includes('maxresdefault.jpg')) {
@@ -256,7 +235,7 @@ export const Home: React.FC<HomeProps> = ({
       <header className="flex items-center justify-between h-16 pt-1 mb-3">
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-white/50 tracking-wider uppercase">
-            {getGreeting()}
+            {greeting}
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-center gap-2">
             <span>Musify</span>
@@ -318,40 +297,47 @@ export const Home: React.FC<HomeProps> = ({
       </header>
 
       {/* =========================================================================
-          2. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
+          SKELETON SHIMMER LOADER (When initially loading)
           ========================================================================= */}
-      <section className="mb-6 -mx-4 px-4 overflow-x-auto no-scrollbar py-1">
-        <div className="flex items-center gap-2.5 min-w-max">
-          {MOOD_CHIPS.map((mood) => {
-            const isSelected = activeMood === mood.label;
-            return (
-              <motion.button
-                key={mood.label}
-                onClick={() => handleMoodSelect(mood)}
-                whileTap={{ scale: 0.94 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 400 }}
-                className={`relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
-                  isSelected
-                    ? 'text-white border-white/40 shadow-lg'
-                    : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'
-                }`}
-                style={{
-                  backgroundColor: isSelected ? colors.primary : undefined,
-                  boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
-                }}
-              >
-                {mood.label}
-              </motion.button>
-            );
-          })}
-        </div>
-      </section>
+      {loading && quickPicks.length === 0 ? (
+        <HomeFeedSkeleton />
+      ) : (
+        <>
+          {/* =========================================================================
+              2. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
+              ========================================================================= */}
+          <section className="mb-6 -mx-4 px-4 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-2.5 min-w-max">
+              {MOOD_CHIPS.map((mood) => {
+                const isSelected = activeMood === mood.label;
+                return (
+                  <motion.button
+                    key={mood.label}
+                    onClick={() => handleMoodSelect(mood)}
+                    whileTap={{ scale: 0.94 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                    className={`relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
+                      isSelected
+                        ? 'text-white border-white/40 shadow-lg'
+                        : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? colors.primary : undefined,
+                      boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
+                    }}
+                  >
+                    {mood.label}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </section>
 
-      {/* =========================================================================
-          3. HERO CAROUSEL (`HorizontalCenteredHeroCarousel` in HomeScreen.kt)
-          ========================================================================= */}
-      <section
-        className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
+          {/* =========================================================================
+              3. HERO CAROUSEL (`HorizontalCenteredHeroCarousel` in HomeScreen.kt)
+              ========================================================================= */}
+          <section
+            className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
         onMouseEnter={() => setIsCarouselHovered(true)}
         onMouseLeave={() => setIsCarouselHovered(false)}
         onClick={() => handleHeroClick(HERO_SLIDES[heroIndex])}
@@ -464,9 +450,9 @@ export const Home: React.FC<HomeProps> = ({
                     {/* Active Equalizer Animation Overlay */}
                     {isCurrent && isPlaying && (
                       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-0.5">
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
                       </div>
                     )}
                   </div>
@@ -475,7 +461,7 @@ export const Home: React.FC<HomeProps> = ({
                   <div className="flex-1 min-w-0 pr-1">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {track.title}
@@ -733,7 +719,7 @@ export const Home: React.FC<HomeProps> = ({
                   <div className="flex-1 min-w-0 pr-1">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {track.title}
@@ -758,6 +744,8 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 };

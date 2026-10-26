@@ -35,9 +35,13 @@ class AudioEqualizerEngine {
   private currentBassBoost: number = 0; // 0 to 100%
   private attachedElement: HTMLAudioElement | null = null;
 
+  private analyser: AnalyserNode | null = null;
+
   attachElement(audioElement: HTMLAudioElement) {
     this.attachedElement = audioElement;
-    if (this.isEnabled || this.isNormalized) {
+    // On iOS Safari & mobile devices, createMediaElementSource kills background audio on lock screen.
+    // Strictly bypass Web Audio graph when EQ is off.
+    if (this.isEnabled) {
       this.init(audioElement);
     }
   }
@@ -75,6 +79,10 @@ class AudioEqualizerEngine {
       this.compressor.attack.value = 0.003;
       this.compressor.release.value = 0.25;
 
+      // Realtime Analyser for skip-silence detection
+      this.analyser = this.audioCtx.createAnalyser();
+      this.analyser.fftSize = 512;
+
       // Chain filters together
       let prevNode: AudioNode = this.sourceNode;
       this.filters.forEach((filter) => {
@@ -82,11 +90,27 @@ class AudioEqualizerEngine {
         prevNode = filter;
       });
 
-      // Connect filters through compressor to destination
+      // Connect filters through compressor and analyser to destination
       prevNode.connect(this.compressor);
-      this.compressor.connect(this.audioCtx.destination);
+      this.compressor.connect(this.analyser);
+      this.analyser.connect(this.audioCtx.destination);
     } catch {
       // AudioContext could not be initialized or already attached
+    }
+  }
+
+  getInstantRms(): number {
+    if (!this.analyser) return -1;
+    try {
+      const buffer = new Float32Array(this.analyser.fftSize);
+      this.analyser.getFloatTimeDomainData(buffer);
+      let sum = 0;
+      for (let i = 0; i < buffer.length; i++) {
+        sum += buffer[i] * buffer[i];
+      }
+      return Math.sqrt(sum / buffer.length);
+    } catch {
+      return -1;
     }
   }
 

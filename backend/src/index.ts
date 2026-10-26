@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import musicRouter from './routes/music.js';
 import streamRouter from './routes/stream.js';
 import lyricsRouter from './routes/lyrics.js';
+import roomRouter from './routes/room.js';
 
 dotenv.config();
 
@@ -82,6 +83,7 @@ app.use('/api/stream', streamLimiter);
 app.use('/api', musicRouter);
 app.use('/api/stream', streamRouter);
 app.use('/api/lyrics', lyricsRouter);
+app.use('/api/room', roomRouter);
 
 // Global error handler - logs server-side and returns generic error to client
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

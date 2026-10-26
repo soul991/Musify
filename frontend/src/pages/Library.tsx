@@ -9,14 +9,10 @@ import {
   Pin,
   Download,
   TrendingUp,
-  Sparkles,
-  Shuffle,
-  Music,
-  Check
+  Sparkles
 } from 'lucide-react';
 import { useLibrary, UserPlaylist } from '../context/LibraryContext';
 import { usePlayer } from '../context/PlayerContext';
-import { useTheme } from '../context/ThemeContext';
 import { Track } from '../types';
 import { ChipsRow } from '../components/views/ChipsRow';
 import { AutoPlaylistButton } from '../components/views/AutoPlaylistButton';
@@ -26,20 +22,19 @@ import { SpotifyImportModal } from '../components/views/SpotifyImportModal';
 import { AiPlaylistModal } from '../components/views/AiPlaylistModal';
 import { fisherYatesShuffle } from '../utils/shuffle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { VirtualList } from '../components/common/VirtualList';
 
 interface LibraryProps {
   onSelectPlaylistDetails?: (playlist: UserPlaylist) => void;
-  onSelectAlbum?: (id: string) => void;
-  onSelectArtist?: (id: string) => void;
+  _onSelectAlbum?: (id: string) => void;
+  _onSelectArtist?: (id: string) => void;
 }
 
 type LibraryTab = 'all' | 'playlists' | 'songs' | 'albums' | 'artists' | 'offline';
 type SortKey = 'date' | 'name' | 'count';
 
 export const Library: React.FC<LibraryProps> = ({
-  onSelectPlaylistDetails,
-  onSelectAlbum,
-  onSelectArtist
+  onSelectPlaylistDetails
 }) => {
   const {
     likedSongs,
@@ -52,7 +47,6 @@ export const Library: React.FC<LibraryProps> = ({
   } = useLibrary();
 
   const { playTrack, currentTrack } = usePlayer();
-  const { colors } = useTheme();
 
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
@@ -258,6 +252,23 @@ export const Library: React.FC<LibraryProps> = ({
               <p className="text-sm font-semibold">No favorite songs yet</p>
               <p className="text-xs">Tap the heart on any song to add it here</p>
             </div>
+          ) : activeTab === 'songs' && likedSongs.length > 25 ? (
+            <VirtualList<Track>
+              items={likedSongs}
+              itemHeight={64}
+              renderItem={(track, idx) => (
+                <TrackRow
+                  key={track.id}
+                  track={track}
+                  index={idx}
+                  playlistContext={likedSongs}
+                  showIndex={true}
+                  showThumbnail={true}
+                />
+              )}
+              keyExtractor={(track) => track.id}
+              className="h-[calc(100vh-250px)]"
+            />
           ) : (
             <div className="flex flex-col gap-1.5">
               {likedSongs.slice(0, activeTab === 'songs' ? undefined : 6).map((track, idx) => (

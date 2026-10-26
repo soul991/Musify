@@ -89,7 +89,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             onClick={handleToggle}
             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md flex items-center gap-1.5 ${
               isEnabled
-                ? 'bg-[#ED5564] text-white border-white/30'
+                ? 'bg-[#E5303D] text-white border-white/30'
                 : 'bg-white/10 text-white/60 border-white/10'
             }`}
           >
@@ -131,7 +131,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
       <section className="mb-10 p-6 rounded-[28px] bg-white/[0.04] backdrop-blur-3xl border border-white/15 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
-            <Sliders size={16} className="text-[#ED5564]" />
+            <Sliders size={16} className="text-[#E5303D]" />
             <span>5-Band Frequency Response</span>
           </h2>
           <span className="text-xs font-semibold text-white/50">±12 dB range</span>
@@ -158,7 +158,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
                     value={gain}
                     disabled={!isEnabled}
                     onChange={(e) => handleGainChange(idx, parseFloat(e.target.value))}
-                    className="h-32 w-1.5 accent-[#ED5564] appearance-none bg-white/20 rounded-full outline-none cursor-pointer [writing-mode:vertical-lr] [direction:rtl]"
+                    className="h-32 w-1.5 accent-[#E5303D] appearance-none bg-white/20 rounded-full outline-none cursor-pointer [writing-mode:vertical-lr] [direction:rtl]"
                   />
                 </div>
 
@@ -178,7 +178,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
         <div className="p-5 rounded-[24px] bg-white/[0.04] backdrop-blur-2xl border border-white/15 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Volume2 size={18} className="text-[#ED5564]" />
+              <Volume2 size={18} className="text-[#E5303D]" />
               <span className="text-sm font-bold text-white">Bass Boost</span>
             </div>
             <span className="text-xs font-bold text-white/70">{bassBoost}%</span>
@@ -196,7 +196,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
               const boostDb = (val / 100) * 8;
               audioEqualizer.setGain(0, (gains[0] || 0) + boostDb);
             }}
-            className="w-full accent-[#ED5564] h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
+            className="w-full accent-[#E5303D] h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
           />
         </div>
 

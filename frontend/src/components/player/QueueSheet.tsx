@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   X,
   Trash2,
@@ -11,8 +11,7 @@ import {
   Unlock,
   GripVertical,
   Volume2,
-  Sparkles,
-  Plus
+  Sparkles
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
@@ -30,11 +29,14 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
     currentTrack,
     playTrack,
     clearQueue,
+    reorderQueue,
     isPlaying,
     isShuffled,
     toggleShuffle,
     repeatMode,
-    toggleRepeat
+    toggleRepeat,
+    autoplaySimilar,
+    setAutoplaySimilar
   } = usePlayer();
 
   const { isLiked, toggleLike } = useLibrary();
@@ -137,96 +139,138 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
         </button>
 
         <button
-          onClick={() => {}}
-          className="flex-1 h-10 rounded-r-xl flex items-center justify-center gap-2 text-xs font-semibold border border-white/10 bg-white/5 text-white/60 hover:text-white transition-all"
+          onClick={() => setAutoplaySimilar(!autoplaySimilar)}
+          title="Autoplay similar songs when queue ends"
+          aria-label="Autoplay similar songs when queue ends"
+          className={`flex-1 h-10 rounded-r-xl flex items-center justify-center gap-2 text-xs font-semibold border transition-all ${
+            autoplaySimilar
+              ? 'bg-white/20 border-white/30 text-white'
+              : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
+          }`}
         >
-          <Sparkles size={14} className="text-[var(--accent-color)]" />
-          <span>AutoMix</span>
+          <Sparkles size={14} className={autoplaySimilar ? 'text-[#E5303D]' : 'text-white/40'} />
+          <span>Autoplay</span>
+          <span className={`w-1.5 h-1.5 rounded-full ${autoplaySimilar ? 'bg-[#E5303D]' : 'bg-white/20'}`} />
         </button>
       </div>
 
-      {/* Queue Track List */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1.5 no-scrollbar">
-        {queue.map((track, idx) => {
-          const isCurrent = idx === queueIndex;
-          const shapeClass = getItemShapeClass(idx, queue.length);
+      {removedTrackToast && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 bg-[#1A1A1A] text-white text-xs px-3 py-1.5 rounded-full border border-white/15 shadow-xl animate-fade-in pointer-events-none">
+          {removedTrackToast}
+        </div>
+      )}
 
-          return (
-            <motion.div
-              key={`${track.id}-${idx}`}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              onClick={() => playTrack(track, queue)}
-              className={`flex items-center justify-between p-2.5 cursor-pointer transition-all border ${shapeClass} ${
-                isCurrent
-                  ? 'bg-white/15 border-white/30 shadow-md'
-                  : 'bg-white/5 border-white/5 hover:bg-white/10'
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                {/* Drag Reorder Handle */}
-                {!isLocked && (
+      {/* Reorderable Queue Track List with mobile swipe-to-remove */}
+      <Reorder.Group
+        axis="y"
+        values={queue}
+        onReorder={(newQ) => {
+          if (!isLocked) reorderQueue(newQ);
+        }}
+        className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1.5 no-scrollbar"
+      >
+        <AnimatePresence>
+          {queue.map((track, idx) => {
+            const isCurrent = idx === queueIndex;
+            const shapeClass = getItemShapeClass(idx, queue.length);
+
+            return (
+              <Reorder.Item
+                key={`${track.id}-${idx}`}
+                value={track}
+                dragListener={!isLocked}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                className="relative"
+              >
+                <motion.div
+                  drag={!isLocked ? 'x' : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={{ left: 0.7, right: 0 }}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -90) {
+                      const updated = queue.filter((_, i) => i !== idx);
+                      reorderQueue(updated);
+                      setRemovedTrackToast(`Removed "${track.title.slice(0, 20)}" from queue`);
+                      setTimeout(() => setRemovedTrackToast(null), 2500);
+                    }
+                  }}
+                  onClick={() => playTrack(track, queue)}
+                  className={`flex items-center justify-between p-2.5 cursor-pointer transition-all border ${shapeClass} ${
+                    isCurrent
+                      ? 'bg-white/15 border-white/30 shadow-md'
+                      : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                    {/* Drag Reorder Handle */}
+                    {!isLocked && (
+                      <div
+                        className="text-white/30 hover:text-white/80 cursor-grab active:cursor-grabbing p-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <GripVertical size={16} />
+                      </div>
+                    )}
+
+                    {/* Thumbnail */}
+                    <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-white/10">
+                      <img
+                        src={track.thumbnail || '/icons/musify-icon.svg'}
+                        alt={track.title}
+                        width={44}
+                        height={44}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                        }}
+                      />
+                      {isCurrent && isPlaying && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                          <Volume2 size={16} className="text-white animate-pulse" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Song Meta */}
+                    <div className="min-w-0 flex flex-col flex-1">
+                      <p
+                        className={`text-sm font-semibold truncate ${
+                          isCurrent ? 'text-white font-bold' : 'text-white/80'
+                        }`}
+                      >
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-white/50 truncate">
+                        {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: Duration & Like */}
                   <div
-                    className="text-white/30 hover:text-white/80 cursor-grab active:cursor-grabbing p-1"
+                    className="flex items-center gap-2 shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <GripVertical size={16} />
+                    <span className="text-xs text-white/40">
+                      {track.durationFormatted || (track.duration ? formatTime(track.duration) : '')}
+                    </span>
+
+                    <HeartBurstIcon
+                      isLiked={isLiked(track.id)}
+                      onToggle={() => toggleLike(track)}
+                      size={18}
+                    />
                   </div>
-                )}
-
-                {/* Thumbnail */}
-                <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-white/10">
-                  <img
-                    src={track.thumbnail || '/icons/musify-icon.svg'}
-                    alt={track.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                    }}
-                  />
-                  {isCurrent && isPlaying && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-                      <Volume2 size={16} className="text-white animate-pulse" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Song Meta */}
-                <div className="min-w-0 flex flex-col flex-1">
-                  <p
-                    className={`text-sm font-semibold truncate ${
-                      isCurrent ? 'text-white font-bold' : 'text-white/80'
-                    }`}
-                  >
-                    {track.title}
-                  </p>
-                  <p className="text-xs text-white/50 truncate">
-                    {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Duration & Like */}
-              <div
-                className="flex items-center gap-2 shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="text-xs text-white/40">
-                  {track.durationFormatted || (track.duration ? formatTime(track.duration) : '')}
-                </span>
-
-                <HeartBurstIcon
-                  isLiked={isLiked(track.id)}
-                  onToggle={() => toggleLike(track)}
-                  size={18}
-                />
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+                </motion.div>
+              </Reorder.Item>
+            );
+          })}
+        </AnimatePresence>
+      </Reorder.Group>
     </div>
   );
 };

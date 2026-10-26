@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Users, Copy, Check, Radio, Play, Sparkles, LogOut, User, Music2 } from 'lucide-react';
+import { ArrowLeft, Users, Copy, Check, LogOut } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -31,11 +31,20 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
   const [participants, setParticipants] = useState<Participant[]>([]);
 
   const channelRef = useRef<BroadcastChannel | null>(null);
-  const myIdRef = useRef<string>(`peer_${Math.random().toString(36).substring(2, 9)}`);
+  const myIdRef = useRef<string>('');
   const currentTrackRef = useRef(currentTrack);
-  currentTrackRef.current = currentTrack;
   const playTrackRef = useRef(playTrack);
-  playTrackRef.current = playTrack;
+
+  useEffect(() => {
+    if (!myIdRef.current) {
+      myIdRef.current = `peer_${Math.random().toString(36).substring(2, 9)}`;
+    }
+  }, []);
+
+  useEffect(() => {
+    currentTrackRef.current = currentTrack;
+    playTrackRef.current = playTrack;
+  }, [currentTrack, playTrack]);
 
   // Save display name
   const handleSaveName = () => {
@@ -133,7 +142,60 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
     }
   }, [roomCode, userName, isHost]);
 
-  // Host broadcasts playing track changes
+  // Server room synchronization & polling loop
+  useEffect(() => {
+    if (!roomCode) return;
+
+    const myId = myIdRef.current;
+    const interval = setInterval(async () => {
+      try {
+        if (isHost && currentTrackRef.current) {
+          // Sync host state to backend room
+          await fetch(`/api/room/${roomCode}/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              hostId: myId,
+              currentTrack: currentTrackRef.current,
+              isPlaying,
+              currentTime
+            })
+          });
+        } else if (!isHost) {
+          // Listener heartbeat and state polling
+          const res = await fetch(`/api/room/${roomCode}/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: myId })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.state && data.state.currentTrack) {
+              const cur = currentTrackRef.current;
+              if (!cur || cur.id !== data.state.currentTrack.id) {
+                playTrackRef.current(data.state.currentTrack);
+              }
+            }
+          }
+        }
+
+        // Fetch refreshed member list
+        const roomRes = await fetch(`/api/room/${roomCode}`);
+        if (roomRes.ok) {
+          const roomData = await roomRes.json();
+          if (Array.isArray(roomData.members)) {
+            setParticipants(roomData.members);
+          }
+        }
+      } catch {
+        // Fall back to local BroadcastChannel if offline
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [roomCode, isHost, isPlaying, currentTime]);
+
+  // Host broadcasts playing track changes to local BroadcastChannel
   useEffect(() => {
     if (isHost && roomCode && channelRef.current && currentTrack) {
       channelRef.current.postMessage({
@@ -145,10 +207,29 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
     }
   }, [isHost, roomCode, currentTrack, isPlaying, currentTime]);
 
-  const handleCreateRoom = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const handleCreateRoom = async () => {
+    const fallbackCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    try {
+      const res = await fetch('/api/room/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostName: userName, hostId: myIdRef.current })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsHost(true);
+        setRoomCode(data.roomCode);
+        if (Array.isArray(data.members)) {
+          setParticipants(data.members);
+        }
+        return;
+      }
+    } catch {
+      // offline fallback
+    }
+
     setIsHost(true);
-    setRoomCode(code);
+    setRoomCode(fallbackCode);
     setParticipants([
       {
         id: myIdRef.current,
@@ -159,9 +240,35 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
     ]);
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (joinInput.trim().length >= 4) {
       const code = joinInput.trim().toUpperCase();
+      try {
+        const res = await fetch('/api/room/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomCode: code,
+            memberName: userName,
+            memberId: myIdRef.current
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIsHost(false);
+          setRoomCode(code);
+          if (Array.isArray(data.members)) {
+            setParticipants(data.members);
+          }
+          if (data.state?.currentTrack) {
+            playTrackRef.current(data.state.currentTrack);
+          }
+          return;
+        }
+      } catch {
+        // offline fallback
+      }
+
       setIsHost(false);
       setRoomCode(code);
       setParticipants([
@@ -211,12 +318,12 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
           </button>
           <div>
             <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
-              Same-device sync (beta)
+              Live Room Sync
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 flex-wrap">
               <span>Listen Together</span>
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Same-device sync (beta)
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Cross-device sync
               </span>
             </h1>
           </div>

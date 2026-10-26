@@ -130,8 +130,8 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
 
         {/* Bottom Tab Bar Pill & Standalone Search FAB */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Main Tab Group Pill Container (Echo Music Liquid Glass) */}
-          <div className="relative h-[56px] rounded-full p-1.5 flex items-center bg-[#15161D]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] select-none transition-all duration-300">
+          {/* Main Tab Group Pill Container (Calm Liquid Glass) */}
+          <div className="relative h-[56px] rounded-full p-1.5 flex items-center bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] select-none transition-all duration-300">
             {TABS.map((tab) => {
               const isActive = !isSearchActive && activeTab === tab.id;
               const Icon = tab.icon;
@@ -203,15 +203,14 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
               style={
                 isSearchActive
                   ? {
-                      backgroundColor: colors.primary,
-                      boxShadow: `0 4px 20px ${colors.primary}85, inset 0 1px 1px rgba(255,255,255,0.45)`
+                      backgroundColor: '#E5303D'
                     }
                   : undefined
               }
-              className={`w-[56px] h-[56px] rounded-full flex items-center justify-center border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] transition-all duration-200 group ${
+              className={`w-[56px] h-[56px] rounded-full flex items-center justify-center border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-200 group ${
                 isSearchActive
                   ? 'text-white'
-                  : 'bg-[#15161D]/85 backdrop-blur-3xl backdrop-saturate-[1.8] text-white/80 hover:text-white'
+                  : 'bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.6] text-white/80 hover:text-white'
               }`}
             >
               <Search

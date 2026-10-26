@@ -1,14 +1,16 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { LibraryProvider, UserPlaylist } from './context/LibraryContext';
-import { PlayerProvider } from './context/PlayerContext';
+import { LibraryProvider, UserPlaylist, useLibrary } from './context/LibraryContext';
+import { PlayerProvider, usePlayer } from './context/PlayerContext';
+import { ToastProvider } from './context/ToastContext';
 import { Sidebar } from './components/navigation/Sidebar';
 import { FloatingNavBar, NavTab } from './components/navigation/FloatingNavBar';
 import { TopBar } from './components/navigation/TopBar';
 import { DesktopDockPlayer } from './components/player/DesktopDockPlayer';
 import { NowPlayingCompanion } from './components/player/NowPlayingCompanion';
 import { FullPlayer } from './components/player/FullPlayer';
+import { OfflineBanner } from './components/common/OfflineBanner';
 
 // Code-split page components with React.lazy
 const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
@@ -31,7 +33,7 @@ const ListenTogetherView = lazy(() =>
 
 const ViewLoader: React.FC = () => (
   <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-[var(--accent-color,#ED5564)] animate-spin" />
+    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-[#E5303D] animate-spin" />
   </div>
 );
 
@@ -49,8 +51,65 @@ type ViewMode =
 
 const MusifyMain: React.FC = () => {
   const { colors } = useTheme();
+  const { currentTrack, togglePlay, nextTrack, prevTrack, seek, currentTime, duration, volume, setVolume } = usePlayer();
+  const { toggleLike } = useLibrary();
+
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('pwa_prompt_dismissed')) {
+        setShowInstallPrompt(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  // Global Keyboard Shortcuts (Space, ArrowRight/Left, M, L, /)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        if (e.shiftKey) nextTrack();
+        else seek(Math.min(duration, currentTime + 5));
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        if (e.shiftKey) prevTrack();
+        else seek(Math.max(0, currentTime - 5));
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        setVolume(volume > 0 ? 0 : 1);
+      } else if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        if (currentTrack) toggleLike(currentTrack);
+      } else if (e.key === '/') {
+        e.preventDefault();
+        setViewHistory((prev) => [...prev, { type: 'search' }]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentTrack, currentTime, duration, volume, togglePlay, seek, nextTrack, prevTrack, setVolume, toggleLike]);
 
   const currentView = viewHistory[viewHistory.length - 1];
 
@@ -203,10 +262,17 @@ const MusifyMain: React.FC = () => {
   const activeNavTab: NavTab = currentView.type === 'tab' ? currentView.tab : 'home';
 
   return (
-    <div
-      className="flex h-screen w-screen overflow-hidden bg-[var(--bg-primary)] text-white transition-colors duration-700"
-      style={{ background: colors.gradientBackground }}
-    >
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700">
+      {/* Ambient Blurred Crossfade Orbs (10-18% opacity) */}
+      <div
+        className="pointer-events-none absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-[140px] opacity-15 transition-all duration-700"
+        style={{ backgroundColor: colors.primary }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 -right-32 w-[620px] h-[620px] rounded-full blur-[160px] opacity-12 transition-all duration-700"
+        style={{ backgroundColor: colors.secondary || '#B8222E' }}
+      />
+
       {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar
         activeTab={activeNavTab}
@@ -218,8 +284,8 @@ const MusifyMain: React.FC = () => {
         onOpenStats={() => pushView({ type: 'stats' })}
       />
 
-      {/* 2. Main Center Audio Canvas & 3. Right Live Companion Stage */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      {/* 2. Main Center Audio Canvas (glass-panel, 28px radius) */}
+      <div className="flex-1 rounded-[28px] glass-panel overflow-hidden relative flex flex-col h-full z-10">
         {/* TopBar on Explore / Library tabs */}
         {currentView.type === 'tab' && (currentView.tab === 'explore' || currentView.tab === 'library') && (
           <TopBar
@@ -230,61 +296,103 @@ const MusifyMain: React.FC = () => {
           />
         )}
 
-        <div className="flex-1 flex flex-row h-full overflow-hidden relative">
-          {/* Active View Container */}
-          <main className="flex-1 flex flex-col overflow-hidden relative">
-            <Suspense fallback={<ViewLoader />}>
-              {renderActiveView()}
-            </Suspense>
-          </main>
+        <main className="flex-1 overflow-hidden relative flex flex-col">
+          <Suspense fallback={<ViewLoader />}>
+            {renderActiveView()}
+          </Suspense>
+        </main>
 
-          {/* Right Live Companion Stage (3D Spinning Vinyl + Synchronized Karaoke Lyrics + Queue) */}
-          {isCompanionOpen && (
-            <NowPlayingCompanion
-              onClose={() => setIsCompanionOpen(false)}
-              className="hidden xl:flex"
-            />
-          )}
-        </div>
-
-        {/* Desktop Persistent Audio Dock Bar (Obsidian Liquid Glass Pill) */}
+        {/* Desktop Persistent Audio Dock Bar at bottom of canvas */}
         <DesktopDockPlayer
           onOpenListenTogether={() => pushView({ type: 'listen_together' })}
           isCompanionOpen={isCompanionOpen}
           onToggleCompanion={() => setIsCompanionOpen(!isCompanionOpen)}
         />
-
-        {/* Mobile Floating Bottom Bar with Docked MiniPlayer */}
-        <FloatingNavBar
-          className="md:hidden"
-          activeTab={activeNavTab}
-          onTabChange={handleTabChange}
-          onOpenSearch={() => pushView({ type: 'search' })}
-          isSearchActive={currentView.type === 'search'}
-          isHidden={
-            (currentView.type === 'tab' && currentView.tab === 'musicflow') ||
-            currentView.type === 'settings' ||
-            currentView.type === 'stats'
-          }
-        />
-
-        {/* Fullscreen Player Modal */}
-        <FullPlayer />
       </div>
+
+      {/* 3. Right Live Companion Stage (w-[400px], hidden xl:flex) */}
+      {isCompanionOpen && (
+        <NowPlayingCompanion
+          onClose={() => setIsCompanionOpen(false)}
+          className="hidden xl:flex"
+        />
+      )}
+
+      {/* Mobile Floating Bottom Bar with Docked MiniPlayer */}
+      <FloatingNavBar
+        className="md:hidden"
+        activeTab={activeNavTab}
+        onTabChange={handleTabChange}
+        onOpenSearch={() => pushView({ type: 'search' })}
+        isSearchActive={currentView.type === 'search'}
+        isHidden={
+          (currentView.type === 'tab' && currentView.tab === 'musicflow') ||
+          currentView.type === 'settings' ||
+          currentView.type === 'stats'
+        }
+      />
+
+      {/* Fullscreen Player Modal */}
+      <FullPlayer />
+
+      {/* Real-time Network Connectivity Offline Banner */}
+      <OfflineBanner />
+
+      {/* PWA Standalone Install Prompt */}
+      {showInstallPrompt && installPrompt && (
+        <div className="fixed bottom-24 sm:bottom-6 left-6 z-[110] bg-[#1A1A1A]/95 border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-xl">
+          <div className="w-8 h-8 rounded-xl bg-[#E5303D] flex items-center justify-center font-black text-white text-xs">
+            M
+          </div>
+          <div className="text-xs">
+            <p className="font-bold text-white">Install Musify App</p>
+            <p className="text-white/50 text-[10px]">Faster loading & offline playback</p>
+          </div>
+          <div className="flex items-center gap-1.5 ml-2">
+            <button
+              onClick={async () => {
+                if (installPrompt) {
+                  installPrompt.prompt();
+                  await installPrompt.userChoice;
+                  setInstallPrompt(null);
+                  setShowInstallPrompt(false);
+                }
+              }}
+              className="px-2.5 py-1 rounded-lg bg-[#E5303D] hover:bg-[#B8222E] text-white font-bold text-xs transition-colors"
+            >
+              Install
+            </button>
+            <button
+              onClick={() => {
+                setShowInstallPrompt(false);
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('pwa_prompt_dismissed', 'true');
+                }
+              }}
+              className="p-1 text-white/40 hover:text-white"
+              aria-label="Dismiss install prompt"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LibraryProvider>
-        <PlayerProvider>
-          <MotionConfig reducedMotion="user">
-            <MusifyMain />
-          </MotionConfig>
-        </PlayerProvider>
-      </LibraryProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <ThemeProvider>
+        <LibraryProvider>
+          <PlayerProvider>
+            <MotionConfig reducedMotion="user">
+              <MusifyMain />
+            </MotionConfig>
+          </PlayerProvider>
+        </LibraryProvider>
+      </ThemeProvider>
+    </ToastProvider>
   );
 }

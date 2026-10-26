@@ -8,6 +8,7 @@ import { ParallaxHeader } from '../components/views/ParallaxHeader';
 import { TrackRow } from '../components/views/TrackRow';
 import { fisherYatesShuffle } from '../utils/shuffle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TrackListSkeleton, CardsGridSkeleton } from '../components/common/SkeletonLoader';
 
 interface ArtistViewProps {
   artistId: string;
@@ -41,9 +42,9 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-24 text-white/50 gap-3">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-[var(--accent-color)] rounded-full animate-spin" />
-        <span className="text-xs font-semibold">Loading Artist...</span>
+      <div className="flex-1 p-6 overflow-hidden space-y-6">
+        <TrackListSkeleton count={6} />
+        <CardsGridSkeleton count={4} />
       </div>
     );
   }

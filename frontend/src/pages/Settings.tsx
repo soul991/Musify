@@ -12,14 +12,17 @@ import {
   Info,
   Check,
   ChevronRight,
-  Shield,
   Smartphone,
   Search as SearchIcon,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Download,
+  Upload
 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, CALM_ACCENT_PRESETS } from '../context/ThemeContext';
 import { usePlayer } from '../context/PlayerContext';
+import { useLibrary } from '../context/LibraryContext';
+import { useToast } from '../context/ToastContext';
 import { audioEqualizer } from '../services/audioEqualizer';
 import { Material3SettingsGroup } from '../components/views/Material3SettingsGroup';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,6 +44,8 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
   } = useTheme();
 
   const { sleepTimerMinutes, setSleepTimer } = usePlayer();
+  const { exportLibraryData, importLibraryData } = useLibrary();
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showColorPickerModal, setShowColorPickerModal] = useState(false);
@@ -66,17 +71,57 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
   const [skipSilence, setSkipSilence] = useState<boolean>(() => {
     return localStorage.getItem('musify_skip_silence') === 'true';
   });
+  const [seekbarStyle, setSeekbarStyle] = useState<'calm' | 'squiggly'>(() => {
+    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'calm';
+  });
 
-  const presetColors = [
-    { name: 'Coral (Default)', hex: '#ED5564' },
-    { name: 'Electric Blue', hex: '#007AFF' },
-    { name: 'Emerald Green', hex: '#34C759' },
-    { name: 'Vibrant Purple', hex: '#AA3BFF' },
-    { name: 'Amber Gold', hex: '#FFB340' },
-    { name: 'Crimson Rose', hex: '#FF2D55' },
-    { name: 'Cyan Mint', hex: '#00E5FF' },
-    { name: 'Sunset Orange', hex: '#FF6B4A' }
-  ];
+  const presetColors = CALM_ACCENT_PRESETS;
+
+  const handleToggleSkipSilence = () => {
+    const next = !skipSilence;
+    setSkipSilence(next);
+    localStorage.setItem('musify_skip_silence', String(next));
+  };
+
+  const handleToggleSeekbarStyle = (style: 'calm' | 'squiggly') => {
+    setSeekbarStyle(style);
+    localStorage.setItem('musify_seekbar_style', style);
+    window.dispatchEvent(new Event('musify_seekbar_style_change'));
+  };
+
+  const handleExportLibrary = () => {
+    try {
+      const dataStr = exportLibraryData();
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `musify-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Library exported successfully', 'success');
+    } catch {
+      showToast('Failed to export library', 'error');
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        const success = importLibraryData(text);
+        if (success) {
+          showToast('Library imported successfully', 'success');
+        } else {
+          showToast('Invalid backup file format', 'error');
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleWifiQualityChange = (q: AudioQualityLevel) => {
     setAudioQualityWifi(q);
@@ -107,12 +152,6 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     const val = Number(e.target.value);
     setCrossfadeSeconds(val);
     localStorage.setItem('musify_crossfade_secs', String(val));
-  };
-
-  const handleToggleSkipSilence = () => {
-    const next = !skipSilence;
-    setSkipSilence(next);
-    localStorage.setItem('musify_skip_silence', String(next));
   };
 
   const handleClearCache = () => {
@@ -282,6 +321,44 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                     0 ms
                   </div>
                 )
+              },
+              {
+                icon: <Sliders size={20} className="text-emerald-400" />,
+                title: 'Seekbar Style',
+                description:
+                  seekbarStyle === 'calm'
+                    ? 'Calm Straight: Hardware-accelerated solid scrubber'
+                    : 'Squiggly Waveform: Animated fluid sine wave',
+                trailingContent: (
+                  <div className="flex items-center gap-1 p-1 rounded-xl bg-white/10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSeekbarStyle('calm');
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        seekbarStyle === 'calm'
+                          ? 'bg-white text-black shadow-md'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Calm
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSeekbarStyle('squiggly');
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        seekbarStyle === 'squiggly'
+                          ? 'bg-white text-black shadow-md'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Squiggly
+                    </button>
+                  </div>
+                )
               }
             ]}
           />
@@ -434,6 +511,31 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                     <option value="60" className="bg-[#1C1D24]">60 min</option>
                   </select>
                 )
+              },
+              {
+                icon: <Radio size={20} className="text-cyan-400" />,
+                title: 'Skip Silence',
+                description: skipSilence
+                  ? 'Active • Automatically jumps over silent sections'
+                  : 'Disabled • Plays unmanipulated audio streams',
+                trailingContent: (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleSkipSilence();
+                    }}
+                    className={`w-12 h-6 rounded-full p-0.5 cursor-pointer transition-colors duration-200 ${
+                      skipSilence ? 'bg-[var(--accent-color)]' : 'bg-white/20'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
+                        skipSilence ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                ),
+                onClick: handleToggleSkipSilence
               }
             ]}
           />
@@ -465,7 +567,58 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
           />
         )}
 
-        {/* Group 5: About & System */}
+        {/* Group 5: Library Backup & Cloud Sync */}
+        {(matchesSearch('backup') ||
+          matchesSearch('export') ||
+          matchesSearch('import') ||
+          matchesSearch('library') ||
+          matchesSearch('sync')) && (
+          <Material3SettingsGroup
+            title="Library Backup & Cloud Sync"
+            items={[
+              {
+                icon: <Download size={20} className="text-sky-400" />,
+                title: 'Export Library Data (JSON)',
+                description: 'Export all your favorite songs, custom playlists, play history and stats',
+                trailingContent: (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleExportLibrary();
+                    }}
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 active:scale-95"
+                  >
+                    <Download size={14} />
+                    <span>Export</span>
+                  </button>
+                ),
+                onClick: handleExportLibrary
+              },
+              {
+                icon: <Upload size={20} className="text-amber-400" />,
+                title: 'Import Library Data (JSON)',
+                description: 'Restore favorites and playlists from a previously exported backup file',
+                trailingContent: (
+                  <label
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Upload size={14} />
+                    <span>Import</span>
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      className="hidden"
+                      onChange={handleImportFile}
+                    />
+                  </label>
+                )
+              }
+            ]}
+          />
+        )}
+
+        {/* Group 6: About & System */}
         {(matchesSearch('about') || matchesSearch('version') || matchesSearch('echo')) && (
           <Material3SettingsGroup
             title="About & Engine"

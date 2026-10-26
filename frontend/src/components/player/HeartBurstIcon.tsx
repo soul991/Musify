@@ -6,7 +6,7 @@ interface HeartBurstIconProps {
   isLiked: boolean;
   onToggle?: () => void;
   size?: number; // default 24
-  likedColor?: string; // default #FF4081
+  likedColor?: string; // default #E5303D
   unlikedColor?: string; // default currentColor
   className?: string;
 }
@@ -15,7 +15,7 @@ export const HeartBurstIcon: React.FC<HeartBurstIconProps> = ({
   isLiked,
   onToggle,
   size = 24,
-  likedColor = '#FF4081',
+  likedColor = '#E5303D',
   unlikedColor = 'rgba(255, 255, 255, 0.7)',
   className = ''
 }) => {

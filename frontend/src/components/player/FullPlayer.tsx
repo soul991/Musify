@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown,
@@ -7,8 +7,6 @@ import {
   Repeat1,
   SkipBack,
   SkipForward,
-  Play,
-  Pause,
   ListMusic,
   Mic2,
   Moon,
@@ -18,14 +16,13 @@ import {
   VolumeX,
   Headphones,
   Download,
-  Share2,
   CheckCircle2,
   Disc
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLibrary } from '../../context/LibraryContext';
-import { SquigglySlider } from './SquigglySlider';
+import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { FlowerPlayButton } from './FlowerPlayButton';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { PlayerSyncedLyricsView } from './PlayerSyncedLyricsView';
@@ -54,7 +51,9 @@ export const FullPlayer: React.FC = () => {
     setSleepTimer,
     remainingSleepSeconds,
     volume = 1,
-    setVolume
+    setVolume,
+    playbackSpeed,
+    setPlaybackSpeed
   } = usePlayer();
 
   const { colors, playerStyle, setPlayerStyle } = useTheme();
@@ -68,7 +67,7 @@ export const FullPlayer: React.FC = () => {
   const [volumeSliderHover, setVolumeSliderHover] = useState(false);
 
   // Background style selector (matching PlayerBackgroundStyle in PreferenceKeys.kt)
-  const [bgStyle, setBgStyle] = useState<'glow' | 'apple' | 'mesh' | 'gradient'>('glow');
+  const [bgStyle, _setBgStyle] = useState<'glow' | 'apple' | 'mesh' | 'gradient'>('glow');
 
   // Fetch lyrics for 1-line mini preview
   useEffect(() => {
@@ -101,6 +100,13 @@ export const FullPlayer: React.FC = () => {
   const liked = isLiked(currentTrack.id);
   const isMaterial = playerStyle === 'material';
 
+  const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
+  const handleCycleSpeed = () => {
+    const current = playbackSpeed || 1;
+    const nextIdx = (SPEED_OPTIONS.indexOf(current) + 1) % SPEED_OPTIONS.length;
+    setPlaybackSpeed(SPEED_OPTIONS[nextIdx]);
+  };
+
   const formatSleepTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -115,8 +121,18 @@ export const FullPlayer: React.FC = () => {
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#0A0B0E] text-white select-none"
+          drag="y"
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0.05, bottom: 0.7 }}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 100 || info.velocity.y > 500) {
+              setIsPlayerOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#0A0A0A] text-white select-none"
         >
+          {/* Mobile Sheet Drag Handle */}
+          <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mt-2.5 mb-0.5 shrink-0 cursor-grab active:cursor-grabbing sm:hidden" />
           {/* ========================================================= */}
           {/* BACKGROUND RENDERING ENGINES (Echo Music PlayerBackgroundStyle) */}
           {/* ========================================================= */}
@@ -354,15 +370,22 @@ export const FullPlayer: React.FC = () => {
               ) : (
                 /* Standard Modern Rounded Artwork */
                 <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.4 }}
+                  layoutId="player-artwork"
+                  animate={{ scale: isPlaying ? 1.03 : 1.0 }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setIsRotatingThumbnail(true)}
-                  className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] cursor-pointer drop-shadow-[0_20px_45px_rgba(0,0,0,0.8)] rounded-[28px] overflow-hidden border border-white/20 group"
+                  className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] cursor-pointer drop-shadow-[0_20px_45px_rgba(0,0,0,0.8)] rounded-[24px] overflow-hidden border border-white/20 group"
+                  style={{
+                    boxShadow: `0 20px 45px -10px ${colors.primary}33`
+                  }}
                 >
                   <img
                     src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
                     alt={currentTrack.title}
+                    width={330}
+                    height={330}
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                   />
                   {/* Subtle Vinyl Mode Hint overlay */}
@@ -386,9 +409,12 @@ export const FullPlayer: React.FC = () => {
             {/* TRACK METADATA + HEADER ACTION PILL BUTTONS */}
             <div className="flex items-center justify-between gap-3 pt-2">
               <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl font-black text-white truncate tracking-tight">
+                <motion.h1
+                  layoutId="player-title"
+                  className="text-xl sm:text-2xl font-black text-white truncate tracking-tight"
+                >
                   {currentTrack.title}
-                </h1>
+                </motion.h1>
                 <p className="text-sm sm:text-base font-semibold text-white/65 truncate mt-0.5">
                   {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                 </p>
@@ -429,13 +455,13 @@ export const FullPlayer: React.FC = () => {
               )}
             </div>
 
-            {/* SQUIGGLY WAVEFORM SEEKBAR */}
+            {/* ADAPTIVE SEEKBAR (Straight Calm vs Waveform Squiggly) */}
             <div className="pt-2">
-              <SquigglySlider
+              <AdaptiveSeekbar
                 value={currentTime}
                 max={duration}
                 isPlaying={isPlaying}
-                accentColor="#FFFFFF"
+                accentColor="#E5303D"
                 onSeek={seek}
               />
             </div>
@@ -458,8 +484,8 @@ export const FullPlayer: React.FC = () => {
                   isPlaying={isPlaying}
                   onClick={togglePlay}
                   size={84}
-                  color="#FFFFFF"
-                  iconColor="#000000"
+                  color="#E5303D"
+                  iconColor="#FFFFFF"
                   styleType="wavy"
                 />
 
@@ -489,9 +515,10 @@ export const FullPlayer: React.FC = () => {
                     isPlaying={isPlaying}
                     onClick={togglePlay}
                     size={96}
-                    color="#FFFFFF"
-                    iconColor="#000000"
+                    color="#E5303D"
+                    iconColor="#FFFFFF"
                     styleType="apple_squircle"
+                    layoutId="player-play-button"
                   />
 
                   <button
@@ -597,6 +624,16 @@ export const FullPlayer: React.FC = () => {
                   >
                     {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
                   </button>
+
+                  {/* Playback Speed Toggle */}
+                  <button
+                    onClick={handleCycleSpeed}
+                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all shadow-md"
+                    title={`Playback Speed: ${playbackSpeed || 1}x`}
+                    aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
+                  >
+                    {playbackSpeed || 1}x
+                  </button>
                 </div>
 
                 {/* More vertical button: 42px circle */}
@@ -609,7 +646,7 @@ export const FullPlayer: React.FC = () => {
                 </button>
               </div>
             ) : (
-              /* Apple Inspired Mode Bottom Bar: Apple Queue, connected audio picker, Apple Lyrics */
+              /* Apple Inspired Mode Bottom Bar: Apple Queue, connected audio picker, speed, Apple Lyrics */
               <div className="flex items-center justify-between px-2 pt-2">
                 <button
                   onClick={() => setActiveSheet('queue')}
@@ -619,12 +656,23 @@ export const FullPlayer: React.FC = () => {
                   <ListMusic size={26} />
                 </button>
 
-                {/* Connected 56px Button Group (AirPods / Audio Output & Sleep) */}
-                <div className="flex items-center gap-1 bg-white/15 rounded-full p-1 border border-white/20">
-                  <div className="px-4 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold text-white/90">
-                    <Headphones size={15} />
-                    <span>AirPods Pro</span>
+                {/* Connected Button Group (AirPods / Speed) */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-white/15 rounded-full p-1 border border-white/20">
+                    <div className="px-4 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold text-white/90">
+                      <Headphones size={15} />
+                      <span>AirPods Pro</span>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={handleCycleSpeed}
+                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-all"
+                    title={`Playback Speed: ${playbackSpeed || 1}x`}
+                    aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
+                  >
+                    {playbackSpeed || 1}x
+                  </button>
                 </div>
 
                 <button
@@ -648,7 +696,7 @@ export const FullPlayer: React.FC = () => {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                className="absolute inset-0 z-40 bg-[#0C0D12]/95 backdrop-blur-3xl flex flex-col"
+                className="absolute inset-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-3xl flex flex-col"
               >
                 <SyncedLyricsView onClose={() => setActiveSheet('none')} />
               </motion.div>
@@ -660,7 +708,7 @@ export const FullPlayer: React.FC = () => {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                className="absolute inset-x-0 bottom-0 top-16 z-40 bg-[#121319]/95 backdrop-blur-3xl rounded-t-[32px] border-t border-white/20 flex flex-col shadow-2xl"
+                className="absolute inset-x-0 bottom-0 top-16 z-40 bg-[#121212]/95 backdrop-blur-3xl rounded-t-[32px] border-t border-white/10 flex flex-col shadow-2xl"
               >
                 <QueueSheet onClose={() => setActiveSheet('none')} />
               </motion.div>

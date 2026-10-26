@@ -91,7 +91,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
       onDragEnd={handleDragEnd}
       style={{ x: smoothX }}
       onClick={onClick}
-      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#15161D]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99] ${className}`}
+      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99] ${className}`}
     >
       {/* Left: 48px Circular Progress Ring surrounding 40px Album Art */}
       <div className="flex items-center gap-3 min-w-0 pr-1 flex-1">
@@ -119,7 +119,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
               cy={ringSize / 2}
               r={radius}
               fill="none"
-              stroke="#ED5564"
+              stroke="#E5303D"
               strokeWidth={strokeWidth}
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -129,7 +129,8 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           </svg>
 
           {/* Album Art Thumbnail inside Ring */}
-          <div
+          <motion.div
+            layoutId="player-artwork"
             className="relative rounded-full overflow-hidden shadow-inner bg-black/40 flex items-center justify-center"
             style={{ width: artSize, height: artSize }}
           >
@@ -137,20 +138,25 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
               <img
                 src={track.thumbnail}
                 alt={track.title}
+                width={artSize}
+                height={artSize}
                 className="w-full h-full object-cover"
                 loading="eager"
               />
             ) : (
               <Music size={18} className="text-white/60" />
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Title & Artist */}
         <div className="min-w-0 flex flex-col justify-center flex-1 pr-2">
-          <p className="text-sm font-bold text-white truncate drop-shadow-sm leading-tight">
+          <motion.p
+            layoutId="player-title"
+            className="text-sm font-bold text-white truncate drop-shadow-sm leading-tight"
+          >
             {track.title}
-          </p>
+          </motion.p>
           <p className="text-xs text-white/65 font-medium truncate leading-tight mt-0.5">
             {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
           </p>
@@ -180,9 +186,10 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           <SkipBack size={18} className="fill-current" />
         </button>
 
-        <button
+        <motion.button
+          layoutId="player-play-button"
           onClick={onTogglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(255,255,255,0.4)] ml-0.5"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5303D] text-white hover:scale-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(229,48,61,0.4)] ml-0.5"
           title={isPlaying ? 'Pause' : 'Play'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
@@ -191,7 +198,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           ) : (
             <Play size={18} className="fill-current ml-0.5" />
           )}
-        </button>
+        </motion.button>
 
         <button
           onClick={onNext}

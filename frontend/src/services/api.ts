@@ -1,13 +1,14 @@
 import { Track, Album, Artist, Playlist, HomeFeedSection, LyricsData } from '../types';
+import { staleWhileRevalidate } from './apiCache';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || '/api';
 
 export const api = {
-  // Search
-  search: async (query: string, filter?: string) => {
+  // Search with AbortSignal cancellation support
+  search: async (query: string, filter?: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ q: query });
     if (filter) params.set('filter', filter);
-    const res = await fetch(`${API_BASE}/search?${params.toString()}`);
+    const res = await fetch(`${API_BASE}/search?${params.toString()}`, { signal });
     if (!res.ok) throw new Error('Search failed');
     return res.json() as Promise<{
       songs: Track[];
@@ -18,34 +19,40 @@ export const api = {
   },
 
   // Suggestions
-  getSuggestions: async (query: string): Promise<string[]> => {
+  getSuggestions: async (query: string, signal?: AbortSignal): Promise<string[]> => {
     try {
-      const res = await fetch(`${API_BASE}/suggestions?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE}/suggestions?q=${encodeURIComponent(query)}`, { signal });
       return res.json();
     } catch {
       return [];
     }
   },
 
-  // Home feed
+  // Home feed with stale-while-revalidate cache
   getHome: async (): Promise<HomeFeedSection[]> => {
-    const res = await fetch(`${API_BASE}/home`);
-    if (!res.ok) throw new Error('Failed to load home feed');
-    return res.json();
+    return staleWhileRevalidate('home_feed', async () => {
+      const res = await fetch(`${API_BASE}/home`);
+      if (!res.ok) throw new Error('Failed to load home feed');
+      return res.json();
+    }, 5 * 60 * 1000); // 5 min
   },
 
-  // Explore
+  // Explore with stale-while-revalidate cache
   getExplore: async () => {
-    const res = await fetch(`${API_BASE}/explore`);
-    if (!res.ok) throw new Error('Failed to load explore feed');
-    return res.json();
+    return staleWhileRevalidate('explore_feed', async () => {
+      const res = await fetch(`${API_BASE}/explore`);
+      if (!res.ok) throw new Error('Failed to load explore feed');
+      return res.json();
+    }, 10 * 60 * 1000); // 10 min
   },
 
   // Song details
   getSong: async (id: string): Promise<Track> => {
-    const res = await fetch(`${API_BASE}/song/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch song');
-    return res.json();
+    return staleWhileRevalidate(`song_${id}`, async () => {
+      const res = await fetch(`${API_BASE}/song/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch song');
+      return res.json();
+    }, 30 * 60 * 1000);
   },
 
   // Radio / Related queue
@@ -59,25 +66,31 @@ export const api = {
     }
   },
 
-  // Album
+  // Album with stale-while-revalidate cache
   getAlbum: async (id: string): Promise<Album> => {
-    const res = await fetch(`${API_BASE}/album/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch album');
-    return res.json();
+    return staleWhileRevalidate(`album_${id}`, async () => {
+      const res = await fetch(`${API_BASE}/album/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch album');
+      return res.json();
+    }, 30 * 60 * 1000);
   },
 
-  // Artist
+  // Artist with stale-while-revalidate cache
   getArtist: async (id: string): Promise<Artist> => {
-    const res = await fetch(`${API_BASE}/artist/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch artist');
-    return res.json();
+    return staleWhileRevalidate(`artist_${id}`, async () => {
+      const res = await fetch(`${API_BASE}/artist/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch artist');
+      return res.json();
+    }, 30 * 60 * 1000);
   },
 
-  // Playlist
+  // Playlist with stale-while-revalidate cache
   getPlaylist: async (id: string): Promise<Playlist> => {
-    const res = await fetch(`${API_BASE}/playlist/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch playlist');
-    return res.json();
+    return staleWhileRevalidate(`playlist_${id}`, async () => {
+      const res = await fetch(`${API_BASE}/playlist/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch playlist');
+      return res.json();
+    }, 15 * 60 * 1000);
   },
 
   // Lyrics

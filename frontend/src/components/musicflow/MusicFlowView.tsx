@@ -165,7 +165,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           particleCount: 35,
           spread: 60,
           origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
-          colors: [colors.primary, '#FFFFFF', '#ED5564']
+          colors: [colors.primary, '#FFFFFF', '#E5303D']
         });
       }
       lastTapRef.current = 0;
@@ -249,7 +249,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
       <div className="relative z-10 pt-4 px-6 max-w-xl mx-auto w-full flex flex-col items-center">
         {/* Top Header Label */}
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-white/80 mb-3 shadow-sm">
-          <Mic2 size={13} className="text-[#ED5564]" />
+          <Mic2 size={13} className="text-[#E5303D]" />
           <span>MUSIC FLOW</span>
         </div>
 
@@ -409,7 +409,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             >
               <Download
                 size={20}
-                className={downloaded ? 'text-[#ED5564]' : 'text-white/80'}
+                className={downloaded ? 'text-[#E5303D]' : 'text-white/80'}
               />
             </button>
 
@@ -470,7 +470,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           >
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <Mic2 size={18} className="text-[#ED5564]" />
+                <Mic2 size={18} className="text-[#E5303D]" />
                 <h3 className="text-lg font-bold text-white">Live Synced Lyrics</h3>
               </div>
               <button

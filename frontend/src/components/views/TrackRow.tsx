@@ -4,6 +4,7 @@ import { Track } from '../../types';
 import { api } from '../../services/api';
 import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
+import { useToast } from '../../context/ToastContext';
 import { SongDetailsModal } from './SongDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,14 +31,58 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 }) => {
   const { currentTrack, isPlaying, playTrack, addToQueue, playNextInQueue } = usePlayer();
   const { isLiked, toggleLike, playlists, addToPlaylist } = useLibrary();
+  const { showToast } = useToast();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [playlistSubmenuOpen, setPlaylistSubmenuOpen] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<any>(null);
+  const touchMovedRef = useRef<boolean>(false);
 
   const isCurrent = currentTrack?.id === track.id;
   const liked = isLiked(track.id);
+
+  const handleTouchStart = () => {
+    touchMovedRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      if (!touchMovedRef.current) {
+        setMenuOpen(true);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          navigator.vibrate(40);
+        }
+      }
+    }, 450);
+  };
+
+  const handleTouchMove = () => {
+    touchMovedRef.current = true;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/?track=${track.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: track.title,
+          text: `Listen to "${track.title}" on Musify`,
+          url: shareUrl
+        });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showToast(`Copied link for "${track.title}" to clipboard!`, 'success');
+    } catch {
+      showToast('Could not copy link to clipboard', 'error');
+    }
+  };
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -76,6 +121,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   return (
     <div
       ref={menuRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       className={`relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl glass-card cursor-pointer group transition-all duration-200 select-none ${
         isCurrent ? 'bg-white/15 border-white/25 shadow-md' : 'hover:bg-white/[0.08]'
       } ${className}`}
@@ -109,6 +158,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             <img
               src={track.thumbnail || '/icons/musify-icon.svg'}
               alt={track.title}
+              width={48}
+              height={48}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
@@ -164,11 +217,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           aria-label={liked ? 'Unlike' : 'Like'}
           className={`p-1.5 rounded-full transition-colors ${
             liked
-              ? 'text-rose-500 opacity-100'
+              ? 'text-[#E5303D] opacity-100'
               : 'text-white/30 hover:text-white opacity-0 group-hover:opacity-100'
           }`}
         >
-          <Heart size={16} className={liked ? 'fill-rose-500' : ''} />
+          <Heart size={16} className={liked ? 'fill-[#E5303D]' : ''} />
         </button>
 
         {/* Duration */}
@@ -200,7 +253,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: -6 }}
             transition={{ duration: 0.12 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-4 top-12 z-50 min-w-[210px] rounded-2xl bg-[#181922] border border-white/20 shadow-[0_15px_50px_rgba(0,0,0,0.95)] p-1.5 flex flex-col gap-0.5 text-xs font-semibold backdrop-blur-3xl"
+            className="absolute right-4 top-12 z-50 min-w-[210px] rounded-2xl bg-[#1A1A1A] border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.95)] p-1.5 flex flex-col gap-0.5 text-xs font-semibold backdrop-blur-3xl"
           >
             <button
               onClick={() => {
@@ -233,6 +286,17 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             >
               <Play size={15} />
               <span>Play Next</span>
+            </button>
+
+            <button
+              onClick={() => {
+                handleShare();
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <Share2 size={15} />
+              <span>Share Song</span>
             </button>
 
             <div className="relative">
@@ -290,7 +354,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               }}
               className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
             >
-              <Heart size={15} className={liked ? 'fill-rose-500 text-rose-500' : ''} />
+              <Heart size={15} className={liked ? 'fill-[#E5303D] text-[#E5303D]' : ''} />
               <span>{liked ? 'Remove from Favorites' : 'Add to Favorites'}</span>
             </button>
 

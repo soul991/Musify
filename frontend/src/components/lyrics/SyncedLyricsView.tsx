@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Sparkles, SkipBack, SkipForward, RefreshCw, Volume2 } from 'lucide-react';
+import { ChevronDown, Sparkles, SkipBack, SkipForward, RefreshCw, Volume2, Maximize2, Minimize2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { FlowerPlayButton } from '../player/FlowerPlayButton';
@@ -27,11 +27,34 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
   const [lyricsData, setLyricsData] = useState<LyricsData | null>(null);
   const [loadingLyrics, setLoadingLyrics] = useState(false);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const activeLineRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      if (typeof document !== 'undefined' && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+      setIsFullscreen(true);
+    } else {
+      if (typeof document !== 'undefined' && document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!(typeof document !== 'undefined' && document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
 
   // Fetch lyrics when track changes
   useEffect(() => {
@@ -151,13 +174,22 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          aria-label="Close Lyrics"
-          className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 shadow-md"
-        >
-          <ChevronDown size={22} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? 'Exit Fullscreen Lyrics' : 'Fullscreen Lyrics'}
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 shadow-md text-white"
+          >
+            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          </button>
+          <button
+            onClick={onClose}
+            aria-label="Close Lyrics"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 shadow-md"
+          >
+            <ChevronDown size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Lyrics Scroll View */}
@@ -189,28 +221,29 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             let targetOpacity = 0.25;
             let scale = 0.95;
 
-            if (isActive) {
-              targetOpacity = 1.0;
-              scale = 1.02;
-            } else if (distance === 1) {
-              targetOpacity = 0.65;
-              scale = 0.98;
-            } else if (distance === 2) {
-              targetOpacity = 0.45;
-              scale = 0.96;
-            } else if (distance === 3) {
-              targetOpacity = 0.35;
-              scale = 0.95;
+            if (isFullscreen) {
+              if (isActive) {
+                targetOpacity = 1.0;
+                scale = 1.0;
+              } else {
+                targetOpacity = 0.40;
+                scale = 0.96;
+              }
+            } else {
+              if (isActive) {
+                targetOpacity = 1.0;
+                scale = 1.02;
+              } else if (distance === 1) {
+                targetOpacity = 0.65;
+                scale = 0.98;
+              } else if (distance === 2) {
+                targetOpacity = 0.45;
+                scale = 0.96;
+              } else if (distance === 3) {
+                targetOpacity = 0.35;
+                scale = 0.95;
+              }
             }
-
-            // Word-level karaoke calculations if active
-            const nextLineTime = lyricsData.lines[idx + 1]?.time ?? line.time + 4.0;
-            const lineDuration = Math.max(0.5, nextLineTime - line.time);
-            const lineProgress = isActive
-              ? Math.max(0, Math.min(1, (currentTime - line.time) / lineDuration))
-              : idx < currentLineIndex
-              ? 1
-              : 0;
 
             return (
               <motion.div
@@ -229,7 +262,11 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
                 {isActive ? (
                   /* Active Karaoke Line: Solid Pure White with Apple-style Ambient Bloom Glow */
                   <p
-                    className="text-2xl sm:text-4xl font-black tracking-tight leading-snug text-white [text-shadow:_0_0_35px_rgba(255,255,255,0.7),_0_0_15px_rgba(255,255,255,0.4)]"
+                    className={`${
+                      isFullscreen
+                        ? 'text-3xl sm:text-5xl md:text-6xl font-black text-white [text-shadow:_0_0_45px_rgba(255,255,255,0.8),_0_0_20px_rgba(255,255,255,0.5)]'
+                        : 'text-2xl sm:text-4xl font-black text-white [text-shadow:_0_0_35px_rgba(255,255,255,0.7),_0_0_15px_rgba(255,255,255,0.4)]'
+                    } tracking-tight leading-snug`}
                     style={{ letterSpacing: '-0.5px' }}
                   >
                     {line.text}
@@ -237,7 +274,11 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
                 ) : (
                   /* Inactive Line */
                   <p
-                    className="text-2xl sm:text-4xl font-bold tracking-tight leading-snug text-white/90"
+                    className={`${
+                      isFullscreen
+                        ? 'text-3xl sm:text-5xl md:text-6xl font-bold text-white/90'
+                        : 'text-2xl sm:text-4xl font-bold text-white/90'
+                    } tracking-tight leading-snug`}
                     style={{ letterSpacing: '-0.5px' }}
                   >
                     {line.text}

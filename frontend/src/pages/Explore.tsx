@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
 import { Track } from '../types';
+import { TrackListSkeleton } from '../components/common/SkeletonLoader';
 
 interface ExploreProps {
   onSelectAlbum?: (id: string) => void;
@@ -87,7 +88,7 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
               OFFICIAL BILLBOARD CHARTS
             </span>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <TrendingUp size={22} className="text-[#ED5564]" />
+              <TrendingUp size={22} className="text-[#E5303D]" />
               <span>Trending Charts</span>
             </h2>
           </div>
@@ -120,7 +121,7 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
                   {/* Rank Number */}
                   <span
                     className={`w-6 text-center text-xs font-black ${
-                      idx < 3 ? 'text-[#ED5564]' : 'text-white/40'
+                      idx < 3 ? 'text-[#E5303D]' : 'text-white/40'
                     }`}
                   >
                     #{idx + 1}
@@ -144,7 +145,7 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
                   <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {track.title}

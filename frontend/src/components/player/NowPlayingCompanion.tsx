@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Disc, ListMusic, Mic2, X, Play, Music, Sparkles } from 'lucide-react';
+import { Disc, ListMusic, Mic2, X, Play, Sparkles } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
-import { LyricsData, LyricLine } from '../../types';
+import { LyricsData } from '../../types';
 
 interface NowPlayingCompanionProps {
   onClose?: () => void;
@@ -100,7 +99,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
 
   return (
     <aside
-      className={`w-80 lg:w-[350px] shrink-0 glass-panel border-l border-white/10 flex flex-col z-20 overflow-hidden select-none ${className}`}
+      className={`w-[360px] xl:w-[400px] shrink-0 rounded-[28px] glass-panel flex flex-col z-20 overflow-hidden select-none h-full ${className}`}
     >
       {/* Top Header Controls */}
       <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
@@ -216,7 +215,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
               >
                 {loadingLyrics ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-2 text-white/40">
-                    <Sparkles size={20} className="animate-spin text-[#ED5564]" />
+                    <Sparkles size={20} className="animate-spin text-[#E5303D]" />
                     <span className="text-xs font-medium">Aligning lyrics...</span>
                   </div>
                 ) : lyricsData?.synced && lyricsData.lines.length > 0 ? (

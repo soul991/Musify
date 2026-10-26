@@ -213,7 +213,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
                   <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={`text-sm font-bold truncate ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {stat.track.title}
