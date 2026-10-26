@@ -32,6 +32,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
 
   const channelRef = useRef<BroadcastChannel | null>(null);
   const myIdRef = useRef<string>(`peer_${Math.random().toString(36).substring(2, 9)}`);
+  const currentTrackRef = useRef(currentTrack);
+  currentTrackRef.current = currentTrack;
+  const playTrackRef = useRef(playTrack);
+  playTrackRef.current = playTrack;
 
   // Save display name
   const handleSaveName = () => {
@@ -51,6 +55,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
       return;
     }
 
+    const myId = myIdRef.current;
     try {
       const channel = new BroadcastChannel(`musify_room_${roomCode}`);
       channelRef.current = channel;
@@ -58,7 +63,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
       // Announce presence
       channel.postMessage({
         type: 'PEER_JOIN',
-        id: myIdRef.current,
+        id: myId,
         name: userName,
         isHost
       });
@@ -85,7 +90,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
           if (data.type === 'PEER_JOIN') {
             channel.postMessage({
               type: 'PEER_PING',
-              id: myIdRef.current,
+              id: myId,
               name: userName,
               isHost
             });
@@ -94,8 +99,9 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
           setParticipants((prev) => prev.filter((p) => p.id !== data.id));
         } else if (data.type === 'SYNC_TRACK' && !isHost) {
           // Non-host listeners receive track updates from host
-          if (data.track && (!currentTrack || currentTrack.id !== data.track.id)) {
-            playTrack(data.track);
+          const cur = currentTrackRef.current;
+          if (data.track && (!cur || cur.id !== data.track.id)) {
+            playTrackRef.current(data.track);
           }
         }
       };
@@ -104,13 +110,13 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
       const interval = setInterval(() => {
         channel.postMessage({
           type: 'PEER_PING',
-          id: myIdRef.current,
+          id: myId,
           name: userName,
           isHost
         });
         // Prune peers silent for > 15 seconds
         setParticipants((prev) =>
-          prev.filter((p) => p.id === myIdRef.current || Date.now() - p.lastSeen < 15000)
+          prev.filter((p) => p.id === myId || Date.now() - p.lastSeen < 15000)
         );
       }, 5000);
 
@@ -118,7 +124,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
         clearInterval(interval);
         channel.postMessage({
           type: 'PEER_LEAVE',
-          id: myIdRef.current
+          id: myId
         });
         channel.close();
       };
@@ -137,7 +143,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
         time: currentTime
       });
     }
-  }, [isHost, roomCode, currentTrack?.id, isPlaying]);
+  }, [isHost, roomCode, currentTrack, isPlaying, currentTime]);
 
   const handleCreateRoom = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -198,16 +204,20 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
+            aria-label="Go back"
             className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
             <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
-              Social Audio Sync
+              Same-device sync (beta)
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 flex-wrap">
               <span>Listen Together</span>
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Same-device sync (beta)
+              </span>
             </h1>
           </div>
         </div>
@@ -280,7 +290,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
 
             <h2 className="text-2xl font-black text-white">Start a Party Room</h2>
             <p className="text-sm text-white/60 font-medium mt-1 mb-6 max-w-xs">
-              Stream music in real-time sync with friends using a shared room session.
+              Same-device sync (beta): Stream music in real-time sync between tabs and windows in this browser.
             </p>
 
             <button

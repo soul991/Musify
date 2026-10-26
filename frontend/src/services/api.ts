@@ -106,7 +106,8 @@ export const api = {
   },
 
   // Audio Stream URL
-  getStreamUrl: (videoId: string): string => {
-    return `${API_BASE}/stream/${videoId}`;
+  getStreamUrl: (videoId: string, quality?: string): string => {
+    const url = `${API_BASE}/stream/${videoId}`;
+    return quality ? `${url}?quality=${encodeURIComponent(quality)}` : url;
   }
 };

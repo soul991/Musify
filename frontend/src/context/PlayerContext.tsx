@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { useTheme } from './ThemeContext';
 import { useLibrary } from './LibraryContext';
 import { audioEqualizer } from '../services/audioEqualizer';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -21,6 +22,7 @@ interface PlayerContextType {
   isQueueOpen: boolean;
   sleepTimerMinutes: number | null;
   remainingSleepSeconds: number | null;
+  playbackError: string | null;
   setIsPlayerOpen: (open: boolean) => void;
   setIsLyricsOpen: (open: boolean) => void;
   setIsQueueOpen: (open: boolean) => void;
@@ -63,9 +65,82 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [remainingSleepSeconds, setRemainingSleepSeconds] = useState<number | null>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const originalQueueRef = useRef<Track[]>([]);
+  const currentTrackRef = useRef<Track | null>(null);
+  currentTrackRef.current = currentTrack;
+  const volumeRef = useRef<number>(1);
+  const errorTimeoutRef = useRef<any>(null);
+  const skipTimeoutRef = useRef<any>(null);
+  const fadeInTimerRef = useRef<any>(null);
+  const handleTrackEndRef = useRef<() => void>(() => {});
+  const triggerPlaybackErrorRef = useRef<(title: string) => void>(() => {});
+  const prevTrackRef = useRef<() => void>(() => {});
+  const nextTrackRef = useRef<() => void>(() => {});
+
+  // Determine current network audio quality
+  const getEffectiveAudioQuality = (): string => {
+    if (typeof window === 'undefined') return 'lossless';
+    const isCellular =
+      (navigator as any).connection?.type === 'cellular' ||
+      (navigator as any).connection?.effectiveType === '2g' ||
+      (navigator as any).connection?.effectiveType === '3g';
+    if (isCellular) {
+      return localStorage.getItem('musify_audio_cellular') || 'high';
+    }
+    return localStorage.getItem('musify_audio_wifi') || 'lossless';
+  };
+
+  const triggerPlaybackError = (trackTitle: string) => {
+    setIsLoading(false);
+    setIsPlaying(false);
+    setPlaybackError(`Unable to play "${trackTitle}". Skipping to next track...`);
+    if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
+
+    errorTimeoutRef.current = setTimeout(() => {
+      setPlaybackError(null);
+    }, 4000);
+
+    skipTimeoutRef.current = setTimeout(() => {
+      nextTrackRef.current();
+    }, 1200);
+  };
+  triggerPlaybackErrorRef.current = triggerPlaybackError;
+
+  // Resume Web Audio AudioContext on user interaction & visibility change
+  useEffect(() => {
+    const handleInteraction = () => {
+      audioEqualizer.ensureContextRunning();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        audioEqualizer.ensureContextRunning();
+        if (isPlaying && audioRef.current && audioRef.current.paused) {
+          audioRef.current.play().catch(() => {});
+        }
+      }
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pageshow', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pageshow', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
+  }, [isPlaying]);
 
   // Initialize audio element
   useEffect(() => {
@@ -73,9 +148,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     audio.preload = 'auto';
     audio.crossOrigin = 'anonymous';
     audioRef.current = audio;
+    audioEqualizer.attachElement(audio);
 
     const onTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
+
+      // Handle Crossfade smooth volume fade-out near track end
+      const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+      const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
+      if (isCrossfade && audio.duration && audio.duration > crossfadeSecs * 2) {
+        const timeLeft = audio.duration - audio.currentTime;
+        if (timeLeft <= crossfadeSecs && timeLeft > 0) {
+          const factor = Math.max(0, timeLeft / crossfadeSecs);
+          audio.volume = Math.max(0, Math.min(volumeRef.current, volumeRef.current * factor));
+        }
+      }
+
       // Update MediaSession position state
       if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audio.duration) {
         try {
@@ -99,17 +187,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const onPlaying = () => {
       setIsPlaying(true);
       setIsLoading(false);
+      setPlaybackError(null);
     };
     const onPause = () => setIsPlaying(false);
 
     const onEnded = () => {
-      handleTrackEnd();
+      handleTrackEndRef.current();
     };
 
     const onError = (e: any) => {
       console.warn('Audio playback error:', e);
-      setIsLoading(false);
-      setIsPlaying(false);
+      if (currentTrackRef.current) {
+        triggerPlaybackErrorRef.current(currentTrackRef.current.title);
+      } else {
+        setIsLoading(false);
+        setIsPlaying(false);
+      }
     };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
@@ -129,6 +222,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('error', onError);
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
+      if (fadeInTimerRef.current) clearInterval(fadeInTimerRef.current);
     };
   }, []);
 
@@ -189,11 +285,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     navigator.mediaSession.setActionHandler('previoustrack', () => {
-      prevTrack();
+      prevTrackRef.current();
     });
 
     navigator.mediaSession.setActionHandler('nexttrack', () => {
-      nextTrack();
+      nextTrackRef.current();
     });
 
     navigator.mediaSession.setActionHandler('seekto', (details) => {
@@ -226,6 +322,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       nextTrack();
     }
   };
+  handleTrackEndRef.current = handleTrackEnd;
 
   const playTrack = async (track: Track, newQueue?: Track[]) => {
     if (!audioRef.current) return;
@@ -254,19 +351,59 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     }
 
-    const streamUrl = api.getStreamUrl(track.id);
+    const quality = getEffectiveAudioQuality();
+    const streamUrl = api.getStreamUrl(track.id, quality);
     audioRef.current.src = streamUrl;
+
+    const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+    const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
+
+    if (isCrossfade) {
+      audioRef.current.volume = 0;
+    } else {
+      audioRef.current.volume = volumeRef.current;
+    }
+
     audioRef.current.load();
 
-    audioEqualizer.init(audioRef.current);
-    audioEqualizer.ensureContextRunning();
+    // If EQ is enabled, wire into Web Audio; otherwise leave native for iOS PWA background play
+    if (audioEqualizer.getEnabled()) {
+      audioEqualizer.init(audioRef.current);
+      audioEqualizer.ensureContextRunning();
+    }
 
     try {
       await audioRef.current.play();
       setIsPlaying(true);
-    } catch (err) {
-      console.warn('Autoplay prevented or interrupted:', err);
-      setIsPlaying(false);
+      setPlaybackError(null);
+
+      // Smooth fade-in if crossfade is enabled
+      if (isCrossfade && audioRef.current) {
+        if (fadeInTimerRef.current) clearInterval(fadeInTimerRef.current);
+        let step = 0;
+        const totalSteps = 15;
+        const targetVol = volumeRef.current;
+        const intervalMs = (Math.min(crossfadeSecs, 2) * 1000) / totalSteps;
+        fadeInTimerRef.current = setInterval(() => {
+          step++;
+          if (!audioRef.current) {
+            clearInterval(fadeInTimerRef.current);
+            return;
+          }
+          audioRef.current.volume = Math.min(targetVol, (targetVol * step) / totalSteps);
+          if (step >= totalSteps) {
+            clearInterval(fadeInTimerRef.current);
+            audioRef.current.volume = targetVol;
+          }
+        }, intervalMs);
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        console.warn('Autoplay error:', err);
+        triggerPlaybackError(track.title);
+      } else {
+        setIsPlaying(false);
+      }
     }
   };
 
@@ -276,7 +413,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      audioEqualizer.ensureContextRunning();
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setPlaybackError(null);
+      }).catch((err) => {
+        if (err?.name !== 'AbortError') {
+          console.warn('Playback error on togglePlay:', err);
+          triggerPlaybackError(currentTrack.title);
+        }
+      });
     }
   };
 
@@ -289,6 +435,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setVolume = (val: number) => {
     if (!audioRef.current) return;
     const clamped = Math.max(0, Math.min(1, val));
+    volumeRef.current = clamped;
     audioRef.current.volume = clamped;
     setVolumeState(clamped);
   };
@@ -309,6 +456,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       playTrack(nextItem, queue);
     }
   };
+  nextTrackRef.current = nextTrack;
 
   const prevTrack = () => {
     if (!audioRef.current) return;
@@ -333,13 +481,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       playTrack(prevItem, queue);
     }
   };
+  prevTrackRef.current = prevTrack;
 
   const toggleShuffle = () => {
     if (!isShuffled) {
-      // Shuffle queue while keeping current track first
+      // Shuffle queue while keeping current track first with unbiased Fisher-Yates shuffle
       const current = currentTrack;
       const rest = queue.filter((t) => t.id !== current?.id);
-      const shuffled = [...rest].sort(() => Math.random() - 0.5);
+      const shuffled = fisherYatesShuffle(rest);
       const newQueue = current ? [current, ...shuffled] : shuffled;
       setQueue(newQueue);
       setQueueIndex(0);
@@ -409,6 +558,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isQueueOpen,
         sleepTimerMinutes,
         remainingSleepSeconds,
+        playbackError,
         setIsPlayerOpen,
         setIsLyricsOpen,
         setIsQueueOpen,
@@ -427,6 +577,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSleepTimer
       }}
     >
+      {playbackError && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] bg-rose-600/95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-2 pointer-events-none transition-all border border-rose-400/30">
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+          <span>{playbackError}</span>
+        </div>
+      )}
       {children}
     </PlayerContext.Provider>
   );

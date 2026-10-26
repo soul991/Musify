@@ -161,6 +161,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             e.stopPropagation();
             toggleLike(track);
           }}
+          aria-label={liked ? 'Unlike' : 'Like'}
           className={`p-1.5 rounded-full transition-colors ${
             liked
               ? 'text-rose-500 opacity-100'
@@ -182,6 +183,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
+            aria-label="More options"
             className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
           >
             <MoreVertical size={16} />

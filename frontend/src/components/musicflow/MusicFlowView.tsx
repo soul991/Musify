@@ -11,8 +11,6 @@ import {
   ListPlus,
   MoreVertical,
   Download,
-  Disc3,
-  User,
   Check,
   Radio,
   ArrowLeft
@@ -22,7 +20,7 @@ import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
-import { Track, LyricLine } from '../../types';
+import { LyricLine } from '../../types';
 import { HeartBurstIcon } from '../player/HeartBurstIcon';
 import { SyncedLyricsView } from '../lyrics/SyncedLyricsView';
 
@@ -41,8 +39,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
     prevTrack,
     currentTime,
     duration,
-    seek,
-    queue
+    seek
   } = usePlayer();
   const { isLiked, toggleLike } = useLibrary();
   const { colors } = useTheme();
@@ -77,7 +74,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
     return () => {
       cancelled = true;
     };
-  }, [currentTrack?.id]);
+  }, [currentTrack]);
 
   // Find active line & upcoming line matching Echo Music 2-line lyrics
   const activeIdx =
@@ -160,12 +157,17 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
     if (now - lastTapRef.current < 280) {
       // Double tap -> Like with Confetti burst
       toggleLike(currentTrack);
-      confetti({
-        particleCount: 35,
-        spread: 60,
-        origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
-        colors: [colors.primary, '#FFFFFF', '#ED5564']
-      });
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReducedMotion) {
+        confetti({
+          particleCount: 35,
+          spread: 60,
+          origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
+          colors: [colors.primary, '#FFFFFF', '#ED5564']
+        });
+      }
       lastTapRef.current = 0;
     } else {
       lastTapRef.current = now;
@@ -235,6 +237,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           }}
           className="absolute top-4 left-4 z-30 pt-safe w-10 h-10 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition-all shadow-xl"
           title="Back to Home"
+          aria-label="Back to Home"
         >
           <ArrowLeft size={20} />
         </button>
@@ -314,6 +317,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             onClick={prevTrack}
             className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all shadow-md"
             title="Previous song (Swipe down)"
+            aria-label="Previous song"
           >
             <ChevronUp size={22} />
           </button>
@@ -321,6 +325,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             onClick={nextTrack}
             className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all shadow-md"
             title="Next song (Swipe up)"
+            aria-label="Next song"
           >
             <ChevronDown size={22} />
           </button>
@@ -364,6 +369,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               onClick={() => toggleLike(currentTrack)}
               className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
               title={liked ? 'Unlike' : 'Like'}
+              aria-label={liked ? 'Unlike' : 'Like'}
             >
               <HeartBurstIcon isLiked={liked} size={22} />
             </button>
@@ -373,6 +379,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               onClick={() => setShowFullLyricsSheet(true)}
               className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
               title="Full Lyrics"
+              aria-label="Full Lyrics"
             >
               <Mic2 size={20} />
             </button>
@@ -382,6 +389,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               onClick={handleShare}
               className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all relative"
               title="Share"
+              aria-label="Share"
             >
               {copiedShare ? (
                 <Check size={20} className="text-green-400" />
@@ -397,6 +405,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               onClick={() => setDownloaded(!downloaded)}
               className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
               title={downloaded ? 'Downloaded' : 'Download for offline'}
+              aria-label={downloaded ? 'Downloaded' : 'Download for offline'}
             >
               <Download
                 size={20}
@@ -411,6 +420,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               }}
               className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
               title="Add to Playlist"
+              aria-label="Add to Playlist"
             >
               <ListPlus size={20} />
             </button>
@@ -420,6 +430,11 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
         {/* Bottom 2px Scrubber Line with 8px Thumb */}
         <div
           className="relative w-full h-3 flex items-center cursor-pointer group"
+          role="slider"
+          aria-label="Playback progress"
+          aria-valuenow={Math.round(progressRatio * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const clickPos = (e.clientX - rect.left) / rect.width;
@@ -461,6 +476,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               <button
                 onClick={() => setShowFullLyricsSheet(false)}
                 className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white font-bold"
+                aria-label="Close lyrics"
               >
                 ✕
               </button>

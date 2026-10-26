@@ -117,13 +117,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenListenTogether && (
           <button
             onClick={onOpenListenTogether}
-            className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/[0.04] transition-all duration-200 text-sm font-semibold group"
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/[0.04] transition-all duration-200 text-sm font-semibold group"
+            title="Listen Together - Same-device sync (beta)"
           >
-            <span className="text-white/60 group-hover:text-white">
+            <span className="text-white/60 group-hover:text-white shrink-0">
               <Users size={19} />
             </span>
-            <span>Listen Together</span>
-            <span className="ml-auto flex h-2 w-2 relative">
+            <div className="flex flex-col text-left leading-tight">
+              <span>Listen Together</span>
+              <span className="text-[10px] text-amber-400 font-bold">Same-device sync (beta)</span>
+            </div>
+            <span className="ml-auto flex h-2 w-2 relative shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ED5564] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ED5564]"></span>
             </span>
@@ -139,6 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={handleCreatePlaylist}
             className="text-white/50 hover:text-white transition-colors p-1"
             title="Create Playlist"
+            aria-label="Create Playlist"
           >
             <PlusCircle size={15} />
           </button>

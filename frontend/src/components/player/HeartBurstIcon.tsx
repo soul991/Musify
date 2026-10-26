@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 
@@ -20,15 +20,16 @@ export const HeartBurstIcon: React.FC<HeartBurstIconProps> = ({
   className = ''
 }) => {
   const [animating, setAnimating] = useState(false);
-  const [wasLiked, setWasLiked] = useState(isLiked);
+  const prevLikedRef = useRef(isLiked);
 
   useEffect(() => {
-    if (isLiked && !wasLiked) {
+    if (isLiked && !prevLikedRef.current) {
       setAnimating(true);
       const timer = setTimeout(() => setAnimating(false), 550);
+      prevLikedRef.current = isLiked;
       return () => clearTimeout(timer);
     }
-    setWasLiked(isLiked);
+    prevLikedRef.current = isLiked;
   }, [isLiked]);
 
   const particleCount = 6;

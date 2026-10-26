@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { Play, Pause } from 'lucide-react';
 
@@ -93,11 +93,13 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
 }) => {
   const [indent, setIndent] = useState<number>(isPlaying ? 0.08 : 0);
   const [rotation, setRotation] = useState<number>(0);
+  const indentRef = useRef(indent);
+  indentRef.current = indent;
 
   // Animate indent (0.0 to 0.08 over 300ms)
   useEffect(() => {
     let animId: number;
-    const startVal = indent;
+    const startVal = indentRef.current;
     const targetVal = isPlaying ? 0.08 : 0;
     const startTime = performance.now();
     const duration = 300;

@@ -7,6 +7,7 @@ import { useLibrary, UserPlaylist } from '../context/LibraryContext';
 import { Track, Playlist } from '../types';
 import { ParallaxHeader } from '../components/views/ParallaxHeader';
 import { TrackRow } from '../components/views/TrackRow';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 interface PlaylistViewProps {
   playlistId?: string;
@@ -65,7 +66,7 @@ export const PlaylistView: React.FC<PlaylistViewProps> = ({
 
   const handleShuffleAll = () => {
     if (activeTracks.length > 0) {
-      const shuffled = [...activeTracks].sort(() => Math.random() - 0.5);
+      const shuffled = fisherYatesShuffle(activeTracks);
       playTrack(shuffled[0], shuffled);
     }
   };

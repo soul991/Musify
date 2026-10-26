@@ -491,6 +491,7 @@ export const Home: React.FC<HomeProps> = ({
                       e.stopPropagation();
                       toggleLike(track);
                     }}
+                    aria-label={liked ? 'Unlike' : 'Like'}
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors"
                   >
                     <HeartBurstIcon isLiked={liked} size={16} />
@@ -502,6 +503,7 @@ export const Home: React.FC<HomeProps> = ({
                       e.stopPropagation();
                       setActiveMenuTrackId(activeMenuTrackId === track.id ? null : track.id);
                     }}
+                    aria-label="More options"
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors relative"
                   >
                     <MoreVertical size={16} />
@@ -634,6 +636,7 @@ export const Home: React.FC<HomeProps> = ({
                     onClick={() => playTrack(playlist.songs[0], playlist.songs)}
                     className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
                     title="Play Station"
+                    aria-label="Play Station"
                   >
                     <Play size={18} className="fill-current ml-0.5" />
                   </button>
@@ -651,6 +654,7 @@ export const Home: React.FC<HomeProps> = ({
                     }}
                     className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
                     title="Start Radio"
+                    aria-label="Start Radio"
                   >
                     <Radio size={18} />
                   </button>
@@ -661,6 +665,7 @@ export const Home: React.FC<HomeProps> = ({
                     }}
                     className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
                     title="Bookmark Playlist"
+                    aria-label="Bookmark Playlist"
                   >
                     <Bookmark size={18} />
                   </button>

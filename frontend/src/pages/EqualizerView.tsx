@@ -59,6 +59,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
+            aria-label="Go back"
             className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
           >
             <ArrowLeft size={20} />
@@ -77,6 +78,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleReset}
+            aria-label="Reset equalizer to flat"
             className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white transition-all border border-white/10"
             title="Reset to Flat"
           >

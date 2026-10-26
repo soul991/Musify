@@ -20,6 +20,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
+            aria-label="Go back"
             className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
           >
             <ArrowLeft size={20} />
@@ -45,6 +46,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
             </button>
             <button
               onClick={clearHistory}
+              aria-label="Clear History"
               className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10 transition-all"
               title="Clear History"
             >
@@ -118,6 +120,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
                     e.stopPropagation();
                     toggleLike(track);
                   }}
+                  aria-label={liked ? 'Unlike' : 'Like'}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors"
                 >
                   <HeartBurstIcon isLiked={liked} size={16} />

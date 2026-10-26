@@ -64,7 +64,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
     return () => {
       cancelled = true;
     };
-  }, [currentTrack?.id]);
+  }, [currentTrack]);
 
   // Compute current line index
   const currentLineIndex = useMemo(() => {
@@ -323,6 +323,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
           <div className="flex items-center justify-center gap-5 pt-1">
             <button
               onClick={prevTrack}
+              aria-label="Previous track"
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center text-white"
             >
               <SkipBack size={18} className="fill-current" />
@@ -338,6 +339,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
 
             <button
               onClick={nextTrack}
+              aria-label="Next track"
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center text-white"
             >
               <SkipForward size={18} className="fill-current" />

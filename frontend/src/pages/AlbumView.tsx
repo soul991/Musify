@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Album, Track } from '../types';
 import { ParallaxHeader } from '../components/views/ParallaxHeader';
 import { TrackRow } from '../components/views/TrackRow';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 interface AlbumViewProps {
   albumId: string;
@@ -82,7 +83,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, onBack, onSelectA
 
   const handleShuffleAll = () => {
     if (album.tracks.length > 0) {
-      const shuffled = [...album.tracks].sort(() => Math.random() - 0.5);
+      const shuffled = fisherYatesShuffle(album.tracks);
       playTrack(shuffled[0], shuffled);
     }
   };

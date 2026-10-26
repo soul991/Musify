@@ -141,10 +141,11 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles size={20} className="text-purple-400" />
-              <h3 className="text-lg font-black tracking-tight">AI Playlist Generator</h3>
+              <h3 className="text-lg font-black tracking-tight">Mood Playlists</h3>
             </div>
             <button
               onClick={onClose}
+              aria-label="Close"
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
             >
               <X size={16} />
@@ -152,7 +153,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
           </div>
 
           <p className="text-xs text-white/60 -mt-2 leading-relaxed">
-            Describe the mood, activity, or atmosphere you want to experience. Echo's AI neuroengine will curate an acoustic playlist matched to your prompt.
+            Choose a mood, vibe, or search preset to curate a matched playlist.
           </p>
 
           {status !== 'done' ? (
@@ -298,7 +299,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-transform active:scale-95"
                 >
                   <Play size={14} className="fill-current" />
-                  <span>Play AI Playlist</span>
+                  <span>Play Mood Playlist</span>
                 </button>
               </div>
             </div>

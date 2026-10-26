@@ -78,6 +78,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           <button
             onClick={() => setIsLocked(!isLocked)}
             title={isLocked ? 'Unlock queue editing' : 'Lock queue'}
+            aria-label={isLocked ? 'Unlock queue editing' : 'Lock queue'}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border ${
               isLocked
                 ? 'bg-white/20 border-white/30 text-white'
@@ -91,6 +92,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           {queue.length > 1 && !isLocked && (
             <button
               onClick={clearQueue}
+              aria-label="Clear queue"
               className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 border border-white/10 transition-all active:scale-95"
             >
               <Trash2 size={12} />
@@ -100,6 +102,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
 
           <button
             onClick={onClose}
+            aria-label="Close queue"
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/10"
           >
             <X size={16} />

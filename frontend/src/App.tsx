@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { LibraryProvider, UserPlaylist } from './context/LibraryContext';
-import { PlayerProvider, usePlayer } from './context/PlayerContext';
+import { PlayerProvider } from './context/PlayerContext';
 import { Sidebar } from './components/navigation/Sidebar';
 import { FloatingNavBar, NavTab } from './components/navigation/FloatingNavBar';
 import { TopBar } from './components/navigation/TopBar';
 import { DesktopDockPlayer } from './components/player/DesktopDockPlayer';
 import { NowPlayingCompanion } from './components/player/NowPlayingCompanion';
 import { FullPlayer } from './components/player/FullPlayer';
-import { Home } from './pages/Home';
-import { Explore } from './pages/Explore';
-import { Search } from './pages/Search';
-import { Library } from './pages/Library';
-import { Settings } from './pages/Settings';
-import { MusicFlowView } from './components/musicflow/MusicFlowView';
-import { AlbumView } from './pages/AlbumView';
-import { ArtistView } from './pages/ArtistView';
-import { PlaylistView } from './pages/PlaylistView';
-import { StatsView } from './pages/StatsView';
-import { HistoryView } from './pages/HistoryView';
-import { EqualizerView } from './pages/EqualizerView';
-import { ListenTogetherView } from './pages/ListenTogetherView';
+
+// Code-split page components with React.lazy
+const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
+const Explore = lazy(() => import('./pages/Explore').then((m) => ({ default: m.Explore })));
+const Search = lazy(() => import('./pages/Search').then((m) => ({ default: m.Search })));
+const Library = lazy(() => import('./pages/Library').then((m) => ({ default: m.Library })));
+const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
+const MusicFlowView = lazy(() =>
+  import('./components/musicflow/MusicFlowView').then((m) => ({ default: m.MusicFlowView }))
+);
+const AlbumView = lazy(() => import('./pages/AlbumView').then((m) => ({ default: m.AlbumView })));
+const ArtistView = lazy(() => import('./pages/ArtistView').then((m) => ({ default: m.ArtistView })));
+const PlaylistView = lazy(() => import('./pages/PlaylistView').then((m) => ({ default: m.PlaylistView })));
+const StatsView = lazy(() => import('./pages/StatsView').then((m) => ({ default: m.StatsView })));
+const HistoryView = lazy(() => import('./pages/HistoryView').then((m) => ({ default: m.HistoryView })));
+const EqualizerView = lazy(() => import('./pages/EqualizerView').then((m) => ({ default: m.EqualizerView })));
+const ListenTogetherView = lazy(() =>
+  import('./pages/ListenTogetherView').then((m) => ({ default: m.ListenTogetherView }))
+);
+
+const ViewLoader: React.FC = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-[var(--accent-color,#ED5564)] animate-spin" />
+  </div>
+);
 
 type ViewMode =
   | { type: 'tab'; tab: NavTab }
@@ -220,7 +233,9 @@ const MusifyMain: React.FC = () => {
         <div className="flex-1 flex flex-row h-full overflow-hidden relative">
           {/* Active View Container */}
           <main className="flex-1 flex flex-col overflow-hidden relative">
-            {renderActiveView()}
+            <Suspense fallback={<ViewLoader />}>
+              {renderActiveView()}
+            </Suspense>
           </main>
 
           {/* Right Live Companion Stage (3D Spinning Vinyl + Synchronized Karaoke Lyrics + Queue) */}
@@ -265,7 +280,9 @@ export default function App() {
     <ThemeProvider>
       <LibraryProvider>
         <PlayerProvider>
-          <MusifyMain />
+          <MotionConfig reducedMotion="user">
+            <MusifyMain />
+          </MotionConfig>
         </PlayerProvider>
       </LibraryProvider>
     </ThemeProvider>

@@ -124,6 +124,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             onClick={() => toggleLike(currentTrack)}
             className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0"
             title={liked ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
           >
             <HeartBurstIcon isLiked={liked} size={16} />
           </button>
@@ -140,6 +141,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                 isShuffled ? 'text-[#ED5564]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
+              aria-label="Toggle shuffle"
             >
               <Shuffle size={15} />
             </button>
@@ -149,6 +151,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               onClick={prevTrack}
               className="text-white/60 hover:text-white transition-colors"
               title="Previous Track"
+              aria-label="Previous track"
             >
               <SkipBack size={18} />
             </button>
@@ -168,6 +171,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               onClick={nextTrack}
               className="text-white/60 hover:text-white transition-colors"
               title="Next Track"
+              aria-label="Next track"
             >
               <SkipForward size={18} />
             </button>
@@ -179,6 +183,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                 repeatMode !== 'off' ? 'text-[#ED5564]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
+              aria-label={`Repeat mode: ${repeatMode}`}
             >
               {repeatMode === 'one' ? <Repeat1 size={15} /> : <Repeat size={15} />}
             </button>
@@ -224,6 +229,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               onClick={handleMuteToggle}
               className="text-white/50 hover:text-white transition-colors"
               title="Mute / Unmute"
+              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
             >
               {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
@@ -248,6 +254,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                   : 'text-white/50 hover:text-white hover:bg-white/5'
               }`}
               title={isCompanionOpen ? 'Hide companion panel' : 'Show lyrics & queue companion'}
+              aria-label={isCompanionOpen ? 'Hide companion panel' : 'Show lyrics & queue companion'}
             >
               <Mic2 size={16} style={{ color: isCompanionOpen ? colors.primary : undefined }} />
             </button>
@@ -259,6 +266,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               onClick={onOpenListenTogether}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white text-[11px] font-bold transition-all"
               title="Listen Together Room"
+              aria-label="Listen Together Room"
             >
               <Users size={13} className="text-[#ED5564]" />
               <span className="hidden lg:inline">Room</span>
@@ -270,6 +278,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             onClick={() => setIsPlayerOpen(true)}
             className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             title="Expand Full Player"
+            aria-label="Expand Full Player"
           >
             <Maximize2 size={16} />
           </button>

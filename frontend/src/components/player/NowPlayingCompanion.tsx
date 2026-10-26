@@ -56,7 +56,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [currentTrack?.id]);
+  }, [currentTrack]);
 
   // Current active lyric line
   const currentLineIndex = useMemo(() => {
@@ -134,6 +134,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.05] hover:bg-white/[0.12] text-white/60 hover:text-white transition-colors"
             title="Collapse companion"
+            aria-label="Collapse companion"
           >
             <X size={15} />
           </button>
@@ -296,6 +297,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
                         }}
                         className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-white transition-opacity"
                         title="Remove from queue"
+                        aria-label="Remove from queue"
                       >
                         <X size={12} />
                       </button>

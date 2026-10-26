@@ -34,3 +34,11 @@ Thumbs.db
 # Superdesign temporary assets
 .superdesign/tmp/
 
+# Downloaded binaries
+backend/bin/
+bin/
+
+# Netlify local state
+.netlify/
+frontend/.netlify/
+

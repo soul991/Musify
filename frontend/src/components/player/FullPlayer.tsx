@@ -85,7 +85,7 @@ export const FullPlayer: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentTrack?.id]);
+  }, [currentTrack]);
 
   // Close sub-sheets when full player closes
   useEffect(() => {
@@ -207,6 +207,7 @@ export const FullPlayer: React.FC = () => {
             <button
               onClick={() => setIsPlayerOpen(false)}
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
+              aria-label="Collapse player"
             >
               <ChevronDown size={22} className="text-white" />
             </button>
@@ -227,6 +228,7 @@ export const FullPlayer: React.FC = () => {
               <button
                 onClick={() => setIsRotatingThumbnail(!isRotatingThumbnail)}
                 title={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
+                aria-label={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
                 className={`w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   isRotatingThumbnail
                     ? 'bg-[var(--accent-color)] text-black border-[var(--accent-color)]'
@@ -238,6 +240,7 @@ export const FullPlayer: React.FC = () => {
 
               <button
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
+                aria-label="Sleep timer"
                 className={`w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent-color)]/25 border-[var(--accent-color)] text-[var(--accent-color)]'
@@ -398,6 +401,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={() => {}}
                     className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    aria-label="Download song"
                   >
                     <Download size={18} />
                   </button>
@@ -445,6 +449,7 @@ export const FullPlayer: React.FC = () => {
                   transition={{ type: 'spring', damping: 15, stiffness: 500 }}
                   onClick={prevTrack}
                   className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg"
+                  aria-label="Previous track"
                 >
                   <SkipBack size={28} className="fill-current" />
                 </motion.button>
@@ -463,6 +468,7 @@ export const FullPlayer: React.FC = () => {
                   transition={{ type: 'spring', damping: 15, stiffness: 500 }}
                   onClick={nextTrack}
                   className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg"
+                  aria-label="Next track"
                 >
                   <SkipForward size={28} className="fill-current" />
                 </motion.button>
@@ -474,6 +480,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={prevTrack}
                     className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    aria-label="Previous track"
                   >
                     <SkipBack size={36} className="fill-current" />
                   </button>
@@ -490,6 +497,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={nextTrack}
                     className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    aria-label="Next track"
                   >
                     <SkipForward size={36} className="fill-current" />
                   </button>
@@ -534,6 +542,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={() => setActiveSheet('queue')}
                     className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    aria-label="Queue"
                   >
                     <ListMusic size={20} />
                   </button>
@@ -541,6 +550,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Sleep Timer */}
                   <button
                     onClick={() => setShowSleepMenu(!showSleepMenu)}
+                    aria-label="Sleep timer"
                     className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-all shadow-md ${
                       remainingSleepSeconds
                         ? 'bg-[var(--accent-color)] text-black font-bold'
@@ -557,6 +567,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={() => setActiveSheet('lyrics')}
                     className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    aria-label="Synced lyrics"
                   >
                     <Mic2 size={19} />
                   </button>
@@ -564,6 +575,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Shuffle Toggle */}
                   <button
                     onClick={toggleShuffle}
+                    aria-label="Shuffle"
                     className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
                       isShuffled
                         ? 'bg-[var(--accent-color)] text-black'
@@ -576,6 +588,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Repeat Toggle: 3px left, 50px right */}
                   <button
                     onClick={toggleRepeat}
+                    aria-label={`Repeat mode: ${repeatMode}`}
                     className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
                       repeatMode !== 'off'
                         ? 'bg-[var(--accent-color)] text-black'
@@ -590,6 +603,7 @@ export const FullPlayer: React.FC = () => {
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
                   className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                  aria-label="More options"
                 >
                   <MoreVertical size={20} />
                 </button>
@@ -600,6 +614,7 @@ export const FullPlayer: React.FC = () => {
                 <button
                   onClick={() => setActiveSheet('queue')}
                   className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  aria-label="Queue"
                 >
                   <ListMusic size={26} />
                 </button>
@@ -615,6 +630,7 @@ export const FullPlayer: React.FC = () => {
                 <button
                   onClick={() => setActiveSheet('lyrics')}
                   className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  aria-label="Synced lyrics"
                 >
                   <Mic2 size={26} />
                 </button>

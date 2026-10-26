@@ -28,12 +28,22 @@ class AudioEqualizerEngine {
   private audioCtx: AudioContext | null = null;
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private filters: BiquadFilterNode[] = [];
-  private bassBoostGain: GainNode | null = null;
-  private isEnabled: boolean = true;
+  private compressor: DynamicsCompressorNode | null = null;
+  private isEnabled: boolean = typeof window !== 'undefined' ? localStorage.getItem('musify_eq_enabled') === 'true' : false;
+  private isNormalized: boolean = typeof window !== 'undefined' ? localStorage.getItem('musify_normalization') !== 'false' : true;
   private currentGains: number[] = [0, 0, 0, 0, 0];
   private currentBassBoost: number = 0; // 0 to 100%
+  private attachedElement: HTMLAudioElement | null = null;
+
+  attachElement(audioElement: HTMLAudioElement) {
+    this.attachedElement = audioElement;
+    if (this.isEnabled || this.isNormalized) {
+      this.init(audioElement);
+    }
+  }
 
   init(audioElement: HTMLAudioElement) {
+    this.attachedElement = audioElement;
     if (this.audioCtx) return;
 
     try {
@@ -53,9 +63,17 @@ class AudioEqualizerEngine {
           filter.Q.value = 1.4;
         }
         filter.frequency.value = freq;
-        filter.gain.value = this.currentGains[index];
+        filter.gain.value = this.isEnabled ? this.currentGains[index] : 0;
         return filter;
       });
+
+      // Compressor for loudness normalization (EBU R128 dynamics)
+      this.compressor = this.audioCtx.createDynamicsCompressor();
+      this.compressor.threshold.value = this.isNormalized ? -24 : 0;
+      this.compressor.knee.value = 30;
+      this.compressor.ratio.value = this.isNormalized ? 12 : 1;
+      this.compressor.attack.value = 0.003;
+      this.compressor.release.value = 0.25;
 
       // Chain filters together
       let prevNode: AudioNode = this.sourceNode;
@@ -64,8 +82,9 @@ class AudioEqualizerEngine {
         prevNode = filter;
       });
 
-      // Connect to destination
-      prevNode.connect(this.audioCtx.destination);
+      // Connect filters through compressor to destination
+      prevNode.connect(this.compressor);
+      this.compressor.connect(this.audioCtx.destination);
     } catch {
       // AudioContext could not be initialized or already attached
     }
@@ -73,7 +92,7 @@ class AudioEqualizerEngine {
 
   ensureContextRunning() {
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
+      this.audioCtx.resume().catch(() => {});
     }
   }
 
@@ -98,6 +117,13 @@ class AudioEqualizerEngine {
 
   setEnabled(enabled: boolean) {
     this.isEnabled = enabled;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('musify_eq_enabled', String(enabled));
+    }
+    if (enabled && !this.audioCtx && this.attachedElement) {
+      this.init(this.attachedElement);
+    }
+    this.ensureContextRunning();
     this.filters.forEach((filter, index) => {
       const targetGain = enabled ? this.currentGains[index] : 0;
       if (this.audioCtx) {
@@ -106,12 +132,31 @@ class AudioEqualizerEngine {
     });
   }
 
+  setNormalization(enabled: boolean) {
+    this.isNormalized = enabled;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('musify_normalization', String(enabled));
+    }
+    if (enabled && !this.audioCtx && this.attachedElement) {
+      this.init(this.attachedElement);
+    }
+    this.ensureContextRunning();
+    if (this.compressor && this.audioCtx) {
+      this.compressor.ratio.setTargetAtTime(enabled ? 12 : 1, this.audioCtx.currentTime, 0.05);
+      this.compressor.threshold.setTargetAtTime(enabled ? -24 : 0, this.audioCtx.currentTime, 0.05);
+    }
+  }
+
   getGains() {
     return [...this.currentGains];
   }
 
   getEnabled() {
     return this.isEnabled;
+  }
+
+  getNormalization() {
+    return this.isNormalized;
   }
 }
 

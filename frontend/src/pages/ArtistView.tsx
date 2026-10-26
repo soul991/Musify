@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Artist, Track } from '../types';
 import { ParallaxHeader } from '../components/views/ParallaxHeader';
 import { TrackRow } from '../components/views/TrackRow';
+import { fisherYatesShuffle } from '../utils/shuffle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ArtistViewProps {
@@ -71,7 +72,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
 
   const handleShuffleTopSongs = () => {
     if (artist.topSongs.length > 0) {
-      const shuffled = [...artist.topSongs].sort(() => Math.random() - 0.5);
+      const shuffled = fisherYatesShuffle(artist.topSongs);
       playTrack(shuffled[0], shuffled);
     }
   };

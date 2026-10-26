@@ -221,6 +221,7 @@ export const Search: React.FC<SearchProps> = ({
               onClick={onBack}
               className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-all shrink-0"
               title="Go back"
+              aria-label="Go back"
             >
               <ArrowLeft size={20} />
             </button>
@@ -248,6 +249,7 @@ export const Search: React.FC<SearchProps> = ({
             <button
               onClick={handleVoiceSearch}
               title={isListening ? 'Listening...' : 'Voice Search'}
+              aria-label={isListening ? 'Listening...' : 'Voice Search'}
               className={`p-2 rounded-full transition-all ${
                 isListening
                   ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]'
@@ -267,6 +269,7 @@ export const Search: React.FC<SearchProps> = ({
                 }}
                 className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                 title="Clear query"
+                aria-label="Clear query"
               >
                 <X size={16} />
               </button>
@@ -402,6 +405,7 @@ export const Search: React.FC<SearchProps> = ({
                           }}
                           className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10"
                           title="Fill in search field"
+                          aria-label="Fill in search field"
                         >
                           <ArrowUpLeft size={14} />
                         </button>
@@ -412,6 +416,7 @@ export const Search: React.FC<SearchProps> = ({
                           }}
                           className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-white/10"
                           title="Delete from history"
+                          aria-label="Delete from history"
                         >
                           <X size={14} />
                         </button>

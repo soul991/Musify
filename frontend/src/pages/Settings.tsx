@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { usePlayer } from '../context/PlayerContext';
+import { audioEqualizer } from '../services/audioEqualizer';
 import { Material3SettingsGroup } from '../components/views/Material3SettingsGroup';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -93,6 +94,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     const next = !audioNormalization;
     setAudioNormalization(next);
     localStorage.setItem('musify_normalization', String(next));
+    audioEqualizer.setNormalization(next);
   };
 
   const handleToggleCrossfade = () => {
@@ -140,6 +142,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             onClick={onClose}
             className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10 shrink-0 shadow-md"
             title="Go back"
+            aria-label="Go back"
           >
             <ArrowLeft size={20} />
           </button>
@@ -168,6 +171,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
               className="p-1 text-white/40 hover:text-white"
             >
               <X size={16} />

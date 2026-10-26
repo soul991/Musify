@@ -166,6 +166,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           onClick={() => toggleLike(track)}
           className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
           title={liked ? 'Unlike' : 'Like'}
+          aria-label={liked ? 'Unlike' : 'Like'}
         >
           <HeartBurstIcon isLiked={liked} size={18} />
         </button>
@@ -174,6 +175,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           onClick={onPrev}
           className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
           title="Previous"
+          aria-label="Previous track"
         >
           <SkipBack size={18} className="fill-current" />
         </button>
@@ -182,6 +184,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           onClick={onTogglePlay}
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-black hover:scale-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(255,255,255,0.4)] ml-0.5"
           title={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
             <Pause size={18} className="fill-current" />
@@ -194,6 +197,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           onClick={onNext}
           className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
           title="Next"
+          aria-label="Next track"
         >
           <SkipForward size={18} className="fill-current" />
         </button>

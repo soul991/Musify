@@ -24,6 +24,7 @@ import { SortHeader, SortOption } from '../components/views/SortHeader';
 import { TrackRow } from '../components/views/TrackRow';
 import { SpotifyImportModal } from '../components/views/SpotifyImportModal';
 import { AiPlaylistModal } from '../components/views/AiPlaylistModal';
+import { fisherYatesShuffle } from '../utils/shuffle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LibraryProps {
@@ -176,7 +177,7 @@ export const Library: React.FC<LibraryProps> = ({
             iconColor="#A855F7"
             onClick={() => {
               if (likedSongs.length > 0) {
-                const shuffled = [...likedSongs].sort(() => Math.random() - 0.5);
+                const shuffled = fisherYatesShuffle(likedSongs);
                 playTrack(shuffled[0], shuffled);
               }
             }}
@@ -387,6 +388,7 @@ export const Library: React.FC<LibraryProps> = ({
                       }}
                       className="p-2 rounded-full text-white/40 hover:text-white"
                       title="Pin playlist"
+                      aria-label="Pin playlist"
                     >
                       <Pin size={15} />
                     </button>
@@ -399,6 +401,7 @@ export const Library: React.FC<LibraryProps> = ({
                       }}
                       className="p-2 rounded-full text-white/30 hover:text-rose-400"
                       title="Delete playlist"
+                      aria-label="Delete playlist"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -499,8 +502,8 @@ export const Library: React.FC<LibraryProps> = ({
                   <Sparkles size={20} />
                 </div>
                 <div>
-                  <p className="leading-snug">Generate AI Playlist</p>
-                  <p className="text-xs text-white/40 font-normal">Curate mix via AI prompts & moods</p>
+                  <p className="leading-snug">Mood Playlists</p>
+                  <p className="text-xs text-white/40 font-normal">Curate mix via preset moods & vibes</p>
                 </div>
               </button>
 
@@ -579,7 +582,7 @@ export const Library: React.FC<LibraryProps> = ({
         onPlaylistCreated={(pl) => onSelectPlaylistDetails?.(pl)}
       />
 
-      {/* AI Playlist Generator Modal */}
+      {/* Mood Playlists Modal */}
       <AiPlaylistModal
         isOpen={showAiModal}
         onClose={() => setShowAiModal(false)}
