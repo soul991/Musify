@@ -85,8 +85,16 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className="w-full max-w-[1200px] h-[78px] rounded-full bg-[#121212]/90 backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none"
+        className="relative w-full max-w-[1200px] h-[78px] rounded-full backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none overflow-hidden"
+        style={{
+          background: colors.primary ? `linear-gradient(135deg, ${colors.primary}26 0%, #141416 100%)` : "#141416"
+        }}
       >
+        {/* Thin 2px progress line at top of dock */}
+        <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
+          <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+        </div>
+
         {/* Left Section: Track Info & Room Status */}
         <div className="flex items-center gap-3.5 w-64 lg:w-72 shrink-0 min-w-0">
           {/* Circular Artwork */}

@@ -115,7 +115,7 @@ export const Search: React.FC<SearchProps> = ({
             setSuggestions([]);
           }
         });
-    }, 200);
+    }, 150);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -256,7 +256,7 @@ export const Search: React.FC<SearchProps> = ({
             type="text"
             value={query}
             onFocus={() => setIsFocused(true)}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { const val = e.target.value; setQuery(val); if (!val.trim()) { setSuggestions([]); setResults(null); } }}
             onKeyDown={handleKeyDown}
             placeholder={
               searchSource === 'online'

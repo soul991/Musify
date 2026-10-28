@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { isValidVideoId, isValidBrowseId } from '../utils/validation.js';
+import { musicCache, TTL } from '../utils/cache.js';
+import { handlePrefetchStream } from '../services/stream.js';
 import {
   searchMusic,
   getSearchSuggestions,
@@ -13,6 +15,11 @@ import {
 } from '../services/innertube.js';
 
 const router = Router();
+
+// Standard cache-control header helper
+function setCacheHeaders(res: Response, maxAge = 60, staleRevalidate = 600) {
+  res.setHeader('Cache-Control', `public, max-age=${maxAge}, stale-while-revalidate=${staleRevalidate}`);
+}
 
 // GET /api/search?q=...&filter=...
 router.get('/search', async (req: Request, res: Response) => {
@@ -34,7 +41,9 @@ router.get('/search', async (req: Request, res: Response) => {
   }
 
   try {
-    const results = await searchMusic(query, filter);
+    const normalizedKey = `search:${query.toLowerCase()}:${filter || 'all'}`;
+    const results = await musicCache.fetchDedupe(normalizedKey, TTL.SEARCH, () => searchMusic(query, filter));
+    setCacheHeaders(res, 60, 300);
     res.json(results);
   } catch (err: any) {
     console.error('Search error:', err);
@@ -54,7 +63,9 @@ router.get('/suggestions', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const suggestions = await getSearchSuggestions(query);
+    const normalizedKey = `sugg:${query.toLowerCase()}`;
+    const suggestions = await musicCache.fetchDedupe(normalizedKey, TTL.SUGGESTIONS, () => getSearchSuggestions(query));
+    setCacheHeaders(res, 300, 600);
     res.json(suggestions);
   } catch (err: any) {
     console.error('Suggestions error:', err);
@@ -65,7 +76,8 @@ router.get('/suggestions', async (req: Request, res: Response) => {
 // GET /api/home
 router.get('/home', async (_req: Request, res: Response) => {
   try {
-    const sections = await getHomeFeed();
+    const sections = await musicCache.fetchDedupe('home_feed', TTL.HOME, () => getHomeFeed());
+    setCacheHeaders(res, 60, 600);
     res.json(sections);
   } catch (err: any) {
     console.error('Home feed error:', err);
@@ -76,7 +88,8 @@ router.get('/home', async (_req: Request, res: Response) => {
 // GET /api/explore
 router.get('/explore', async (_req: Request, res: Response) => {
   try {
-    const explore = await getExploreFeed();
+    const explore = await musicCache.fetchDedupe('explore_feed', TTL.EXPLORE, () => getExploreFeed());
+    setCacheHeaders(res, 120, 900);
     res.json(explore || {});
   } catch (err: any) {
     console.error('Explore feed error:', err);
@@ -92,11 +105,12 @@ router.get('/song/:id', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const track = await getTrackDetails(id);
+    const track = await musicCache.fetchDedupe(`song:${id}`, TTL.DETAILS, () => getTrackDetails(id));
     if (!track) {
       res.status(404).json({ error: 'Song not found' });
       return;
     }
+    setCacheHeaders(res, 120, 1800);
     res.json(track);
   } catch (err: any) {
     console.error('Song details error:', err);
@@ -112,7 +126,8 @@ router.get('/radio/:id', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const related = await getRelatedTracks(id);
+    const related = await musicCache.fetchDedupe(`radio:${id}`, TTL.RADIO, () => getRelatedTracks(id));
+    setCacheHeaders(res, 120, 1800);
     res.json(related);
   } catch (err: any) {
     console.error('Radio tracks error:', err);
@@ -128,11 +143,12 @@ router.get('/album/:id', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const album = await getAlbumDetails(id);
+    const album = await musicCache.fetchDedupe(`album:${id}`, TTL.DETAILS, () => getAlbumDetails(id));
     if (!album) {
       res.status(404).json({ error: 'Album not found' });
       return;
     }
+    setCacheHeaders(res, 300, 1800);
     res.json(album);
   } catch (err: any) {
     console.error('Album details error:', err);
@@ -148,11 +164,12 @@ router.get('/artist/:id', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const artist = await getArtistDetails(id);
+    const artist = await musicCache.fetchDedupe(`artist:${id}`, TTL.DETAILS, () => getArtistDetails(id));
     if (!artist) {
       res.status(404).json({ error: 'Artist not found' });
       return;
     }
+    setCacheHeaders(res, 300, 1800);
     res.json(artist);
   } catch (err: any) {
     console.error('Artist details error:', err);
@@ -168,16 +185,21 @@ router.get('/playlist/:id', async (req: Request, res: Response) => {
     return;
   }
   try {
-    const playlist = await getPlaylistDetails(id);
+    const playlist = await musicCache.fetchDedupe(`playlist:${id}`, TTL.DETAILS, () => getPlaylistDetails(id));
     if (!playlist) {
       res.status(404).json({ error: 'Playlist not found' });
       return;
     }
+    setCacheHeaders(res, 120, 1800);
     res.json(playlist);
   } catch (err: any) {
     console.error('Playlist details error:', err);
     res.status(500).json({ error: 'Failed to load playlist details' });
   }
 });
+
+// Support prefetch via /api/prefetch/:videoId and POST /api/prefetch
+router.get('/prefetch/:videoId', handlePrefetchStream);
+router.post('/prefetch', handlePrefetchStream);
 
 export default router;

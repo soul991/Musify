@@ -7,11 +7,16 @@ import musicRouter from './routes/music.js';
 import streamRouter from './routes/stream.js';
 import lyricsRouter from './routes/lyrics.js';
 import roomRouter from './routes/room.js';
+import { getInnertube, getHomeFeed } from './services/innertube.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.X_ZOHO_CATALYST_LISTEN_PORT || process.env.PORT || 3001;
+
+// Trust reverse proxy hops (Netlify edge + Catalyst AppSail gateway = 2 hops)
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS) || 2;
+app.set('trust proxy', trustProxyHops);
 
 // Security headers with Helmet (allow cross-origin resource access for media streaming)
 app.use(helmet({
@@ -49,24 +54,21 @@ app.use(cors({
 
 app.use(express.json());
 
-// Rate limiters
+// General API rate limiter (1000 requests per 15 min; exempts health and warm endpoints)
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // general limit on /api
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    const p = req.originalUrl || req.path;
+    return p.includes('/health') || p.includes('/warm') || p.includes('/stream');
+  },
   message: { error: 'Too many requests, please try again later.' }
 });
 
-const streamLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // stricter limit on /api/stream
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many stream requests, please try again later.' }
-});
 
-// Health check endpoint
+// Health check endpoint (exempt from rate limiting)
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -75,9 +77,24 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Cold-start warmup endpoint (exempt from rate limiting)
+app.get('/api/warm', async (_req, res) => {
+  try {
+    const yt = await getInnertube();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      status: 'warm',
+      service: 'Musify Backend',
+      sessionReady: Boolean(yt?.session),
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Warmup failed' });
+  }
+});
+
 // Register rate limits
 app.use('/api', apiLimiter);
-app.use('/api/stream', streamLimiter);
 
 // Register routes
 app.use('/api', musicRouter);
@@ -115,6 +132,16 @@ const isMain = process.argv[1] && (
   path.resolve(process.argv[1]).endsWith('index.ts') ||
   path.resolve(process.argv[1]).endsWith('index.js')
 ) && process.env.NODE_ENV !== 'test';
+
+// Boot-time background pre-warming
+if (process.env.NODE_ENV !== 'test') {
+  getInnertube()
+    .then(async () => {
+      console.log('⚡ Innertube session pre-warming ready');
+      getHomeFeed().catch(() => {});
+    })
+    .catch((err) => console.warn('Innertube boot prewarm warning:', err?.message || err));
+}
 
 if (isMain) {
   app.listen(Number(PORT), '0.0.0.0', () => {

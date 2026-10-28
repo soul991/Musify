@@ -22,6 +22,7 @@ export interface CachedStream {
 
 export const MAX_CACHE_SIZE = 500;
 export const streamUrlCache = new Map<string, CachedStream>();
+export const inFlightResolutions = new Map<string, Promise<CachedStream>>();
 
 export function cleanupCache() {
   const now = Date.now();
@@ -55,6 +56,76 @@ export function getCachedStream(videoId: string): CachedStream | undefined {
   streamUrlCache.delete(videoId);
   streamUrlCache.set(videoId, item);
   return item;
+}
+
+/**
+ * Stream Resolution Rate Limiter (30 real cache misses / minute per client key)
+ * Real cache hits and range requests NEVER consume limiter tokens.
+ */
+export class StreamMissRateLimiter {
+  private windowMs: number;
+  private maxRequests: number;
+  private hits: Map<string, { count: number; resetAt: number }>;
+
+  constructor(windowMs = 60 * 1000, maxRequests = 30) {
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+    this.hits = new Map();
+  }
+
+  isAllowed(clientKey: string): { allowed: boolean; retryAfterSec?: number } {
+    if (!clientKey) return { allowed: true };
+    const now = Date.now();
+    const entry = this.hits.get(clientKey);
+
+    if (!entry || entry.resetAt <= now) {
+      this.hits.set(clientKey, { count: 1, resetAt: now + this.windowMs });
+      return { allowed: true };
+    }
+
+    if (entry.count < this.maxRequests) {
+      entry.count += 1;
+      return { allowed: true };
+    }
+
+    const retryAfterSec = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+    return { allowed: false, retryAfterSec };
+  }
+
+  reset() {
+    this.hits.clear();
+  }
+}
+
+export const streamMissLimiter = new StreamMissRateLimiter(60 * 1000, 30);
+
+export class StreamRateLimitError extends Error {
+  status: number;
+  retryAfterSec: number;
+
+  constructor(retryAfterSec: number) {
+    super('Too many stream resolution requests. Please wait a moment.');
+    this.name = 'StreamRateLimitError';
+    this.status = 429;
+    this.retryAfterSec = retryAfterSec;
+  }
+}
+
+/**
+ * Extracts client key for direct stream requests.
+ * Since direct stream requests go directly to Catalyst AppSail (1 reverse proxy hop),
+ * the rightmost entry in X-Forwarded-For is guaranteed to be the actual remote client IP
+ * appended by Catalyst and cannot be spoofed by forging the left/upstream XFF entries.
+ */
+export function getStreamClientKey(req: Request): string {
+  const xff = req.headers['x-forwarded-for'];
+  if (typeof xff === 'string' && xff.trim()) {
+    const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      return parts[parts.length - 1]; // rightmost entry: untampered client IP from immediate reverse proxy
+    }
+  }
+  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
 }
 
 function findYtDlpBinary(): string {
@@ -153,7 +224,16 @@ async function extractWithYtDlp(videoId: string, quality?: string): Promise<Cach
   }
 }
 
-export async function resolveStreamUrl(videoId: string, quality?: string): Promise<CachedStream> {
+/**
+ * Resolves stream URL with real cache miss rate-limiting (30/min per client key).
+ * Cached hits return immediately and do NOT count against rate limit.
+ * Passing no clientKey (e.g. for prefetch) exempts the request.
+ */
+export async function resolveStreamUrl(
+  videoId: string,
+  quality?: string,
+  clientKey?: string
+): Promise<CachedStream> {
   if (!isValidVideoId(videoId)) {
     throw new Error('Invalid videoId: ' + videoId);
   }
@@ -161,52 +241,76 @@ export async function resolveStreamUrl(videoId: string, quality?: string): Promi
   const cached = getCachedStream(cacheKey);
   const now = Date.now();
   if (cached && cached.expiresAt > now + 60000) {
-    return cached;
+    return cached; // Real cache hit: 0 rate limit cost!
   }
 
-  // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
-  try {
-    const yt = await getInnertube();
-    const info = await yt.music.getInfo(videoId);
-    const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
-    const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
-
-    if (audioFormats.length > 0) {
-      let selectedFormat: any;
-      if (quality === 'low') {
-        selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
-      } else if (quality === 'medium') {
-        selectedFormat = audioFormats.find((f: any) => f.itag === 251 || f.itag === 140) || audioFormats[0];
-      } else {
-        const aacFormat = audioFormats.find((f: any) => f.itag === 140);
-        const opusFormat = audioFormats.find((f: any) => f.itag === 251);
-        selectedFormat = aacFormat || opusFormat || audioFormats[0];
-      }
-
-      const decipheredUrl = await selectedFormat.decipher(yt.session.player);
-      if (decipheredUrl) {
-        const result: CachedStream = {
-          url: decipheredUrl,
-          mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
-          contentLength: selectedFormat.content_length || 0,
-          expiresAt: now + 5 * 3600 * 1000
-        };
-        setCachedStream(cacheKey, result);
-        return result;
-      }
+  // Real cache miss: apply rate limiter if clientKey is provided
+  if (clientKey) {
+    const check = streamMissLimiter.isAllowed(clientKey);
+    if (!check.allowed) {
+      throw new StreamRateLimitError(check.retryAfterSec || 60);
     }
-  } catch (err) {
-    console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
   }
 
-  // 2. Fallback: yt-dlp binary extraction
-  const ytdlpStream = await extractWithYtDlp(videoId, quality);
-  if (ytdlpStream) {
-    setCachedStream(cacheKey, ytdlpStream);
-    return ytdlpStream;
+  // In-flight concurrent request de-duplication
+  const existingPromise = inFlightResolutions.get(cacheKey);
+  if (existingPromise) {
+    return existingPromise;
   }
 
-  throw new Error('Unable to extract playable audio stream for ' + videoId);
+  const resolutionPromise = (async () => {
+    try {
+      // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
+      try {
+        const yt = await getInnertube();
+        const info = await yt.music.getInfo(videoId);
+        const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
+        const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+
+        if (audioFormats.length > 0) {
+          let selectedFormat: any;
+          if (quality === 'low') {
+            selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
+          } else if (quality === 'medium') {
+            selectedFormat = audioFormats.find((f: any) => f.itag === 140 || f.itag === 251) || audioFormats[0];
+          } else {
+            // Prefer itag 140 (128k AAC/m4a) for native low-latency playback in iOS Safari and browsers
+            const aacFormat = audioFormats.find((f: any) => f.itag === 140);
+            const opusFormat = audioFormats.find((f: any) => f.itag === 251);
+            selectedFormat = aacFormat || opusFormat || audioFormats[0];
+          }
+
+          const decipheredUrl = await selectedFormat.decipher(yt.session.player);
+          if (decipheredUrl) {
+            const result: CachedStream = {
+              url: decipheredUrl,
+              mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
+              contentLength: selectedFormat.content_length || 0,
+              expiresAt: now + 5 * 3600 * 1000
+            };
+            setCachedStream(cacheKey, result);
+            return result;
+          }
+        }
+      } catch (err) {
+        console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
+      }
+
+      // 2. Fallback: yt-dlp binary extraction
+      const ytdlpStream = await extractWithYtDlp(videoId, quality);
+      if (ytdlpStream) {
+        setCachedStream(cacheKey, ytdlpStream);
+        return ytdlpStream;
+      }
+
+      throw new Error('Unable to extract playable audio stream for ' + videoId);
+    } finally {
+      inFlightResolutions.delete(cacheKey);
+    }
+  })();
+
+  inFlightResolutions.set(cacheKey, resolutionPromise);
+  return resolutionPromise;
 }
 
 export async function handleStreamProxy(req: Request, res: Response) {
@@ -230,11 +334,14 @@ export async function handleStreamProxy(req: Request, res: Response) {
   }
 
   const cacheKey = quality ? `${videoId}:${quality}` : videoId;
+  const clientKey = getStreamClientKey(req);
 
   try {
-    const streamInfo = await resolveStreamUrl(videoId, quality);
-    const rangeHeader = req.headers.range;
+    const t0 = performance.now();
+    const streamInfo = await resolveStreamUrl(videoId, quality, clientKey);
+    const resolveMs = Math.round(performance.now() - t0);
 
+    const rangeHeader = req.headers.range;
     const reqHeaders: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     };
@@ -243,14 +350,18 @@ export async function handleStreamProxy(req: Request, res: Response) {
       reqHeaders['Range'] = rangeHeader;
     }
 
+    const tUpstream = performance.now();
     const upstreamResponse = await fetch(streamInfo.url, {
       headers: reqHeaders
     });
+    const firstByteMs = Math.round(performance.now() - tUpstream);
+
+    console.log(`[STREAM] videoId=${videoId} | resolveStream: ${resolveMs}ms | upstream first byte: ${firstByteMs}ms | status: ${upstreamResponse.status} | range: ${rangeHeader || 'full'}`);
 
     if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
       // If cached URL expired or was invalidated, purge and retry once
       streamUrlCache.delete(cacheKey);
-      const freshInfo = await resolveStreamUrl(videoId, quality);
+      const freshInfo = await resolveStreamUrl(videoId, quality, clientKey);
       const retryResponse = await fetch(freshInfo.url, { headers: reqHeaders });
       if (!retryResponse.ok && retryResponse.status !== 206) {
         res.setHeader('Cache-Control', 'no-store, no-cache');
@@ -263,6 +374,12 @@ export async function handleStreamProxy(req: Request, res: Response) {
 
     forwardStream(upstreamResponse, res, streamInfo.mimeType);
   } catch (err: any) {
+    if (err instanceof StreamRateLimitError || err?.status === 429) {
+      res.setHeader('Retry-After', String(err.retryAfterSec || 60));
+      res.setHeader('Cache-Control', 'no-store, no-cache');
+      res.status(429).json({ error: err.message || 'Too many stream resolution requests. Please wait a moment.' });
+      return;
+    }
     console.error('Error in handleStreamProxy:', err);
     if (!res.headersSent) {
       res.setHeader('Cache-Control', 'no-store, no-cache');
@@ -331,5 +448,32 @@ function forwardStream(upstreamResponse: any, res: Response, fallbackMimeType: s
       }
     };
     pump();
+  }
+}
+
+export async function handlePrefetchStream(req: Request, res: Response) {
+  const rawId = req.params.videoId || req.body?.videoId;
+  const videoId = Array.isArray(rawId) ? rawId[0] : rawId;
+  if (!videoId || !isValidVideoId(videoId)) {
+    res.status(400).json({ error: 'Invalid or missing videoId' });
+    return;
+  }
+  const rawQuality = req.query?.quality || req.body?.quality;
+  const quality = typeof rawQuality === 'string' ? rawQuality : undefined;
+
+  try {
+    // Exempt from rate limiting: do not pass clientKey
+    const streamInfo = await resolveStreamUrl(videoId, quality);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json({
+      success: true,
+      videoId,
+      cached: true,
+      expiresAt: streamInfo.expiresAt,
+      mimeType: streamInfo.mimeType
+    });
+  } catch (err: any) {
+    console.warn(`Prefetch failed for ${videoId}:`, err?.message || err);
+    res.status(500).json({ error: 'Prefetch failed' });
   }
 }

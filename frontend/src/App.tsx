@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { MotionConfig } from 'framer-motion';
+import { MotionConfig, motion, AnimatePresence } from 'framer-motion';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { LibraryProvider, UserPlaylist, useLibrary } from './context/LibraryContext';
 import { PlayerProvider, usePlayer } from './context/PlayerContext';
@@ -57,6 +57,7 @@ const MusifyMain: React.FC = () => {
 
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
+  const [showShortcutsSheet, setShowShortcutsSheet] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
@@ -383,6 +384,38 @@ const MusifyMain: React.FC = () => {
             >
               ✕
             </button>
+          </div>
+        </div>
+      )}
+      {/* Keyboard Shortcuts Help Sheet ('?') */}
+      {showShortcutsSheet && (
+        <div
+          onClick={() => setShowShortcutsSheet(false)}
+          className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 select-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-[24px] bg-[#141416] border border-white/15 p-6 shadow-2xl flex flex-col gap-4 text-white"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="font-bold text-base">Keyboard Shortcuts</h3>
+              <button
+                onClick={() => setShowShortcutsSheet(false)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex flex-col gap-2.5 text-xs">
+              <div className="flex justify-between items-center"><span className="text-white/60">Play / Pause</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">Space</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Seek -5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">←</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Seek +5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">→</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Previous track</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">J</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Next track</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">L</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Mute / Unmute</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">M</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Search</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">/</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Toggle shortcuts sheet</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">?</kbd></div>
+            </div>
           </div>
         </div>
       )}

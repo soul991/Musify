@@ -376,7 +376,7 @@ export const FullPlayer: React.FC = () => {
                   onClick={() => setIsRotatingThumbnail(true)}
                   className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] cursor-pointer drop-shadow-[0_20px_45px_rgba(0,0,0,0.8)] rounded-[24px] overflow-hidden border border-white/20 group"
                   style={{
-                    boxShadow: `0 20px 45px -10px ${colors.primary}33`
+                    boxShadow: `0 32px 80px -12px ${colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
                   }}
                 >
                   <img

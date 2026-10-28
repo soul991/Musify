@@ -270,7 +270,28 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
             );
           })}
         </AnimatePresence>
-      </Reorder.Group>
+            </Reorder.Group>
+
+      {/* Autoplay Similar Songs Indicator & Toggle */}
+      <div className="mt-3 mb-6 p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between mx-4 shrink-0 select-none">
+        <div className="flex items-center gap-2.5">
+          <Sparkles size={16} className={autoplaySimilar ? 'text-[#E5303D]' : 'text-white/40'} />
+          <div>
+            <p className="text-xs font-bold text-white">Autoplay similar tracks</p>
+            <p className="text-[10px] text-white/50">Continuously adds music to your queue</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setAutoplaySimilar(!autoplaySimilar)}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+            autoplaySimilar
+              ? 'bg-[#E5303D] border-[#E5303D] text-white shadow-md shadow-[#E5303D]/25'
+              : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
+          }`}
+        >
+          {autoplaySimilar ? 'Autoplay: on' : 'Autoplay: off'}
+        </button>
+      </div>
     </div>
   );
 };

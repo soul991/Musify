@@ -6,6 +6,7 @@ export type FlowerPlayStyle = 'wavy' | 'scallop8' | 'apple_squircle' | 'circle';
 
 interface FlowerPlayButtonProps {
   isPlaying: boolean;
+  isLoading?: boolean;
   onClick: () => void;
   size?: number; // size in px, default 84 in full player, 48 in mini player
   color?: string; // background fill, default '#FFFFFF'
@@ -84,6 +85,7 @@ export function generateRoundedStarPath(
 
 export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
   isPlaying,
+  isLoading = false,
   onClick,
   size = 84,
   color = '#FFFFFF',
@@ -212,6 +214,9 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
       className={`relative flex items-center justify-center cursor-pointer select-none ${className}`}
       style={{ width: size, height: size }}
     >
+{isLoading && (
+        <span className="absolute inset-[-5px] rounded-full border-2 border-transparent border-t-[#E5303D] border-r-[#E5303D]/40 animate-spin pointer-events-none" />
+      )}
       {/* Dynamic Scalloped Wavy Vector Path */}
       <svg
         viewBox={`0 0 ${size} ${size}`}

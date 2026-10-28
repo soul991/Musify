@@ -1,4 +1,5 @@
 import { Innertube, Platform } from 'youtubei.js';
+import { isValidVideoId } from '../utils/validation.js';
 
 // Setup JavaScript evaluator for signature cipher and n-sig deciphering
 Platform.shim.eval = (data: any, env: any) => {
@@ -247,30 +248,81 @@ export async function getTrackDetails(videoId: string): Promise<MusifyTrack | nu
 
 export async function getRelatedTracks(videoId: string): Promise<MusifyTrack[]> {
   const yt = await getInnertube();
+  const tracks: MusifyTrack[] = [];
+  const seenIds = new Set<string>();
+  seenIds.add(videoId);
+
+  // 1. Primary: Use real Up Next radio queue
+  try {
+    const upNext = await yt.music.getUpNext(videoId);
+    const contents: any[] = (upNext as any).contents || [];
+
+    for (const item of contents) {
+      const id = item.video_id || item.id;
+      if (!id || !isValidVideoId(id) || seenIds.has(id)) continue;
+
+      const duration = item.duration?.seconds || parseDuration(item.duration?.text);
+      if (duration <= 0) continue; // Drop non-playable/non-song items
+
+      seenIds.add(id);
+      const title = item.title?.text || (typeof item.title === 'string' ? item.title : 'Track');
+      const artists = Array.isArray(item.artists) && item.artists.length > 0
+        ? item.artists.map((a: any) => ({ name: a.name }))
+        : [{ name: item.author?.name || 'Artist' }];
+
+      tracks.push({
+        id,
+        title,
+        artists,
+        duration,
+        durationFormatted: item.duration?.text,
+        thumbnail: getBestThumbnail(item.thumbnails || (item.thumbnail ? [item.thumbnail] : [])),
+        type: 'song'
+      });
+    }
+
+    if (tracks.length >= 5) {
+      return tracks.slice(0, 30);
+    }
+  } catch (err: any) {
+    console.warn(`getUpNext failed for ${videoId}, falling back to getRelated:`, err?.message || err);
+  }
+
+  // 2. Fallback: Query related shelves, strictly keeping song items with duration
   try {
     const related = await yt.music.getRelated(videoId);
-    const tracks: MusifyTrack[] = [];
     const sections: any[] = (related as any).sections || [];
-    
+
     for (const sec of sections) {
       const contents = sec.contents || [];
       for (const item of contents) {
-        if (item.id && item.title) {
-          tracks.push({
-            id: item.id,
-            title: item.title?.text || item.title,
-            artists: item.artists ? item.artists.map((a: any) => ({ name: a.name })) : [{ name: item.author?.name || 'Artist' }],
-            duration: item.duration?.seconds || 0,
-            thumbnail: getBestThumbnail(item.thumbnails || [item.thumbnail]),
-            type: 'song'
-          });
-        }
+        const id = item.id || item.video_id;
+        if (!id || !isValidVideoId(id) || seenIds.has(id)) continue;
+
+        const duration = item.duration?.seconds || parseDuration(item.duration?.text);
+        if (duration <= 0) continue; // Drop albums, playlists, artists without track duration
+
+        seenIds.add(id);
+        const title = item.title?.text || (typeof item.title === 'string' ? item.title : 'Track');
+        const artists = Array.isArray(item.artists) && item.artists.length > 0
+          ? item.artists.map((a: any) => ({ name: a.name }))
+          : [{ name: item.author?.name || 'Artist' }];
+
+        tracks.push({
+          id,
+          title,
+          artists,
+          duration,
+          durationFormatted: item.duration?.text,
+          thumbnail: getBestThumbnail(item.thumbnails || (item.thumbnail ? [item.thumbnail] : [])),
+          type: 'song'
+        });
       }
     }
     return tracks.slice(0, 25);
-  } catch (err) {
-    console.error('Error getting related tracks:', err);
-    return [];
+  } catch (err: any) {
+    console.error('Error in getRelatedTracks fallback:', err?.message || err);
+    return tracks;
   }
 }
 
