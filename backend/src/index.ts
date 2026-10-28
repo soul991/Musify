@@ -7,7 +7,6 @@ import musicRouter from './routes/music.js';
 import streamRouter from './routes/stream.js';
 import lyricsRouter from './routes/lyrics.js';
 import roomRouter from './routes/room.js';
-import { getCachedStream, isValidVideoId } from './services/stream.js';
 import { getInnertube, getHomeFeed } from './services/innertube.js';
 
 dotenv.config();
@@ -62,32 +61,12 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    const p = req.path;
-    return p === '/health' || p === '/api/health' || p === '/warm' || p === '/api/warm';
+    const p = req.originalUrl || req.path;
+    return p.includes('/health') || p.includes('/warm') || p.includes('/stream');
   },
   message: { error: 'Too many requests, please try again later.' }
 });
 
-// Stream resolution rate limiter: limits ONLY expensive stream cache misses (30 per minute per client IP)
-// Range requests (HTTP 206) and repeat requests for cached audio streams bypass this limiter
-const streamResolutionLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // 30 new uncached stream resolutions per minute per IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    const videoId = req.params.videoId || req.body?.videoId;
-    if (videoId && isValidVideoId(videoId)) {
-      const quality = typeof req.query?.quality === 'string' ? req.query.quality : undefined;
-      const cacheKey = quality ? `${videoId}:${quality}` : videoId;
-      if (getCachedStream(cacheKey)) {
-        return true;
-      }
-    }
-    return false;
-  },
-  message: { error: 'Too many stream resolution requests. Please wait a moment.' }
-});
 
 // Health check endpoint (exempt from rate limiting)
 app.get('/api/health', (_req, res) => {
@@ -110,13 +89,12 @@ app.get('/api/warm', async (_req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
-    res.status(500).json({ error: 'Warmup failed', details: err?.message || err });
+    res.status(500).json({ error: 'Warmup failed' });
   }
 });
 
 // Register rate limits
 app.use('/api', apiLimiter);
-app.use('/api/stream', streamResolutionLimiter);
 
 // Register routes
 app.use('/api', musicRouter);

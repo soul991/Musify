@@ -107,6 +107,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Performance & prefetch refs
   const hasPrefetchedNextHalfwayRef = useRef<boolean>(false);
   const isFetchingRadioRef = useRef<boolean>(false);
+  const radioFetchedTrackIdsRef = useRef<Set<string>>(new Set());
   const playedHistoryIdsRef = useRef<string[]>([]);
   const consecutiveFailuresRef = useRef<number>(0);
   const directStreamFailedRef = useRef<Set<string>>(new Set());
@@ -259,7 +260,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     audioEqualizer.attachElement(audio);
 
     const secAudio = new Audio();
-    secAudio.preload = 'auto';
+    const isCrossfadeInitial = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+    secAudio.preload = isCrossfadeInitial ? 'auto' : 'metadata';
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
 
@@ -308,6 +310,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           fetch(nextUrl, { method: 'GET', headers: { Range: 'bytes=0-262143' } }).catch(() => {});
           // Preload into secondary audio element for seamless gapless transition
           if (secondaryAudioRef.current) {
+            const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+            secondaryAudioRef.current.preload = isCrossfade ? 'auto' : 'metadata';
             secondaryAudioRef.current.src = nextUrl;
             secondaryAudioRef.current.load();
           }
@@ -316,21 +320,43 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Background Autoplay Queue Expansion: when 3 or fewer tracks remaining, fetch more radio tracks
       const remainingTracks = queueRef.current.length - queueIndexRef.current;
-      if (remainingTracks <= 3 && autoplaySimilarRef.current && !isFetchingRadioRef.current && currentTrackRef.current) {
+      const currentTrackId = currentTrackRef.current?.id;
+      if (
+        remainingTracks <= 3 &&
+        autoplaySimilarRef.current &&
+        !isFetchingRadioRef.current &&
+        currentTrackId &&
+        !radioFetchedTrackIdsRef.current.has(currentTrackId)
+      ) {
+        radioFetchedTrackIdsRef.current.add(currentTrackId);
         isFetchingRadioRef.current = true;
-        api.getRadio(currentTrackRef.current.id)
-          .then((related) => {
+        api.getRadio(currentTrackId)
+          .then(async (related) => {
             isFetchingRadioRef.current = false;
-            if (related.length > 0) {
-              const existingIds = new Set([
-                ...queueRef.current.map((t) => t.id),
-                ...playedHistoryIdsRef.current
-              ]);
-              const fresh = related.filter((t) => !existingIds.has(t.id));
-              if (fresh.length > 0) {
-                setQueue((prev) => [...prev, ...fresh]);
-                originalQueueRef.current = [...originalQueueRef.current, ...fresh];
+            const existingIds = new Set([
+              ...queueRef.current.map((t) => t.id),
+              ...playedHistoryIdsRef.current
+            ]);
+            let fresh = (related || []).filter((t) => !existingIds.has(t.id));
+
+            // Fallback: if getRadio returned no fresh tracks, fall back to related search
+            if (fresh.length === 0 && currentTrackRef.current) {
+              try {
+                const artist = currentTrackRef.current.artists?.[0]?.name;
+                const query = artist && artist !== 'Unknown Artist'
+                  ? `${artist} songs`
+                  : `${currentTrackRef.current.title} songs`;
+                const searchRes = await api.search(query, 'songs');
+                const searchSongs = searchRes.songs || [];
+                fresh = searchSongs.filter((t) => !existingIds.has(t.id));
+              } catch (searchErr) {
+                console.warn('[PlayerContext] Fallback related search failed:', searchErr);
               }
+            }
+
+            if (fresh.length > 0) {
+              setQueue((prev) => [...prev, ...fresh]);
+              originalQueueRef.current = [...originalQueueRef.current, ...fresh];
             }
           })
           .catch(() => {
@@ -615,6 +641,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // and fetch radio recommendations in background to append, keeping current index correct.
     let targetQueue: Track[];
     if (newQueue && newQueue.length > 0) {
+      radioFetchedTrackIdsRef.current.clear();
       targetQueue = newQueue;
       setQueue(newQueue);
       originalQueueRef.current = newQueue;
@@ -627,6 +654,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setQueueIndex(0);
 
       // Auto-fetch related radio tracks in the background, deduping against last 50 played tracks
+      radioFetchedTrackIdsRef.current.add(track.id);
       api.getRadio(track.id).then((related) => {
         if (related.length > 0) {
           const existingIds = new Set([track.id, ...playedHistoryIdsRef.current]);
