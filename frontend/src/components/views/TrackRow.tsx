@@ -95,6 +95,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [menuOpen]);
 
+  const handleIntentWarm = () => {
+    if (track.id) api.prefetchStream(track.id);
+  };
+
   const handleRowClick = () => {
     playTrack(track, playlistContext);
   };
@@ -125,6 +129,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onPointerDown={handleIntentWarm}
+      onMouseEnter={handleIntentWarm}
       className={`relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl glass-card cursor-pointer group transition-all duration-200 select-none ${
         isCurrent ? 'bg-white/15 border-white/25 shadow-md' : 'hover:bg-white/[0.08]'
       } ${className}`}

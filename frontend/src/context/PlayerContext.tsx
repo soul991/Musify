@@ -43,6 +43,8 @@ interface PlayerContextType {
   setSleepTimer: (minutes: number | null) => void;
   autoplaySimilar: boolean;
   setAutoplaySimilar: (val: boolean) => void;
+  retryPlayback: () => void;
+  prefetchTrack: (videoId: string) => void;
 }
 
 const getInitialPersistedPlayer = () => {
@@ -95,23 +97,36 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  // Audio elements & crossfade/gapless state
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const secondaryAudioRef = useRef<HTMLAudioElement | null>(null);
   const isCrossfadingRef = useRef<boolean>(false);
   const crossfadeTimerRef = useRef<any>(null);
   const silenceTimerRef = useRef<any>(null);
+
+  // Performance & prefetch refs
+  const hasPrefetchedNextHalfwayRef = useRef<boolean>(false);
+  const isFetchingRadioRef = useRef<boolean>(false);
+  const playedHistoryIdsRef = useRef<string[]>([]);
+  const consecutiveFailuresRef = useRef<number>(0);
+  const directStreamFailedRef = useRef<Set<string>>(new Set());
+  const playStartTimeRef = useRef<number>(0);
+
+  // Queue & state sync refs
   const originalQueueRef = useRef<Track[]>([]);
   const currentTrackRef = useRef<Track | null>(currentTrack);
   const queueRef = useRef<Track[]>(queue);
   const queueIndexRef = useRef<number>(queueIndex);
   const repeatModeRef = useRef<RepeatMode>('off');
-  const prefetchedNextIdRef = useRef<string | null>(null);
+  const autoplaySimilarRef = useRef<boolean>(autoplaySimilar);
   const volumeRef = useRef<number>(1);
   const errorTimeoutRef = useRef<any>(null);
   const skipTimeoutRef = useRef<any>(null);
   const fadeInTimerRef = useRef<any>(null);
+
+  // Callback refs to break circular dependencies
   const handleTrackEndRef = useRef<() => void>(() => {});
-  const triggerPlaybackErrorRef = useRef<(title: string) => void>(() => {});
+  const triggerPlaybackErrorRef = useRef<(track: Track) => void>(() => {});
   const prevTrackRef = useRef<() => void>(() => {});
   const nextTrackRef = useRef<() => void>(() => {});
   const extractColorsRef = useRef(extractColorsFromImage);
@@ -121,6 +136,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setPlaybackSpeedState(speed);
     if (audioRef.current) {
       audioRef.current.playbackRate = speed;
+    }
+  };
+
+  const prefetchTrack = (videoId: string) => {
+    if (videoId) {
+      api.prefetchStream(videoId);
     }
   };
 
@@ -137,20 +158,63 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return localStorage.getItem('musify_audio_wifi') || 'lossless';
   };
 
-  const triggerPlaybackError = (trackTitle: string) => {
+  // Safe error handling with 3-consecutive-failure cap and proxy fallback
+  const handlePlaybackFailure = (track: Track) => {
     setIsLoading(false);
     setIsPlaying(false);
-    setPlaybackError(`Unable to play "${trackTitle}". Skipping to next track...`);
+
+    // 1. Direct stream failure fallback: try Netlify proxy route once before giving up
+    if (!directStreamFailedRef.current.has(track.id) && audioRef.current) {
+      directStreamFailedRef.current.add(track.id);
+      console.warn(`[STREAM] Direct stream failed for "${track.title}". Falling back to proxy route /api/stream...`);
+      const proxyUrl = api.getStreamUrl(track.id, getEffectiveAudioQuality(), true);
+      audioRef.current.src = proxyUrl;
+      audioRef.current.load();
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setPlaybackError(null);
+        consecutiveFailuresRef.current = 0;
+      }).catch((err) => {
+        if (err?.name !== 'AbortError') {
+          triggerConsecutiveFailure(track);
+        }
+      });
+      return;
+    }
+
+    triggerConsecutiveFailure(track);
+  };
+
+  const triggerConsecutiveFailure = (track: Track) => {
+    consecutiveFailuresRef.current += 1;
+    console.warn(`[PLAYBACK] Failure count: ${consecutiveFailuresRef.current} for track: "${track.title}"`);
+
     if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
     if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
 
+    // If reached 3 consecutive errors, do NOT auto-skip further; display retry toast
+    if (consecutiveFailuresRef.current >= 3) {
+      setPlaybackError(`Playback stopped after 3 errors. Check network connection or tap Retry.`);
+      return;
+    }
+
+    setPlaybackError(`Unable to play "${track.title}". Skipping to next track...`);
+
     errorTimeoutRef.current = setTimeout(() => {
       setPlaybackError(null);
-    }, 4000);
+    }, 4500);
 
     skipTimeoutRef.current = setTimeout(() => {
       nextTrackRef.current();
     }, 1200);
+  };
+
+  const retryPlayback = () => {
+    consecutiveFailuresRef.current = 0;
+    setPlaybackError(null);
+    if (currentTrackRef.current) {
+      playTrack(currentTrackRef.current, queueRef.current);
+    }
   };
 
   // Resume Web Audio AudioContext on user interaction & visibility change
@@ -185,7 +249,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [isPlaying]);
 
-  // Initialize primary and secondary audio elements for seamless gapless / crossfade
+  // Initialize primary and secondary audio elements and attach event listeners to BOTH elements
+  // This permanently eliminates the crossfade listener disconnection bug (Root cause #7)
   useEffect(() => {
     const audio = new Audio();
     audio.preload = 'auto';
@@ -198,14 +263,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
 
-    const onTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+    const onTimeUpdate = (e: Event) => {
+      const activeEl = e.target as HTMLAudioElement;
+      if (activeEl !== audioRef.current) return;
 
-      // 1. Skip Silence Detection (leading and trailing silence)
+      setCurrentTime(activeEl.currentTime);
+
+      // Skip Silence Detection
       const isSkipSilence = typeof window !== 'undefined' && localStorage.getItem('musify_skip_silence') === 'true';
-      if (isSkipSilence && audio.duration && !isCrossfadingRef.current) {
-        // Trailing silence: if in final 8 seconds and RMS is silent (< 0.003) for > 1s, advance to next track
-        const timeLeft = audio.duration - audio.currentTime;
+      if (isSkipSilence && activeEl.duration && !isCrossfadingRef.current) {
+        const timeLeft = activeEl.duration - activeEl.currentTime;
         if (timeLeft <= 8 && timeLeft > 0.5) {
           const rms = audioEqualizer.getInstantRms();
           if (rms >= 0 && rms < 0.003) {
@@ -220,20 +287,62 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             silenceTimerRef.current = null;
           }
         }
-        // Leading silence: in the first 2 seconds, if RMS is near zero, bump forward
-        if (audio.currentTime < 2) {
+        if (activeEl.currentTime < 2) {
           const rms = audioEqualizer.getInstantRms();
           if (rms >= 0 && rms < 0.002) {
-            audio.currentTime = Math.min(2.5, audio.currentTime + 0.4);
+            activeEl.currentTime = Math.min(2.5, activeEl.currentTime + 0.4);
           }
         }
       }
 
-      // 2. Real Crossfade Transition (simultaneous playback of outgoing and incoming audio)
+      // 50% Track Playback: Preload and ranged-fetch next track's first 256 KB
+      if (!hasPrefetchedNextHalfwayRef.current && activeEl.duration && activeEl.currentTime >= activeEl.duration * 0.5) {
+        hasPrefetchedNextHalfwayRef.current = true;
+        const nextIdx = queueIndexRef.current + 1;
+        const currentQ = queueRef.current;
+        const nextItem = currentQ[nextIdx] || (repeatModeRef.current === 'all' ? currentQ[0] : null);
+        if (nextItem) {
+          const q = getEffectiveAudioQuality();
+          const nextUrl = api.getStreamUrl(nextItem.id, q);
+          // Ranged prefetch of first 256 KB
+          fetch(nextUrl, { method: 'GET', headers: { Range: 'bytes=0-262143' } }).catch(() => {});
+          // Preload into secondary audio element for seamless gapless transition
+          if (secondaryAudioRef.current) {
+            secondaryAudioRef.current.src = nextUrl;
+            secondaryAudioRef.current.load();
+          }
+        }
+      }
+
+      // Background Autoplay Queue Expansion: when 3 or fewer tracks remaining, fetch more radio tracks
+      const remainingTracks = queueRef.current.length - queueIndexRef.current;
+      if (remainingTracks <= 3 && autoplaySimilarRef.current && !isFetchingRadioRef.current && currentTrackRef.current) {
+        isFetchingRadioRef.current = true;
+        api.getRadio(currentTrackRef.current.id)
+          .then((related) => {
+            isFetchingRadioRef.current = false;
+            if (related.length > 0) {
+              const existingIds = new Set([
+                ...queueRef.current.map((t) => t.id),
+                ...playedHistoryIdsRef.current
+              ]);
+              const fresh = related.filter((t) => !existingIds.has(t.id));
+              if (fresh.length > 0) {
+                setQueue((prev) => [...prev, ...fresh]);
+                originalQueueRef.current = [...originalQueueRef.current, ...fresh];
+              }
+            }
+          })
+          .catch(() => {
+            isFetchingRadioRef.current = false;
+          });
+      }
+
+      // Crossfade Transition
       const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
       const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
-      if (isCrossfade && crossfadeSecs > 0 && audio.duration && audio.duration > crossfadeSecs * 2) {
-        const timeLeft = audio.duration - audio.currentTime;
+      if (isCrossfade && crossfadeSecs > 0 && activeEl.duration && activeEl.duration > crossfadeSecs * 2) {
+        const timeLeft = activeEl.duration - activeEl.currentTime;
         if (timeLeft <= crossfadeSecs && timeLeft > 0 && !isCrossfadingRef.current) {
           const nextIdx = queueIndexRef.current + 1;
           const currentQ = queueRef.current;
@@ -268,7 +377,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     audioRef.current.currentTime = 0;
                     audioRef.current.src = '';
                   }
-                  // Swap primary and secondary audio elements
+                  // Swap primary and secondary audio elements.
+                  // Since event listeners are bound to BOTH elements, listeners continue to work seamlessly!
                   const temp = audioRef.current;
                   audioRef.current = sec;
                   secondaryAudioRef.current = temp;
@@ -278,6 +388,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   setQueueIndex(nextIdx < currentQ.length ? nextIdx : 0);
                   extractColorsRef.current(nextItem.thumbnail);
                   addToHistoryRef.current(nextItem);
+                  hasPrefetchedNextHalfwayRef.current = false;
                   if (audioRef.current) {
                     audioRef.current.volume = targetVol;
                   }
@@ -291,77 +402,98 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Update MediaSession position state
-      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audio.duration) {
+      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && activeEl.duration) {
         try {
           navigator.mediaSession.setPositionState({
-            duration: audio.duration,
-            playbackRate: audio.playbackRate,
-            position: audio.currentTime
+            duration: activeEl.duration,
+            playbackRate: activeEl.playbackRate,
+            position: activeEl.currentTime
           });
-        } catch {
-          // ignore
-        }
-      }
-
-      // Stream prefetch ~20s before track end into service worker / browser cache
-      if (audio.duration && audio.duration - audio.currentTime <= 20) {
-        const nextIdx = queueIndexRef.current + 1;
-        const currentQ = queueRef.current;
-        const nextItem = currentQ[nextIdx] || (repeatModeRef.current === 'all' ? currentQ[0] : null);
-        if (nextItem && prefetchedNextIdRef.current !== nextItem.id) {
-          prefetchedNextIdRef.current = nextItem.id;
-          const q = getEffectiveAudioQuality();
-          const nextUrl = api.getStreamUrl(nextItem.id, q);
-          fetch(nextUrl, { method: 'GET', headers: { Range: 'bytes=0-32767' } }).catch(() => {});
-        }
+        } catch {}
       }
     };
 
-    const onLoadedMetadata = () => {
-      setDuration(audio.duration || 0);
-      setIsLoading(false);
-    };
-
-    const onWaiting = () => setIsLoading(true);
-    const onPlaying = () => {
-      setIsPlaying(true);
-      setIsLoading(false);
-      setPlaybackError(null);
-    };
-    const onPause = () => setIsPlaying(false);
-
-    const onEnded = () => {
-      handleTrackEndRef.current();
-    };
-
-    const onError = (e: any) => {
-      console.warn('Audio playback error:', e);
-      if (currentTrackRef.current) {
-        triggerPlaybackErrorRef.current(currentTrackRef.current.title);
-      } else {
+    const onLoadedMetadata = (e: Event) => {
+      const target = e.target as HTMLAudioElement;
+      if (target === audioRef.current) {
+        setDuration(target.duration || 0);
         setIsLoading(false);
+      }
+    };
+
+    const onWaiting = (e: Event) => {
+      if (e.target === audioRef.current) {
+        setIsLoading(true);
+      }
+    };
+
+    const onPlaying = (e: Event) => {
+      if (e.target === audioRef.current) {
+        setIsPlaying(true);
+        setIsLoading(false);
+        setPlaybackError(null);
+        consecutiveFailuresRef.current = 0;
+        if (playStartTimeRef.current > 0) {
+          const latency = Math.round(performance.now() - playStartTimeRef.current);
+          console.log(`[PERF] Audio playing latency: ${latency}ms for track: "${currentTrackRef.current?.title || 'Unknown'}"`);
+          playStartTimeRef.current = 0;
+        }
+      }
+    };
+
+    const onPause = (e: Event) => {
+      if (e.target === audioRef.current) {
         setIsPlaying(false);
       }
     };
 
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-    audio.addEventListener('waiting', onWaiting);
-    audio.addEventListener('playing', onPlaying);
-    audio.addEventListener('pause', onPause);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('error', onError);
+    const onEnded = (e: Event) => {
+      if (e.target === audioRef.current) {
+        handleTrackEndRef.current();
+      }
+    };
+
+    const onError = (e: Event) => {
+      if (e.target === audioRef.current) {
+        console.warn('Audio playback element error:', e);
+        if (currentTrackRef.current) {
+          triggerPlaybackErrorRef.current(currentTrackRef.current);
+        } else {
+          setIsLoading(false);
+          setIsPlaying(false);
+        }
+      }
+    };
+
+    // Attach identical event listeners to both primary and secondary audio elements
+    const bindEvents = (el: HTMLAudioElement) => {
+      el.addEventListener('timeupdate', onTimeUpdate);
+      el.addEventListener('loadedmetadata', onLoadedMetadata);
+      el.addEventListener('waiting', onWaiting);
+      el.addEventListener('playing', onPlaying);
+      el.addEventListener('pause', onPause);
+      el.addEventListener('ended', onEnded);
+      el.addEventListener('error', onError);
+    };
+
+    const unbindEvents = (el: HTMLAudioElement) => {
+      el.removeEventListener('timeupdate', onTimeUpdate);
+      el.removeEventListener('loadedmetadata', onLoadedMetadata);
+      el.removeEventListener('waiting', onWaiting);
+      el.removeEventListener('playing', onPlaying);
+      el.removeEventListener('pause', onPause);
+      el.removeEventListener('ended', onEnded);
+      el.removeEventListener('error', onError);
+    };
+
+    bindEvents(audio);
+    bindEvents(secAudio);
 
     return () => {
       audio.pause();
       secAudio.pause();
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-      audio.removeEventListener('waiting', onWaiting);
-      audio.removeEventListener('playing', onPlaying);
-      audio.removeEventListener('pause', onPause);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('error', onError);
+      unbindEvents(audio);
+      unbindEvents(secAudio);
       if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
       if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
       if (fadeInTimerRef.current) clearInterval(fadeInTimerRef.current);
@@ -468,30 +600,46 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const playTrack = async (track: Track, newQueue?: Track[]) => {
     if (!audioRef.current) return;
 
+    playStartTimeRef.current = performance.now();
+    hasPrefetchedNextHalfwayRef.current = false;
+
+    // 1. Show metadata in the immediate tick with zero delay
     setCurrentTrack(track);
     setIsLoading(true);
     setCurrentTime(0);
-    extractColorsFromImage(track.thumbnail);
-    addToHistory(track);
+    setDuration(track.duration || 0);
+    setPlaybackError(null);
 
-    if (newQueue) {
+    // 2. Fix Queue Handling (Root cause #6):
+    // If newQueue is passed, adopt it. If no queue is passed, replace queue with [track]
+    // and fetch radio recommendations in background to append, keeping current index correct.
+    let targetQueue: Track[];
+    if (newQueue && newQueue.length > 0) {
+      targetQueue = newQueue;
       setQueue(newQueue);
       originalQueueRef.current = newQueue;
       const idx = newQueue.findIndex((t) => t.id === track.id);
       setQueueIndex(idx !== -1 ? idx : 0);
-    } else if (queue.length === 0) {
+    } else {
+      targetQueue = [track];
       setQueue([track]);
       originalQueueRef.current = [track];
       setQueueIndex(0);
-      // Auto-fetch related radio tracks in the background
+
+      // Auto-fetch related radio tracks in the background, deduping against last 50 played tracks
       api.getRadio(track.id).then((related) => {
         if (related.length > 0) {
-          setQueue((prev) => [...prev, ...related]);
-          originalQueueRef.current = [...originalQueueRef.current, ...related];
+          const existingIds = new Set([track.id, ...playedHistoryIdsRef.current]);
+          const fresh = related.filter((t) => !existingIds.has(t.id));
+          if (fresh.length > 0) {
+            setQueue((prev) => [...prev, ...fresh]);
+            originalQueueRef.current = [...originalQueueRef.current, ...fresh];
+          }
         }
-      });
+      }).catch(() => {});
     }
 
+    // 3. Start audio stream resolution and playback in the immediate tick
     const quality = getEffectiveAudioQuality();
     const streamUrl = api.getStreamUrl(track.id, quality);
     audioRef.current.src = streamUrl;
@@ -507,7 +655,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     audioRef.current.load();
 
-    // If EQ is enabled, wire into Web Audio; otherwise leave native for iOS PWA background play
     if (audioEqualizer.getEnabled()) {
       audioEqualizer.init(audioRef.current);
       audioEqualizer.ensureContextRunning();
@@ -517,6 +664,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await audioRef.current.play();
       setIsPlaying(true);
       setPlaybackError(null);
+      consecutiveFailuresRef.current = 0;
 
       // Smooth fade-in if crossfade is enabled
       if (isCrossfade && audioRef.current) {
@@ -539,13 +687,37 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }, intervalMs);
       }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        console.warn('Autoplay error:', err);
-        triggerPlaybackError(track.title);
+      if (err?.name === 'NotAllowedError') {
+        // Browser autoplay policy: leave track paused with clear button to tap
+        setIsPlaying(false);
+        setIsLoading(false);
+        setPlaybackError('Tap Play to start listening');
+      } else if (err?.name !== 'AbortError') {
+        console.warn('Playback error:', err);
+        handlePlaybackFailure(track);
       } else {
         setIsPlaying(false);
       }
     }
+
+    // 4. Run non-blocking background tasks after audio starts
+    setTimeout(() => {
+      extractColorsFromImage(track.thumbnail);
+      addToHistory(track);
+
+      // Track last 50 played track IDs for deduplication
+      playedHistoryIdsRef.current = [
+        track.id,
+        ...playedHistoryIdsRef.current.filter((id) => id !== track.id)
+      ].slice(0, 50);
+
+      // Prefetch the next 2 queue items immediately
+      const curIdx = targetQueue.findIndex((t) => t.id === track.id);
+      const next1 = targetQueue[curIdx + 1];
+      const next2 = targetQueue[curIdx + 2];
+      if (next1) api.prefetchStream(next1.id);
+      if (next2) api.prefetchStream(next2.id);
+    }, 0);
   };
 
   const togglePlay = () => {
@@ -555,13 +727,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsPlaying(false);
     } else {
       audioEqualizer.ensureContextRunning();
+      playStartTimeRef.current = performance.now();
       audioRef.current.play().then(() => {
         setIsPlaying(true);
         setPlaybackError(null);
       }).catch((err) => {
         if (err?.name !== 'AbortError') {
           console.warn('Playback error on togglePlay:', err);
-          triggerPlaybackError(currentTrack.title);
+          handlePlaybackFailure(currentTrack);
         }
       });
     }
@@ -588,11 +761,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (repeatMode === 'all') {
         nextIdx = 0;
       } else if (autoplaySimilar && currentTrack) {
+        // Queue finished: fetch more radio items and seamlessly keep playing
         api.getRadio(currentTrack.id).then((related) => {
           if (related.length > 0) {
-            setQueue((prev) => [...prev, ...related]);
-            originalQueueRef.current = [...originalQueueRef.current, ...related];
-            playTrack(related[0], [...queue, ...related]);
+            const existingIds = new Set([
+              ...queue.map((t) => t.id),
+              ...playedHistoryIdsRef.current
+            ]);
+            const fresh = related.filter((t) => !existingIds.has(t.id));
+            const toAppend = fresh.length > 0 ? fresh : related;
+            const updatedQueue = [...queue, ...toAppend];
+            setQueue(updatedQueue);
+            originalQueueRef.current = [...originalQueueRef.current, ...toAppend];
+            setQueueIndex(queue.length);
+            playTrack(toAppend[0], updatedQueue);
           }
         }).catch(() => {});
         return;
@@ -609,7 +791,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const prevTrack = () => {
     if (!audioRef.current) return;
-    // If more than 3 seconds in, restart the song
     if (audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
       setCurrentTime(0);
@@ -633,7 +814,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const toggleShuffle = () => {
     if (!isShuffled) {
-      // Shuffle queue while keeping current track first with unbiased Fisher-Yates shuffle
       const current = currentTrack;
       const rest = queue.filter((t) => t.id !== current?.id);
       const shuffled = fisherYatesShuffle(rest);
@@ -642,7 +822,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setQueueIndex(0);
       setIsShuffled(true);
     } else {
-      // Restore original queue order
       setQueue(originalQueueRef.current);
       const idx = originalQueueRef.current.findIndex((t) => t.id === currentTrack?.id);
       setQueueIndex(idx !== -1 ? idx : 0);
@@ -659,6 +838,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addToQueue = (track: Track) => {
     setQueue((prev) => [...prev, track]);
     originalQueueRef.current = [...originalQueueRef.current, track];
+    // Warm intent
+    api.prefetchStream(track.id);
   };
 
   const playNextInQueue = (track: Track) => {
@@ -668,6 +849,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       newQ.splice(nextIdx, 0, track);
       return newQ;
     });
+    // Warm intent
+    api.prefetchStream(track.id);
   };
 
   const clearQueue = () => {
@@ -688,54 +871,35 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setQueueIndex(idx !== -1 ? idx : 0);
   };
 
-  // Synchronize dynamic refs outside render to satisfy React 19 compiler rules
+  // Synchronize dynamic refs
   useEffect(() => {
     currentTrackRef.current = currentTrack;
     queueRef.current = queue;
     queueIndexRef.current = queueIndex;
     repeatModeRef.current = repeatMode;
-    triggerPlaybackErrorRef.current = triggerPlaybackError;
+    autoplaySimilarRef.current = autoplaySimilar;
+    triggerPlaybackErrorRef.current = handlePlaybackFailure;
     handleTrackEndRef.current = handleTrackEnd;
     nextTrackRef.current = nextTrack;
     prevTrackRef.current = prevTrack;
-    extractColorsRef.current = extractColorsFromImage;
-    addToHistoryRef.current = addToHistory;
+    volumeRef.current = volume;
   });
 
-  // Attach restored track stream to audio element on initial mount
-  useEffect(() => {
-    if (persistedState?.currentTrack && audioRef.current) {
-      const q = getEffectiveAudioQuality();
-      audioRef.current.src = api.getStreamUrl(persistedState.currentTrack.id, q);
-      audioRef.current.currentTime = persistedState.currentTime || 0;
-      audioRef.current.load();
-      if (Array.isArray(persistedState.queue)) {
-        originalQueueRef.current = persistedState.queue;
-      }
-    }
-  }, [persistedState]);
-
-  // Persist player queue, current track, and seek point
-  const timeBucket = Math.floor(currentTime / 5);
+  // Persist playback state to localStorage safely
   useEffect(() => {
     if (!currentTrack) return;
-    const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          'musify_persisted_player',
-          JSON.stringify({
-            currentTrack,
-            queue,
-            queueIndex,
-            currentTime: audioRef.current?.currentTime ?? currentTime
-          })
-        );
-      } catch {
-        // ignore storage quota errors
-      }
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [currentTrack, queue, queueIndex, timeBucket, currentTime]);
+    try {
+      localStorage.setItem(
+        'musify_persisted_player',
+        JSON.stringify({
+          currentTrack,
+          currentTime,
+          queue,
+          queueIndex
+        })
+      );
+    } catch {}
+  }, [currentTrack, currentTime, queue, queueIndex]);
 
   return (
     <PlayerContext.Provider
@@ -775,13 +939,21 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         reorderQueue,
         setSleepTimer,
         autoplaySimilar,
-        setAutoplaySimilar
+        setAutoplaySimilar,
+        retryPlayback,
+        prefetchTrack
       }}
     >
       {playbackError && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] bg-rose-600/95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-2 pointer-events-none transition-all border border-rose-400/30">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-          <span>{playbackError}</span>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] bg-[#141416]/95 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 transition-all border border-[#E5303D]/40 pointer-events-auto">
+          <span className="w-2 h-2 rounded-full bg-[#E5303D] animate-ping shrink-0" />
+          <span className="max-w-[240px] sm:max-w-md truncate">{playbackError}</span>
+          <button
+            onClick={retryPlayback}
+            className="px-2.5 py-1 rounded-lg bg-[#E5303D] hover:bg-[#d02834] text-white font-bold transition-colors cursor-pointer shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
       {children}
