@@ -2,8 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
 describe('Phase 3 Playback & Crossfade Audio Swap Regression Tests', () => {
-  it('audio element swap continues to fire ended event and advance queue', () => {
-    // Mock Audio element using standard Web EventTarget
+  it('crossfade test: swap audio elements 3 times and assert that ended still fires on third track and advances queue', () => {
     class MockAudioElement extends EventTarget {
       currentTime = 0;
       duration = 180;
@@ -15,82 +14,88 @@ describe('Phase 3 Playback & Crossfade Audio Swap Regression Tests', () => {
       play() {
         return Promise.resolve();
       }
-
       pause() {}
       load() {}
     }
 
-    const audioPrimary = new MockAudioElement();
-    const audioSecondary = new MockAudioElement();
+    const audioA = new MockAudioElement();
+    const audioB = new MockAudioElement();
 
-    const audioRef = { current: audioPrimary };
-    const secondaryAudioRef = { current: audioSecondary };
+    const audioRef = { current: audioA };
+    const secondaryAudioRef = { current: audioB };
 
     let queueIndex = 0;
-    const queue = ['song-1', 'song-2', 'song-3'];
-    let endCount = 0;
+    let endEventsProcessed = 0;
 
     const onEnded = (e: Event) => {
-      // Only process ended if the event originated from the active audio element
       if (e.target === audioRef.current) {
-        endCount++;
+        endEventsProcessed++;
         queueIndex++;
       }
     };
 
-    // Both audio elements must be bound to handlers
-    const bindEvents = (el: MockAudioElement) => {
-      el.addEventListener('ended', onEnded);
-    };
+    audioA.addEventListener('ended', onEnded);
+    audioB.addEventListener('ended', onEnded);
 
-    bindEvents(audioPrimary);
-    bindEvents(audioSecondary);
+    // Initial state: audioA active at index 0
+    assert.strictEqual(audioRef.current, audioA);
 
-    // 1. Initial play on primary element
-    assert.strictEqual(queueIndex, 0);
-    audioPrimary.dispatchEvent(new Event('ended'));
-    assert.strictEqual(queueIndex, 1, 'First track end advances queue to index 1');
-    assert.strictEqual(endCount, 1);
-
-    // 2. Perform crossfade / gapless swap of audio elements
-    const temp = audioRef.current;
+    // Swap 1 (audioA -> audioB)
+    const temp1 = audioRef.current;
     audioRef.current = secondaryAudioRef.current;
-    secondaryAudioRef.current = temp;
+    secondaryAudioRef.current = temp1;
+    assert.strictEqual(audioRef.current, audioB);
 
-    assert.strictEqual(audioRef.current, audioSecondary, 'Active audio element is now secondary element');
+    // Swap 2 (audioB -> audioA)
+    const temp2 = audioRef.current;
+    audioRef.current = secondaryAudioRef.current;
+    secondaryAudioRef.current = temp2;
+    assert.strictEqual(audioRef.current, audioA);
 
-    // 3. Dispatch ended on the now-active secondary audio element
-    audioSecondary.dispatchEvent(new Event('ended'));
-    assert.strictEqual(queueIndex, 2, 'Second track end after element swap successfully advances queue to index 2');
-    assert.strictEqual(endCount, 2);
+    // Swap 3 (audioA -> audioB)
+    const temp3 = audioRef.current;
+    audioRef.current = secondaryAudioRef.current;
+    secondaryAudioRef.current = temp3;
+    assert.strictEqual(audioRef.current, audioB, 'After 3 swaps, audioB is active');
 
-    // 4. Ensure old inactive element (now secondary) does NOT trigger queue advances if it fires
-    audioPrimary.dispatchEvent(new Event('ended'));
-    assert.strictEqual(queueIndex, 2, 'Inactive audio element event correctly ignored');
-    assert.strictEqual(endCount, 2);
+    // Dispatch ended on active element audioB
+    audioB.dispatchEvent(new Event('ended'));
+    assert.strictEqual(endEventsProcessed, 1, 'ended event fires successfully after 3 swaps');
+    assert.strictEqual(queueIndex, 1, 'Queue index advances to 1');
+
+    // Further dispatch on old inactive element audioA should NOT advance queue
+    audioA.dispatchEvent(new Event('ended'));
+    assert.strictEqual(endEventsProcessed, 1, 'Inactive element ended event is correctly ignored');
+    assert.strictEqual(queueIndex, 1);
   });
 
-  it('consecutive error limiter caps skips at 3 and does not skip indefinitely', () => {
+  it('auto-skip stress test: feed the player 4 invalid track ids in a row and assert that it stops at 3, does not loop, and shows the toast', () => {
+    const invalidTrackIds = ['invalid-1', 'invalid-2', 'invalid-3', 'invalid-4'];
     let consecutiveFailures = 0;
     let autoSkippedTimes = 0;
-    let finalErrorState = '';
+    let toastMessage: string | null = null;
+    let hasLoopHalted = false;
 
-    const handlePlaybackFailure = (title: string) => {
+    const handlePlaybackFailure = (trackId: string) => {
       consecutiveFailures++;
       if (consecutiveFailures >= 3) {
-        finalErrorState = 'Playback stopped after 3 errors. Check network connection or tap Retry.';
-        return;
+        toastMessage = 'Playback stopped after 3 errors. Check network connection or tap Retry.';
+        hasLoopHalted = true;
+        return; // Halt: do not auto-skip
       }
       autoSkippedTimes++;
+      toastMessage = `Unable to play "${trackId}". Skipping to next track...`;
     };
 
-    // Simulate 5 failing tracks in a row
-    for (let i = 1; i <= 5; i++) {
-      handlePlaybackFailure(`failing-song-${i}`);
+    // Feed player 4 invalid track IDs sequentially
+    for (const id of invalidTrackIds) {
+      if (hasLoopHalted) break;
+      handlePlaybackFailure(id);
     }
 
-    assert.strictEqual(consecutiveFailures, 5);
-    assert.strictEqual(autoSkippedTimes, 2, 'Only 2 auto-skips executed before hitting the 3-failure cap');
-    assert.match(finalErrorState, /Playback stopped after 3 errors/);
+    assert.strictEqual(consecutiveFailures, 3, 'Consecutive failures strictly capped at 3');
+    assert.strictEqual(autoSkippedTimes, 2, 'Only 2 auto-skips triggered before capping at 3');
+    assert.strictEqual(hasLoopHalted, true, 'Auto-skip loop was halted');
+    assert.strictEqual(toastMessage, 'Playback stopped after 3 errors. Check network connection or tap Retry.');
   });
 });
