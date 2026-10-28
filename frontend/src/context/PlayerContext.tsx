@@ -721,6 +721,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const togglePlay = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(8);
     if (!audioRef.current || !currentTrack) return;
     if (isPlaying) {
       audioRef.current.pause();
@@ -755,6 +756,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const nextTrack = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(8);
     if (queue.length === 0) return;
     let nextIdx = queueIndex + 1;
     if (nextIdx >= queue.length) {
@@ -790,6 +792,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const prevTrack = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(8);
     if (!audioRef.current) return;
     if (audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;

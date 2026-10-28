@@ -4,6 +4,7 @@ import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
 import { Track } from '../../types';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { useLibrary } from '../../context/LibraryContext';
+import { useTheme } from '../../context/ThemeContext';
 
 interface FloatingMiniPlayerProps {
   track: Track;
@@ -39,6 +40,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
   className = ''
 }) => {
   const { isLiked, toggleLike } = useLibrary();
+  const { colors } = useTheme();
   const [isPressed, setIsPressed] = useState(false);
   const dragX = useMotionValue(0);
   const smoothX = useSpring(dragX, { stiffness: 450, damping: 32 });
@@ -93,6 +95,11 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
       onClick={onClick}
       className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99] ${className}`}
     >
+      {/* Thin 2px progress line at top of mini player */}
+      <div className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
+        <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${progressRatio * 100}%` }} />
+      </div>
+
       {/* Left: 48px Circular Progress Ring surrounding 40px Album Art */}
       <div className="flex items-center gap-3 min-w-0 pr-1 flex-1">
         <div

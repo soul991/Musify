@@ -103,6 +103,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const toggleLike = (track: Track) => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(8);
     setLikedSongs((prev) => {
       const exists = prev.some((s) => s.id === track.id);
       if (exists) {
