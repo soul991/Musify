@@ -22,6 +22,7 @@ export interface CachedStream {
 
 export const MAX_CACHE_SIZE = 500;
 export const streamUrlCache = new Map<string, CachedStream>();
+export const inFlightResolutions = new Map<string, Promise<CachedStream>>();
 
 export function cleanupCache() {
   const now = Date.now();
@@ -164,49 +165,65 @@ export async function resolveStreamUrl(videoId: string, quality?: string): Promi
     return cached;
   }
 
-  // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
-  try {
-    const yt = await getInnertube();
-    const info = await yt.music.getInfo(videoId);
-    const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
-    const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+  // In-flight concurrent request de-duplication
+  const existingPromise = inFlightResolutions.get(cacheKey);
+  if (existingPromise) {
+    return existingPromise;
+  }
 
-    if (audioFormats.length > 0) {
-      let selectedFormat: any;
-      if (quality === 'low') {
-        selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
-      } else if (quality === 'medium') {
-        selectedFormat = audioFormats.find((f: any) => f.itag === 251 || f.itag === 140) || audioFormats[0];
-      } else {
-        const aacFormat = audioFormats.find((f: any) => f.itag === 140);
-        const opusFormat = audioFormats.find((f: any) => f.itag === 251);
-        selectedFormat = aacFormat || opusFormat || audioFormats[0];
+  const resolutionPromise = (async () => {
+    try {
+      // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
+      try {
+        const yt = await getInnertube();
+        const info = await yt.music.getInfo(videoId);
+        const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
+        const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+
+        if (audioFormats.length > 0) {
+          let selectedFormat: any;
+          if (quality === 'low') {
+            selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
+          } else if (quality === 'medium') {
+            selectedFormat = audioFormats.find((f: any) => f.itag === 140 || f.itag === 251) || audioFormats[0];
+          } else {
+            // Prefer itag 140 (128k AAC/m4a) for native low-latency playback in iOS Safari and browsers
+            const aacFormat = audioFormats.find((f: any) => f.itag === 140);
+            const opusFormat = audioFormats.find((f: any) => f.itag === 251);
+            selectedFormat = aacFormat || opusFormat || audioFormats[0];
+          }
+
+          const decipheredUrl = await selectedFormat.decipher(yt.session.player);
+          if (decipheredUrl) {
+            const result: CachedStream = {
+              url: decipheredUrl,
+              mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
+              contentLength: selectedFormat.content_length || 0,
+              expiresAt: now + 5 * 3600 * 1000
+            };
+            setCachedStream(cacheKey, result);
+            return result;
+          }
+        }
+      } catch (err) {
+        console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
       }
 
-      const decipheredUrl = await selectedFormat.decipher(yt.session.player);
-      if (decipheredUrl) {
-        const result: CachedStream = {
-          url: decipheredUrl,
-          mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
-          contentLength: selectedFormat.content_length || 0,
-          expiresAt: now + 5 * 3600 * 1000
-        };
-        setCachedStream(cacheKey, result);
-        return result;
+      // 2. Fallback: yt-dlp binary extraction
+      const ytdlpStream = await extractWithYtDlp(videoId, quality);
+      if (ytdlpStream) {
+        setCachedStream(cacheKey, ytdlpStream);
+        return ytdlpStream;
       }
+
+      throw new Error('Unable to extract playable audio stream for ' + videoId);
+    } finally {
+      inFlightResolutions.delete(cacheKey);
     }
-  } catch (err) {
-    console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
-  }
+  })();
 
-  // 2. Fallback: yt-dlp binary extraction
-  const ytdlpStream = await extractWithYtDlp(videoId, quality);
-  if (ytdlpStream) {
-    setCachedStream(cacheKey, ytdlpStream);
-    return ytdlpStream;
-  }
-
-  throw new Error('Unable to extract playable audio stream for ' + videoId);
+  inFlightResolutions.set(cacheKey, resolutionPromise);
+  return resolutionPromise;
 }
 
 export async function handleStreamProxy(req: Request, res: Response) {
@@ -232,9 +249,11 @@ export async function handleStreamProxy(req: Request, res: Response) {
   const cacheKey = quality ? `${videoId}:${quality}` : videoId;
 
   try {
+    const t0 = performance.now();
     const streamInfo = await resolveStreamUrl(videoId, quality);
-    const rangeHeader = req.headers.range;
+    const resolveMs = Math.round(performance.now() - t0);
 
+    const rangeHeader = req.headers.range;
     const reqHeaders: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     };
@@ -243,9 +262,13 @@ export async function handleStreamProxy(req: Request, res: Response) {
       reqHeaders['Range'] = rangeHeader;
     }
 
+    const tUpstream = performance.now();
     const upstreamResponse = await fetch(streamInfo.url, {
       headers: reqHeaders
     });
+    const firstByteMs = Math.round(performance.now() - tUpstream);
+
+    console.log(`[STREAM] videoId=${videoId} | resolveStream: ${resolveMs}ms | upstream first byte: ${firstByteMs}ms | status: ${upstreamResponse.status} | range: ${rangeHeader || 'full'}`);
 
     if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
       // If cached URL expired or was invalidated, purge and retry once
@@ -331,5 +354,31 @@ function forwardStream(upstreamResponse: any, res: Response, fallbackMimeType: s
       }
     };
     pump();
+  }
+}
+
+export async function handlePrefetchStream(req: Request, res: Response) {
+  const rawId = req.params.videoId || req.body?.videoId;
+  const videoId = Array.isArray(rawId) ? rawId[0] : rawId;
+  if (!videoId || !isValidVideoId(videoId)) {
+    res.status(400).json({ error: 'Invalid or missing videoId' });
+    return;
+  }
+  const rawQuality = req.query?.quality || req.body?.quality;
+  const quality = typeof rawQuality === 'string' ? rawQuality : undefined;
+
+  try {
+    const streamInfo = await resolveStreamUrl(videoId, quality);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json({
+      success: true,
+      videoId,
+      cached: true,
+      expiresAt: streamInfo.expiresAt,
+      mimeType: streamInfo.mimeType
+    });
+  } catch (err: any) {
+    console.warn(`Prefetch failed for ${videoId}:`, err?.message || err);
+    res.status(500).json({ error: 'Prefetch failed' });
   }
 }
