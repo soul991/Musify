@@ -6,16 +6,12 @@ import {
   ArrowUpLeft,
   Globe,
   Library as LibraryIcon,
-  Music,
-  Disc,
-  User,
-  ListMusic,
-  Play,
   TrendingUp,
   Trash2,
   Mic,
-  MicOff,
-  ArrowLeft
+  ArrowLeft,
+  User,
+  Play
 } from 'lucide-react';
 import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -23,7 +19,8 @@ import { useLibrary } from '../context/LibraryContext';
 import { Track } from '../types';
 import { ChipsRow } from '../components/views/ChipsRow';
 import { TrackRow } from '../components/views/TrackRow';
-import { motion, AnimatePresence } from 'framer-motion';
+import { TrackListSkeleton, EmptyState } from '../components/common/SkeletonLoader';
+import { VirtualList } from '../components/common/VirtualList';
 
 interface SearchProps {
   onBack?: () => void;
@@ -40,8 +37,8 @@ export const Search: React.FC<SearchProps> = ({
   onSelectArtist,
   onSelectPlaylist
 }) => {
-  const { playTrack, currentTrack } = usePlayer();
-  const { likedSongs, history: libraryHistory } = useLibrary();
+  const { playTrack } = usePlayer();
+  const { likedSongs } = useLibrary();
 
   const [query, setQuery] = useState('');
   const [searchSource, setSearchSource] = useState<'online' | 'local'>('online');
@@ -69,6 +66,8 @@ export const Search: React.FC<SearchProps> = ({
 
   const debounceRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+  const suggestionsAbortRef = useRef<AbortController | null>(null);
 
   // Save search history
   useEffect(() => {
@@ -89,18 +88,33 @@ export const Search: React.FC<SearchProps> = ({
     setSearchHistory([]);
   };
 
-  // Debounced auto-suggestions
+  // Debounced auto-suggestions with AbortController
   useEffect(() => {
-    if (!query.trim()) {
-      setSuggestions([]);
+    const trimmed = query.trim();
+    if (!trimmed) {
+      if (suggestionsAbortRef.current) {
+        suggestionsAbortRef.current.abort();
+      }
       return;
     }
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      api.getSuggestions(query).then((suggs) => {
-        setSuggestions(suggs.slice(0, 6));
-      }).catch(() => setSuggestions([]));
+      if (suggestionsAbortRef.current) {
+        suggestionsAbortRef.current.abort();
+      }
+      const controller = new AbortController();
+      suggestionsAbortRef.current = controller;
+
+      api.getSuggestions(trimmed, controller.signal)
+        .then((suggs) => {
+          setSuggestions(suggs.slice(0, 6));
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            setSuggestions([]);
+          }
+        });
     }, 200);
 
     return () => {
@@ -108,10 +122,16 @@ export const Search: React.FC<SearchProps> = ({
     };
   }, [query]);
 
-  // Execute Search
+  // Execute Search with 200ms debounce & AbortController to cancel stale requests
   const executeSearch = (searchQuery: string) => {
     const trimmed = searchQuery.trim();
     if (!trimmed) return;
+
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
 
     addSearchHistory(trimmed);
     setSuggestions([]);
@@ -137,13 +157,15 @@ export const Search: React.FC<SearchProps> = ({
     }
 
     // Online YouTube Music Search
-    api.search(trimmed)
+    api.search(trimmed, undefined, controller.signal)
       .then((data) => {
         setResults(data);
         setLoading(false);
       })
-      .catch(() => {
-        setLoading(false);
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setLoading(false);
+        }
       });
   };
 
@@ -221,6 +243,7 @@ export const Search: React.FC<SearchProps> = ({
               onClick={onBack}
               className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-all shrink-0"
               title="Go back"
+              aria-label="Go back"
             >
               <ArrowLeft size={20} />
             </button>
@@ -248,6 +271,7 @@ export const Search: React.FC<SearchProps> = ({
             <button
               onClick={handleVoiceSearch}
               title={isListening ? 'Listening...' : 'Voice Search'}
+              aria-label={isListening ? 'Listening...' : 'Voice Search'}
               className={`p-2 rounded-full transition-all ${
                 isListening
                   ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]'
@@ -267,6 +291,7 @@ export const Search: React.FC<SearchProps> = ({
                 }}
                 className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                 title="Clear query"
+                aria-label="Clear query"
               >
                 <X size={16} />
               </button>
@@ -402,6 +427,7 @@ export const Search: React.FC<SearchProps> = ({
                           }}
                           className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10"
                           title="Fill in search field"
+                          aria-label="Fill in search field"
                         >
                           <ArrowUpLeft size={14} />
                         </button>
@@ -412,6 +438,7 @@ export const Search: React.FC<SearchProps> = ({
                           }}
                           className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-white/10"
                           title="Delete from history"
+                          aria-label="Delete from history"
                         >
                           <X size={14} />
                         </button>
@@ -457,19 +484,10 @@ export const Search: React.FC<SearchProps> = ({
         </div>
       )}
 
-      {/* Loading Skeleton */}
+      {/* Loading Skeleton shimmer (no spinner) */}
       {loading && (
-        <div className="flex flex-col gap-3 py-6">
-          <div className="flex items-center justify-center gap-3 text-white/50 py-8">
-            <div className="w-7 h-7 border-2 border-white/20 border-t-[var(--accent-color)] rounded-full animate-spin" />
-            <span className="text-sm font-semibold">Searching YouTube Music...</span>
-          </div>
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 rounded-2xl bg-white/[0.04] animate-pulse border border-white/5"
-            />
-          ))}
+        <div className="py-6">
+          <TrackListSkeleton count={8} />
         </div>
       )}
 
@@ -551,18 +569,37 @@ export const Search: React.FC<SearchProps> = ({
                   {results.songs.length} tracks
                 </span>
               </div>
-              <div className="flex flex-col gap-1.5">
-                {results.songs.map((song, idx) => (
-                  <TrackRow
-                    key={song.id}
-                    track={song}
-                    index={idx}
-                    playlistContext={results.songs}
-                    showIndex={false}
-                    showThumbnail={true}
-                  />
-                ))}
-              </div>
+              {results.songs.length > 20 ? (
+                <VirtualList<Track>
+                  items={results.songs}
+                  itemHeight={64}
+                  renderItem={(song, idx) => (
+                    <TrackRow
+                      key={song.id}
+                      track={song}
+                      index={idx}
+                      playlistContext={results.songs}
+                      showIndex={false}
+                      showThumbnail={true}
+                    />
+                  )}
+                  keyExtractor={(song) => song.id}
+                  className="h-[520px]"
+                />
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {results.songs.map((song, idx) => (
+                    <TrackRow
+                      key={song.id}
+                      track={song}
+                      index={idx}
+                      playlistContext={results.songs}
+                      showIndex={false}
+                      showThumbnail={true}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -679,16 +716,16 @@ export const Search: React.FC<SearchProps> = ({
             </div>
           )}
 
-          {/* Empty Results Placeholder */}
+          {/* Empty Results Placeholder with Animated Icon */}
           {results.songs.length === 0 &&
             results.albums.length === 0 &&
             results.artists.length === 0 &&
             results.playlists.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-white/40">
-                <SearchIcon size={36} className="text-white/20" />
-                <p className="text-base font-bold">No results found</p>
-                <p className="text-xs">Try different keywords or switch between Online and Library</p>
-              </div>
+              <EmptyState
+                icon="search"
+                title="No results found"
+                description="Try different keywords or switch between Online and Library search."
+              />
             )}
         </div>
       )}

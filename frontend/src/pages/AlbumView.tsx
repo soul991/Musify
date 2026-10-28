@@ -6,6 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { Album, Track } from '../types';
 import { ParallaxHeader } from '../components/views/ParallaxHeader';
 import { TrackRow } from '../components/views/TrackRow';
+import { fisherYatesShuffle } from '../utils/shuffle';
+import { TrackListSkeleton } from '../components/common/SkeletonLoader';
 
 interface AlbumViewProps {
   albumId: string;
@@ -33,9 +35,8 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, onBack, onSelectA
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-24 text-white/50 gap-3">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-[var(--accent-color)] rounded-full animate-spin" />
-        <span className="text-xs font-semibold">Loading Album...</span>
+      <div className="flex-1 p-6 overflow-hidden">
+        <TrackListSkeleton count={8} />
       </div>
     );
   }
@@ -82,7 +83,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, onBack, onSelectA
 
   const handleShuffleAll = () => {
     if (album.tracks.length > 0) {
-      const shuffled = [...album.tracks].sort(() => Math.random() - 0.5);
+      const shuffled = fisherYatesShuffle(album.tracks);
       playTrack(shuffled[0], shuffled);
     }
   };

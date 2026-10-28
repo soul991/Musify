@@ -13,6 +13,7 @@ logs/
 catalyst-debug.log
 
 # Environment and local configs
+.env
 .env.local
 .env.*.local
 
@@ -33,4 +34,12 @@ Thumbs.db
 
 # Superdesign temporary assets
 .superdesign/tmp/
+
+# Downloaded binaries
+backend/bin/
+bin/
+
+# Netlify local state
+.netlify/
+frontend/.netlify/
 

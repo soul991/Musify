@@ -9,14 +9,10 @@ import {
   Pin,
   Download,
   TrendingUp,
-  Sparkles,
-  Shuffle,
-  Music,
-  Check
+  Sparkles
 } from 'lucide-react';
 import { useLibrary, UserPlaylist } from '../context/LibraryContext';
 import { usePlayer } from '../context/PlayerContext';
-import { useTheme } from '../context/ThemeContext';
 import { Track } from '../types';
 import { ChipsRow } from '../components/views/ChipsRow';
 import { AutoPlaylistButton } from '../components/views/AutoPlaylistButton';
@@ -24,21 +20,21 @@ import { SortHeader, SortOption } from '../components/views/SortHeader';
 import { TrackRow } from '../components/views/TrackRow';
 import { SpotifyImportModal } from '../components/views/SpotifyImportModal';
 import { AiPlaylistModal } from '../components/views/AiPlaylistModal';
+import { fisherYatesShuffle } from '../utils/shuffle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { VirtualList } from '../components/common/VirtualList';
 
 interface LibraryProps {
   onSelectPlaylistDetails?: (playlist: UserPlaylist) => void;
-  onSelectAlbum?: (id: string) => void;
-  onSelectArtist?: (id: string) => void;
+  _onSelectAlbum?: (id: string) => void;
+  _onSelectArtist?: (id: string) => void;
 }
 
 type LibraryTab = 'all' | 'playlists' | 'songs' | 'albums' | 'artists' | 'offline';
 type SortKey = 'date' | 'name' | 'count';
 
 export const Library: React.FC<LibraryProps> = ({
-  onSelectPlaylistDetails,
-  onSelectAlbum,
-  onSelectArtist
+  onSelectPlaylistDetails
 }) => {
   const {
     likedSongs,
@@ -51,7 +47,6 @@ export const Library: React.FC<LibraryProps> = ({
   } = useLibrary();
 
   const { playTrack, currentTrack } = usePlayer();
-  const { colors } = useTheme();
 
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
@@ -176,7 +171,7 @@ export const Library: React.FC<LibraryProps> = ({
             iconColor="#A855F7"
             onClick={() => {
               if (likedSongs.length > 0) {
-                const shuffled = [...likedSongs].sort(() => Math.random() - 0.5);
+                const shuffled = fisherYatesShuffle(likedSongs);
                 playTrack(shuffled[0], shuffled);
               }
             }}
@@ -257,6 +252,23 @@ export const Library: React.FC<LibraryProps> = ({
               <p className="text-sm font-semibold">No favorite songs yet</p>
               <p className="text-xs">Tap the heart on any song to add it here</p>
             </div>
+          ) : activeTab === 'songs' && likedSongs.length > 25 ? (
+            <VirtualList<Track>
+              items={likedSongs}
+              itemHeight={64}
+              renderItem={(track, idx) => (
+                <TrackRow
+                  key={track.id}
+                  track={track}
+                  index={idx}
+                  playlistContext={likedSongs}
+                  showIndex={true}
+                  showThumbnail={true}
+                />
+              )}
+              keyExtractor={(track) => track.id}
+              className="h-[calc(100vh-250px)]"
+            />
           ) : (
             <div className="flex flex-col gap-1.5">
               {likedSongs.slice(0, activeTab === 'songs' ? undefined : 6).map((track, idx) => (
@@ -387,6 +399,7 @@ export const Library: React.FC<LibraryProps> = ({
                       }}
                       className="p-2 rounded-full text-white/40 hover:text-white"
                       title="Pin playlist"
+                      aria-label="Pin playlist"
                     >
                       <Pin size={15} />
                     </button>
@@ -399,6 +412,7 @@ export const Library: React.FC<LibraryProps> = ({
                       }}
                       className="p-2 rounded-full text-white/30 hover:text-rose-400"
                       title="Delete playlist"
+                      aria-label="Delete playlist"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -499,8 +513,8 @@ export const Library: React.FC<LibraryProps> = ({
                   <Sparkles size={20} />
                 </div>
                 <div>
-                  <p className="leading-snug">Generate AI Playlist</p>
-                  <p className="text-xs text-white/40 font-normal">Curate mix via AI prompts & moods</p>
+                  <p className="leading-snug">Mood Playlists</p>
+                  <p className="text-xs text-white/40 font-normal">Curate mix via preset moods & vibes</p>
                 </div>
               </button>
 
@@ -579,7 +593,7 @@ export const Library: React.FC<LibraryProps> = ({
         onPlaylistCreated={(pl) => onSelectPlaylistDetails?.(pl)}
       />
 
-      {/* AI Playlist Generator Modal */}
+      {/* Mood Playlists Modal */}
       <AiPlaylistModal
         isOpen={showAiModal}
         onClose={() => setShowAiModal(false)}

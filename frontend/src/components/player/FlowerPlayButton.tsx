@@ -1,6 +1,6 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
-import { Play, Pause } from 'lucide-react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play } from 'lucide-react';
 
 export type FlowerPlayStyle = 'wavy' | 'scallop8' | 'apple_squircle' | 'circle';
 
@@ -13,6 +13,7 @@ interface FlowerPlayButtonProps {
   className?: string;
   styleType?: FlowerPlayStyle;
   iconSize?: number;
+  layoutId?: string;
 }
 
 /**
@@ -89,15 +90,18 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
   iconColor = '#000000',
   className = '',
   styleType = 'wavy',
-  iconSize
+  iconSize,
+  layoutId
 }) => {
   const [indent, setIndent] = useState<number>(isPlaying ? 0.08 : 0);
   const [rotation, setRotation] = useState<number>(0);
+  const indentRef = useRef(indent);
+  indentRef.current = indent;
 
   // Animate indent (0.0 to 0.08 over 300ms)
   useEffect(() => {
     let animId: number;
-    const startVal = indent;
+    const startVal = indentRef.current;
     const targetVal = isPlaying ? 0.08 : 0;
     const startTime = performance.now();
     const duration = 300;
@@ -153,6 +157,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
     return (
       <motion.button
         type="button"
+        layoutId={layoutId}
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', damping: 20, stiffness: 450 }}
         onClick={onClick}
@@ -200,6 +205,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
   return (
     <motion.button
       type="button"
+      layoutId={layoutId}
       whileTap={{ scale: 0.90 }}
       transition={{ type: 'spring', damping: 15, stiffness: 500 }}
       onClick={onClick}
@@ -215,34 +221,51 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
         <path d={pathData} fill={color} />
       </svg>
 
-      {/* Center Play/Pause Glyph */}
+      {/* Center Play/Pause Glyph with 90deg crossfade morph */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {isPlaying ? (
-          <div className="flex items-center gap-1.5">
-            <span
-              className="rounded-full transition-all"
-              style={{
-                width: Math.max(3, Math.round(finalIconSize * 0.2)),
-                height: Math.round(finalIconSize * 0.9),
-                backgroundColor: iconColor
-              }}
-            />
-            <span
-              className="rounded-full transition-all"
-              style={{
-                width: Math.max(3, Math.round(finalIconSize * 0.2)),
-                height: Math.round(finalIconSize * 0.9),
-                backgroundColor: iconColor
-              }}
-            />
-          </div>
-        ) : (
-          <Play
-            size={finalIconSize}
-            className="ml-1 transition-transform"
-            style={{ fill: iconColor, color: iconColor }}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {isPlaying ? (
+            <motion.div
+              key="pause"
+              initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center gap-1.5"
+            >
+              <span
+                className="rounded-full"
+                style={{
+                  width: Math.max(3, Math.round(finalIconSize * 0.2)),
+                  height: Math.round(finalIconSize * 0.9),
+                  backgroundColor: iconColor
+                }}
+              />
+              <span
+                className="rounded-full"
+                style={{
+                  width: Math.max(3, Math.round(finalIconSize * 0.2)),
+                  height: Math.round(finalIconSize * 0.9),
+                  backgroundColor: iconColor
+                }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="play"
+              initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Play
+                size={finalIconSize}
+                className="ml-1"
+                style={{ fill: iconColor, color: iconColor }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.button>
   );

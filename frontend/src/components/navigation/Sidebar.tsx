@@ -53,17 +53,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-[260px] lg:w-[280px] h-screen shrink-0 border-r border-white/10 p-5 bg-[#0A0B0E]/85 backdrop-blur-3xl text-white select-none z-20">
+    <aside className="hidden md:flex flex-col w-[240px] h-full shrink-0 rounded-[28px] glass-panel p-4 text-white select-none z-20 overflow-hidden min-h-0">
       {/* Brand Logo & Identity */}
-      <div className="flex items-center gap-3.5 px-2 py-3 mb-5">
+      <div className="flex items-center gap-3 px-2 py-2 mb-4">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#ED5564]/25 shrink-0"
-          style={{ backgroundColor: colors.primary }}
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#E5303D]/25 shrink-0 bg-[#E5303D]"
         >
           <img src="/icons/musify-icon.svg" alt="Musify" className="w-6 h-6 invert" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-xl font-black tracking-tight leading-none">Musify</h2>
+          <h2 className="text-lg font-black tracking-tight leading-none">Musify</h2>
           <span className="text-[10px] tracking-widest font-bold uppercase text-white/40 block mt-1">
             Liquid Audio
           </span>
@@ -73,14 +72,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Quick Search Action */}
       <button
         onClick={onOpenSearch}
-        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-white/60 hover:text-white transition-all mb-5 active:scale-98"
+        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-white/60 hover:text-white transition-all mb-4 active:scale-98"
       >
-        <Search size={17} />
-        <span className="text-xs font-semibold">Search tracks, artists...</span>
+        <Search size={16} />
+        <span className="text-xs font-semibold">Search tracks...</span>
       </button>
 
       {/* Core Navigation Links */}
-      <div className="flex flex-col gap-1 mb-6">
+      <div className="flex flex-col gap-1 mb-4">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
 
@@ -88,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`relative flex items-center gap-3.5 px-4 py-2.5 rounded-2xl transition-all duration-200 text-sm font-semibold group ${
+              className={`relative flex items-center gap-3 px-3.5 py-2 rounded-2xl transition-all duration-200 text-sm font-semibold group ${
                 isActive
                   ? 'bg-white/[0.12] text-white shadow-sm border border-white/15 font-bold'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
@@ -96,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <span
                 className="transition-colors duration-200"
-                style={{ color: isActive ? colors.primary : undefined }}
+                style={{ color: isActive ? '#E5303D' : undefined }}
               >
                 {item.icon}
               </span>
@@ -105,8 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* Glowing Ruby Active Beacon */}
               {isActive && (
                 <div
-                  className="ml-auto w-1.5 h-4 rounded-full shadow-[0_0_12px_#ED5564]"
-                  style={{ backgroundColor: colors.primary }}
+                  className="ml-auto w-1.5 h-4 rounded-full shadow-[0_0_8px_#E5303D] bg-[#E5303D]"
                 />
               )}
             </button>
@@ -117,15 +115,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenListenTogether && (
           <button
             onClick={onOpenListenTogether}
-            className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/[0.04] transition-all duration-200 text-sm font-semibold group"
+            className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-white/60 hover:text-white hover:bg-white/[0.04] transition-all duration-200 text-sm font-semibold group"
+            title="Listen Together - Cross-device sync"
           >
-            <span className="text-white/60 group-hover:text-white">
-              <Users size={19} />
+            <span className="text-white/60 group-hover:text-white shrink-0">
+              <Users size={18} />
             </span>
-            <span>Listen Together</span>
-            <span className="ml-auto flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ED5564] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ED5564]"></span>
+            <div className="flex flex-col text-left leading-tight">
+              <span>Listen Together</span>
+              <span className="text-[10px] text-amber-400 font-bold">Live Room</span>
+            </div>
+            <span className="ml-auto flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E5303D] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E5303D]"></span>
             </span>
           </button>
         )}
@@ -139,6 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={handleCreatePlaylist}
             className="text-white/50 hover:text-white transition-colors p-1"
             title="Create Playlist"
+            aria-label="Create Playlist"
           >
             <PlusCircle size={15} />
           </button>

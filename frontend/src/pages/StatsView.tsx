@@ -77,6 +77,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={onBack}
+          aria-label="Go back"
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
         >
           <ArrowLeft size={20} />
@@ -212,7 +213,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
                   <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={`text-sm font-bold truncate ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {stat.track.title}

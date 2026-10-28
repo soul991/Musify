@@ -139,7 +139,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 10 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="w-full max-w-lg rounded-3xl bg-[#16171E] border border-white/20 p-6 text-white shadow-2xl flex flex-col gap-5 select-none relative"
+          className="w-full max-w-lg rounded-3xl bg-[#1A1A1A] border border-white/10 p-6 text-white shadow-2xl flex flex-col gap-5 select-none relative"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -190,7 +190,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                 <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">
                   YouTube Music
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20">
+                <span className="px-2.5 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
                   Spotify Albums
                 </span>
               </div>

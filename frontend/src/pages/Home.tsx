@@ -1,22 +1,17 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
-  Pause,
+  Search,
   MoreVertical,
-  Heart,
   History,
   Radio,
   Users,
   Sliders,
   Settings as SettingsIcon,
-  Sparkles,
   ListPlus,
-  Share2,
-  Check,
   Disc,
-  Bookmark,
-  Volume2
+  Bookmark
 } from 'lucide-react';
 import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -24,6 +19,7 @@ import { useLibrary } from '../context/LibraryContext';
 import { useTheme } from '../context/ThemeContext';
 import { Track } from '../types';
 import { HeartBurstIcon } from '../components/player/HeartBurstIcon';
+import { HomeFeedSkeleton } from '../components/common/SkeletonLoader';
 
 export interface HomeProps {
   onSelectAlbum?: (id: string) => void;
@@ -104,15 +100,12 @@ interface CommunityPlaylistData {
 }
 
 export const Home: React.FC<HomeProps> = ({
-  onSelectAlbum,
-  onSelectArtist,
-  onSelectPlaylist,
   onOpenSearch,
-  onOpenSettings,
   onOpenHistory,
   onOpenStats,
   onOpenListenTogether,
-  onOpenEqualizer
+  onOpenEqualizer,
+  onOpenSettings
 }) => {
   const { playTrack, currentTrack, isPlaying, addToQueue, playNextInQueue } = usePlayer();
   const { isLiked, toggleLike } = useLibrary();
@@ -127,14 +120,14 @@ export const Home: React.FC<HomeProps> = ({
   const [loading, setLoading] = useState(true);
   const [activeMenuTrackId, setActiveMenuTrackId] = useState<string | null>(null);
 
-  // Dynamic time-of-day greeting (Echo Music MainActivity TopAppBar)
-  const getGreeting = () => {
+  // Dynamic time-of-day greeting (computed once on mount)
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Good morning';
     if (hour >= 12 && hour < 17) return 'Good afternoon';
     if (hour >= 17 && hour < 21) return 'Good evening';
     return 'Late night';
-  };
+  });
 
   // Close context menu on outside click
   useEffect(() => {
@@ -227,18 +220,6 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // Helper to chunk an array into 4 rows for LazyHorizontalGrid
-  const chunkInto4Rows = (items: Track[]) => {
-    const rows: Track[][] = [[], [], [], []];
-    items.forEach((item, index) => {
-      rows[index % 4].push(item);
-    });
-    return rows;
-  };
-
-  const quickPickRows = chunkInto4Rows(quickPicks.slice(0, 16));
-  const forgottenRows = chunkInto4Rows(forgottenFavorites.slice(0, 16));
-
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.currentTarget;
     if (target.src.includes('maxresdefault.jpg')) {
@@ -249,109 +230,109 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 pt-safe pb-56 text-white no-scrollbar select-none">
+    <div className="flex-1 overflow-y-auto px-6 py-6 pb-36 text-white min-h-0 select-none">
       {/* =========================================================================
-          1. TOP APP BAR (Echo Music MainActivity TopAppBar + Greeting)
+          1. FIGMA TOP BAR: Search Pill + Profile Avatar
           ========================================================================= */}
-      <header className="flex items-center justify-between h-16 pt-1 mb-3">
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold text-white/50 tracking-wider uppercase">
-            {getGreeting()}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-center gap-2">
-            <span>Musify</span>
-          </h1>
-        </div>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={onOpenSearch}
+          className="flex-1 h-11 rounded-full bg-white/[0.07] hover:bg-white/[0.11] border border-white/[0.08] px-4.5 flex items-center gap-3 text-sm text-[#A7A7A7] transition-all cursor-pointer group text-left"
+          title="Search songs, albums, artists"
+          aria-label="Search songs, albums, artists"
+        >
+          <Search size={18} className="text-[#A7A7A7] group-hover:text-white transition-colors" />
+          <span className="font-normal truncate">Search songs, albums, artists</span>
+        </button>
 
-        {/* Action icons row: History, Stats, Equalizer, Listen Together, Settings */}
+        {/* Action icons shortcut (History, Listen Together, Settings) */}
         <div className="flex items-center gap-2">
-          {/* History Action Button */}
-          <button
-            onClick={onOpenHistory}
-            title="Listening History"
-            aria-label="Listening History"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <History size={18} />
-          </button>
+          {onOpenListenTogether && (
+            <button
+              onClick={onOpenListenTogether}
+              title="Listen Together Room"
+              aria-label="Listen Together Room"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors"
+            >
+              <Users size={17} />
+            </button>
+          )}
 
-          {/* Stats Button */}
-          <button
-            onClick={onOpenStats}
-            title="Listening Statistics"
-            aria-label="Listening Statistics"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <Radio size={18} />
-          </button>
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              title="Settings"
+              aria-label="Settings"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors"
+            >
+              <SettingsIcon size={17} />
+            </button>
+          )}
 
-          {/* Equalizer Button */}
-          <button
-            onClick={onOpenEqualizer}
-            title="Audio Equalizer"
-            aria-label="Audio Equalizer"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
+          {/* User Profile Avatar Pill matching Figma */}
+          <div
+            className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E5303D] to-[#B8222E] flex items-center justify-center font-bold text-sm text-white shadow-md shadow-[#E5303D]/25 shrink-0"
+            title="Musify Account"
           >
-            <Sliders size={18} />
-          </button>
-
-          {/* Listen Together Button */}
-          <button
-            onClick={onOpenListenTogether}
-            title="Listen Together Room"
-            aria-label="Listen Together Room"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <Users size={18} />
-          </button>
-
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            title="Settings & Appearance"
-            aria-label="Settings"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 transition-all duration-200 border border-white/10 text-white/80 hover:text-white"
-          >
-            <SettingsIcon size={18} />
-          </button>
+            M
+          </div>
         </div>
-      </header>
+      </div>
 
       {/* =========================================================================
-          2. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
+          2. FIGMA GREETING
           ========================================================================= */}
-      <section className="mb-6 -mx-4 px-4 overflow-x-auto no-scrollbar py-1">
-        <div className="flex items-center gap-2.5 min-w-max">
-          {MOOD_CHIPS.map((mood) => {
-            const isSelected = activeMood === mood.label;
-            return (
-              <motion.button
-                key={mood.label}
-                onClick={() => handleMoodSelect(mood)}
-                whileTap={{ scale: 0.94 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 400 }}
-                className={`relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
-                  isSelected
-                    ? 'text-white border-white/40 shadow-lg'
-                    : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'
-                }`}
-                style={{
-                  backgroundColor: isSelected ? colors.primary : undefined,
-                  boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
-                }}
-              >
-                {mood.label}
-              </motion.button>
-            );
-          })}
-        </div>
-      </section>
+      <div className="mb-6">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          {greeting}
+        </h1>
+        <p className="text-sm text-[#A7A7A7] font-normal mt-1">
+          Pick up where you left off
+        </p>
+      </div>
 
       {/* =========================================================================
-          3. HERO CAROUSEL (`HorizontalCenteredHeroCarousel` in HomeScreen.kt)
+          SKELETON SHIMMER LOADER (When initially loading)
           ========================================================================= */}
-      <section
-        className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
+      {loading && quickPicks.length === 0 ? (
+        <HomeFeedSkeleton />
+      ) : (
+        <>
+          {/* =========================================================================
+              3. MOOD FILTER CHIPS ROW (`ChipsRow.kt`)
+              ========================================================================= */}
+          <section className="mb-6 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-2 min-w-max px-0.5">
+              {MOOD_CHIPS.map((mood) => {
+                const isSelected = activeMood === mood.label;
+                return (
+                  <motion.button
+                    key={mood.label}
+                    onClick={() => handleMoodSelect(mood)}
+                    whileTap={{ scale: 0.94 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                    className={`relative px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
+                      isSelected
+                        ? 'text-white border-white/40 shadow-lg'
+                        : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? colors.primary : undefined,
+                      boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
+                    }}
+                  >
+                    {mood.label}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* =========================================================================
+              3. HERO CAROUSEL (`HorizontalCenteredHeroCarousel` in HomeScreen.kt)
+              ========================================================================= */}
+          <section
+            className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
         onMouseEnter={() => setIsCarouselHovered(true)}
         onMouseLeave={() => setIsCarouselHovered(false)}
         onClick={() => handleHeroClick(HERO_SLIDES[heroIndex])}
@@ -464,9 +445,9 @@ export const Home: React.FC<HomeProps> = ({
                     {/* Active Equalizer Animation Overlay */}
                     {isCurrent && isPlaying && (
                       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-0.5">
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
-                        <span className="w-1 bg-[#ED5564] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
+                        <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
                       </div>
                     )}
                   </div>
@@ -475,7 +456,7 @@ export const Home: React.FC<HomeProps> = ({
                   <div className="flex-1 min-w-0 pr-1">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {track.title}
@@ -491,6 +472,7 @@ export const Home: React.FC<HomeProps> = ({
                       e.stopPropagation();
                       toggleLike(track);
                     }}
+                    aria-label={liked ? 'Unlike' : 'Like'}
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors"
                   >
                     <HeartBurstIcon isLiked={liked} size={16} />
@@ -502,6 +484,7 @@ export const Home: React.FC<HomeProps> = ({
                       e.stopPropagation();
                       setActiveMenuTrackId(activeMenuTrackId === track.id ? null : track.id);
                     }}
+                    aria-label="More options"
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors relative"
                   >
                     <MoreVertical size={16} />
@@ -634,6 +617,7 @@ export const Home: React.FC<HomeProps> = ({
                     onClick={() => playTrack(playlist.songs[0], playlist.songs)}
                     className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
                     title="Play Station"
+                    aria-label="Play Station"
                   >
                     <Play size={18} className="fill-current ml-0.5" />
                   </button>
@@ -651,6 +635,7 @@ export const Home: React.FC<HomeProps> = ({
                     }}
                     className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
                     title="Start Radio"
+                    aria-label="Start Radio"
                   >
                     <Radio size={18} />
                   </button>
@@ -661,6 +646,7 @@ export const Home: React.FC<HomeProps> = ({
                     }}
                     className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
                     title="Bookmark Playlist"
+                    aria-label="Bookmark Playlist"
                   >
                     <Bookmark size={18} />
                   </button>
@@ -728,7 +714,7 @@ export const Home: React.FC<HomeProps> = ({
                   <div className="flex-1 min-w-0 pr-1">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#ED5564]' : 'text-white'
+                        isCurrent ? 'text-[#E5303D]' : 'text-white'
                       }`}
                     >
                       {track.title}
@@ -753,6 +739,8 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 };
