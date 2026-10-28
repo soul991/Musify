@@ -74,6 +74,10 @@ function findYtDlpBinary(): string {
       if (fs.existsSync(winBin)) {
         return winBin;
       }
+      const genericBin = path.join(dir, 'yt-dlp');
+      if (fs.existsSync(genericBin)) {
+        return genericBin;
+      }
     }
     return 'yt-dlp';
   }

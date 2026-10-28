@@ -59,7 +59,10 @@ router.post('/create', (req, res) => {
     return res.status(503).json({ error: 'Server room capacity reached. Please try later.' });
   }
 
-  const { hostName, hostId = Math.random().toString(36).substring(2, 9) } = req.body || {};
+  const { hostName, hostId } = req.body || {};
+  const safeHostId = typeof hostId === 'string' && /^[a-zA-Z0-9_-]{1,32}$/.test(hostId)
+    ? hostId
+    : Math.random().toString(36).substring(2, 9);
   let code = generateRoomCode();
   while (rooms.has(code)) {
     code = generateRoomCode();
@@ -67,7 +70,7 @@ router.post('/create', (req, res) => {
 
   const newRoom: Room = {
     code,
-    hostId,
+    hostId: safeHostId,
     createdAt: Date.now(),
     lastActivity: Date.now(),
     state: {
@@ -80,8 +83,8 @@ router.post('/create', (req, res) => {
     members: new Map<string, RoomMember>()
   };
 
-  newRoom.members.set(hostId, {
-    id: hostId,
+  newRoom.members.set(safeHostId, {
+    id: safeHostId,
     name: (typeof hostName === 'string' && hostName.trim().slice(0, 30)) || 'Host',
     lastSeen: Date.now(),
     isHost: true
@@ -91,7 +94,7 @@ router.post('/create', (req, res) => {
 
   return res.json({
     roomCode: code,
-    hostId,
+    hostId: safeHostId,
     members: Array.from(newRoom.members.values()),
     state: newRoom.state
   });
@@ -99,7 +102,10 @@ router.post('/create', (req, res) => {
 
 // Join an existing room
 router.post('/join', (req, res) => {
-  const { roomCode, memberName, memberId = Math.random().toString(36).substring(2, 9) } = req.body || {};
+  const { roomCode, memberName, memberId } = req.body || {};
+  const safeMemberId = typeof memberId === 'string' && /^[a-zA-Z0-9_-]{1,32}$/.test(memberId)
+    ? memberId
+    : Math.random().toString(36).substring(2, 9);
   if (!roomCode || typeof roomCode !== 'string') {
     return res.status(400).json({ error: 'Valid roomCode is required' });
   }
@@ -114,11 +120,11 @@ router.post('/join', (req, res) => {
   room.lastActivity = Date.now();
   const safeName = (typeof memberName === 'string' && memberName.trim().slice(0, 30)) || 'Listener';
 
-  room.members.set(memberId, {
-    id: memberId,
+  room.members.set(safeMemberId, {
+    id: safeMemberId,
     name: safeName,
     lastSeen: Date.now(),
-    isHost: memberId === room.hostId
+    isHost: safeMemberId === room.hostId
   });
 
   return res.json({

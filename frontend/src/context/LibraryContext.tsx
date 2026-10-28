@@ -73,21 +73,29 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   });
 
-  // Save changes to localStorage
+  // Save changes to localStorage safely
   useEffect(() => {
-    localStorage.setItem('musify_liked_songs', JSON.stringify(likedSongs));
+    try {
+      localStorage.setItem('musify_liked_songs', JSON.stringify(likedSongs));
+    } catch {}
   }, [likedSongs]);
 
   useEffect(() => {
-    localStorage.setItem('musify_user_playlists', JSON.stringify(playlists));
+    try {
+      localStorage.setItem('musify_user_playlists', JSON.stringify(playlists));
+    } catch {}
   }, [playlists]);
 
   useEffect(() => {
-    localStorage.setItem('musify_history', JSON.stringify(history));
+    try {
+      localStorage.setItem('musify_history', JSON.stringify(history));
+    } catch {}
   }, [history]);
 
   useEffect(() => {
-    localStorage.setItem('musify_play_stats', JSON.stringify(playStats));
+    try {
+      localStorage.setItem('musify_play_stats', JSON.stringify(playStats));
+    } catch {}
   }, [playStats]);
 
   const isLiked = (trackId: string) => {

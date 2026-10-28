@@ -13,6 +13,7 @@ logs/
 catalyst-debug.log
 
 # Environment and local configs
+.env
 .env.local
 .env.*.local
 

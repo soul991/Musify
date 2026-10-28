@@ -32,6 +32,23 @@ export const CALM_ACCENT_PRESETS = [
   { name: 'Ash Graphite', hex: '#7A7D84' }
 ];
 
+
+function safeGetStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Advanced palette extractor for dynamic soothing ambient lighting (cached per track)
@@ -113,7 +130,7 @@ function hexToRgb(hex: string): string {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [accentColor, setAccentColorState] = useState<string>(() => {
-    const saved = localStorage.getItem('musify_accent_color');
+    const saved = safeGetStorage('musify_accent_color');
     // If old pink/coral #ED5564 was saved, reset to #E5303D
     if (saved && saved.toUpperCase() === '#ED5564') {
       return DEFAULT_ACCENT;
@@ -122,11 +139,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [pureBlack, setPureBlackState] = useState<boolean>(() => {
-    return localStorage.getItem('musify_pure_black') === 'true';
+    return safeGetStorage('musify_pure_black') === 'true';
   });
 
   const [playerStyle, setPlayerStyleState] = useState<'apple' | 'material'>(() => {
-    return (localStorage.getItem('musify_player_style') as 'apple' | 'material') || 'apple';
+    return (safeGetStorage('musify_player_style') as 'apple' | 'material') || 'apple';
   });
 
   const [dynamicColor, setDynamicColor] = useState<string>(DEFAULT_ACCENT);
@@ -134,17 +151,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setAccentColor = (color: string) => {
     setAccentColorState(color);
-    localStorage.setItem('musify_accent_color', color);
+    safeSetStorage('musify_accent_color', color);
   };
 
   const setPureBlack = (enabled: boolean) => {
     setPureBlackState(enabled);
-    localStorage.setItem('musify_pure_black', String(enabled));
+    safeSetStorage('musify_pure_black', String(enabled));
   };
 
   const setPlayerStyle = (style: 'apple' | 'material') => {
     setPlayerStyleState(style);
-    localStorage.setItem('musify_player_style', style);
+    safeSetStorage('musify_player_style', style);
   };
 
   const extractColorsFromImage = async (imageUrl: string) => {

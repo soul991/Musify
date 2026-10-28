@@ -11,6 +11,7 @@ import { DesktopDockPlayer } from './components/player/DesktopDockPlayer';
 import { NowPlayingCompanion } from './components/player/NowPlayingCompanion';
 import { FullPlayer } from './components/player/FullPlayer';
 import { OfflineBanner } from './components/common/OfflineBanner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Code-split page components with React.lazy
 const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
@@ -303,9 +304,11 @@ const MusifyMain: React.FC = () => {
         )}
 
         <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
-          <Suspense fallback={<ViewLoader />}>
-            {renderActiveView()}
-          </Suspense>
+          <ErrorBoundary fallbackTitle="View unavailable" onReset={() => setViewHistory([{ type: 'tab', tab: 'home' }])}>
+            <Suspense fallback={<ViewLoader />}>
+              {renderActiveView()}
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
         {/* Desktop Persistent Audio Dock Bar at bottom of canvas */}
@@ -389,7 +392,8 @@ const MusifyMain: React.FC = () => {
 
 export default function App() {
   return (
-    <ToastProvider>
+    <ErrorBoundary fallbackTitle="Musify encountered an unexpected error">
+      <ToastProvider>
       <ThemeProvider>
         <LibraryProvider>
           <PlayerProvider>
@@ -400,5 +404,6 @@ export default function App() {
         </LibraryProvider>
       </ThemeProvider>
     </ToastProvider>
+    </ErrorBoundary>
   );
 }
