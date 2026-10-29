@@ -201,10 +201,11 @@ export const Library: React.FC<LibraryProps> = ({
                 </div>
 
                 <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
-                  {pl.tracks[0]?.thumbnail ? (
+                  {Boolean(pl.tracks[0]?.thumbnail) ? (
                     <img
                       src={pl.tracks[0].thumbnail}
                       alt={pl.name}
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                       onError={handleImageError}
                     />
@@ -342,10 +343,11 @@ export const Library: React.FC<LibraryProps> = ({
                   </button>
 
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
-                    {pl.tracks[0]?.thumbnail ? (
+                    {Boolean(pl.tracks[0]?.thumbnail) ? (
                       <img
                         src={pl.tracks[0].thumbnail}
                         alt={pl.name}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
                       />
@@ -373,11 +375,13 @@ export const Library: React.FC<LibraryProps> = ({
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                      {pl.tracks[0]?.thumbnail ? (
+                      {Boolean(pl.tracks[0]?.thumbnail) ? (
                         <img
                           src={pl.tracks[0].thumbnail}
                           alt={pl.name}
+                          referrerPolicy="no-referrer"
                           className="w-full h-full object-cover"
+                          onError={handleImageError}
                         />
                       ) : (
                         <ListMusic size={22} className="text-white/40" />
@@ -466,9 +470,11 @@ export const Library: React.FC<LibraryProps> = ({
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowFabModal(true)}
-          className="w-14 h-14 rounded-full bg-white text-black shadow-2xl flex items-center justify-center border border-white/20"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#ED5564] text-white shadow-[0_10px_30px_rgba(237,85,100,0.45)] hover:shadow-[0_14px_40px_rgba(237,85,100,0.65)] flex items-center justify-center border border-white/25 transition-all"
+          title="New playlist or import"
+          aria-label="New playlist or import"
         >
-          <Plus size={26} strokeWidth={2.5} />
+          <Plus size={24} strokeWidth={2.5} />
         </motion.button>
       </div>
 

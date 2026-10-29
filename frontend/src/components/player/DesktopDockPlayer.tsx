@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Shuffle,
@@ -11,7 +11,10 @@ import {
   Maximize2,
   Users,
   Mic2,
-  ListMusic
+  ListMusic,
+  Headphones,
+  Speaker,
+  Bluetooth
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,6 +22,7 @@ import { useLibrary } from '../../context/LibraryContext';
 import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { FlowerPlayButton } from './FlowerPlayButton';
 import { HeartBurstIcon } from './HeartBurstIcon';
+import { AudioOutputModal } from './AudioOutputModal';
 
 interface DesktopDockPlayerProps {
   onOpenListenTogether?: () => void;
@@ -49,9 +53,12 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
     repeatMode,
     toggleRepeat,
     setIsPlayerOpen,
-    isPlayerOpen
+    isPlayerOpen,
+    audioOutputDeviceId,
+    audioQuality
   } = usePlayer();
 
+  const [showOutputModal, setShowOutputModal] = useState(false);
   const { colors } = useTheme();
   const { isLiked, toggleLike } = useLibrary();
 
@@ -105,6 +112,10 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             <img
               src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
               alt={currentTrack.title}
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+              }}
               className={`w-full h-full object-cover rounded-full ${
                 isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
               }`}
@@ -281,6 +292,16 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             </button>
           )}
 
+          {/* Audio Output Selector Trigger */}
+          <button
+            onClick={() => setShowOutputModal(true)}
+            className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1"
+            title="Audio Output & AirPlay"
+            aria-label="Audio Output & AirPlay"
+          >
+            <Headphones size={16} />
+          </button>
+
           {/* Full Player Expand */}
           <button
             onClick={() => setIsPlayerOpen(true)}
@@ -292,6 +313,9 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           </button>
         </div>
       </motion.div>
+
+      {/* Audio Output Selector Modal */}
+      <AudioOutputModal isOpen={showOutputModal} onClose={() => setShowOutputModal(false)} />
     </div>
   );
 };

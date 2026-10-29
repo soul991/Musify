@@ -75,7 +75,9 @@ export class StreamMissRateLimiter {
   }
 
   isAllowed(clientKey: string): { allowed: boolean; retryAfterSec?: number } {
-    if (!clientKey) return { allowed: true };
+    if (!clientKey || clientKey === '127.0.0.1' || clientKey === '::1' || clientKey === 'localhost' || clientKey.startsWith('192.168.') || clientKey.startsWith('10.') || clientKey.startsWith('172.')) {
+      return { allowed: true };
+    }
     const now = Date.now();
     const entry = this.hits.get(clientKey);
 
@@ -283,6 +285,19 @@ export async function resolveStreamUrl(
 
             const decipheredUrl = await selectedFormat.decipher(yt.session.player);
             if (decipheredUrl) {
+              // Probe URL with 0-0 byte range to verify YouTube doesn't reject with 403
+              const probeRes = await fetch(decipheredUrl, {
+                headers: {
+                  Range: 'bytes=0-0',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                },
+                signal: AbortSignal.timeout(2500)
+              }).catch(() => null);
+
+              if (!probeRes || (!probeRes.ok && probeRes.status !== 206)) {
+                throw new Error(`Innertube stream URL probe returned status ${probeRes?.status || 'failed'}`);
+              }
+
               const result: CachedStream = {
                 url: decipheredUrl,
                 mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
@@ -390,8 +405,26 @@ export async function handleStreamProxy(req: Request, res: Response) {
     console.log(`[STREAM] videoId=${videoId} | resolveStream: ${resolveMs}ms | upstream first byte: ${firstByteMs}ms | status: ${upstreamResponse.status} | range: ${rangeHeader || 'full'}`);
 
     if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
-      // If cached URL expired or was invalidated, purge and retry once
+      console.warn(`[STREAM] videoId=${videoId} upstream returned ${upstreamResponse.status}. Purging cache and falling back to yt-dlp...`);
       streamUrlCache.delete(cacheKey);
+
+      // 1. Immediate fallback to yt-dlp extraction
+      try {
+        const ytdlpStream = await extractWithYtDlp(videoId, quality);
+        if (ytdlpStream) {
+          const retryResponse = await fetch(ytdlpStream.url, { headers: reqHeaders });
+          console.log(`[STREAM] yt-dlp fallback upstream status: ${retryResponse.status} for ${videoId}`);
+          if (retryResponse.ok || retryResponse.status === 206) {
+            setCachedStream(cacheKey, ytdlpStream);
+            forwardStream(req, retryResponse, res, ytdlpStream.mimeType);
+            return;
+          }
+        }
+      } catch (ytdlpErr: any) {
+        console.warn(`[STREAM] yt-dlp fallback attempt failed for ${videoId}:`, ytdlpErr?.message || ytdlpErr);
+      }
+
+      // 2. Secondary fallback: re-resolve
       const freshInfo = await resolveStreamUrl(videoId, quality, clientKey);
       const retryResponse = await fetch(freshInfo.url, { headers: reqHeaders });
       if (!retryResponse.ok && retryResponse.status !== 206) {

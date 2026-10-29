@@ -28,6 +28,7 @@ import { HeartBurstIcon } from './HeartBurstIcon';
 import { PlayerSyncedLyricsView } from './PlayerSyncedLyricsView';
 import { SyncedLyricsView } from '../lyrics/SyncedLyricsView';
 import { QueueSheet } from './QueueSheet';
+import { AudioOutputModal } from './AudioOutputModal';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
 
@@ -53,8 +54,11 @@ export const FullPlayer: React.FC = () => {
     volume = 1,
     setVolume,
     playbackSpeed,
-    setPlaybackSpeed
+    setPlaybackSpeed,
+    audioOutputDeviceId
   } = usePlayer();
+
+  const [showOutputModal, setShowOutputModal] = useState(false);
 
   const { colors, playerStyle, setPlayerStyle } = useTheme();
   const { isLiked, toggleLike } = useLibrary();
@@ -65,6 +69,18 @@ export const FullPlayer: React.FC = () => {
   const [lyricsData, setLyricsData] = useState<LyricsData | null>(null);
   const [isRotatingThumbnail, setIsRotatingThumbnail] = useState(false);
   const [volumeSliderHover, setVolumeSliderHover] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleArtMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setTilt({ x: (y / rect.height) * -14, y: (x / rect.width) * 14 });
+  };
+
+  const handleArtMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
 
   // Background style selector (matching PlayerBackgroundStyle in PreferenceKeys.kt)
   const [bgStyle, _setBgStyle] = useState<'glow' | 'apple' | 'mesh' | 'gradient'>('glow');
@@ -332,6 +348,10 @@ export const FullPlayer: React.FC = () => {
                       <img
                         src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
                         alt={currentTrack.title}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                        }}
                         className="w-full h-full object-cover"
                       />
                       {/* Center Spindle Hole */}
@@ -368,14 +388,18 @@ export const FullPlayer: React.FC = () => {
                   </motion.div>
                 </div>
               ) : (
-                /* Standard Modern Rounded Artwork */
+                /* Standard Modern Rounded Artwork with Interactive 3D Tilt */
                 <motion.div
                   layoutId="player-artwork"
                   animate={{ scale: isPlaying ? 1.03 : 1.0 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setIsRotatingThumbnail(true)}
+                  onMouseMove={handleArtMouseMove}
+                  onMouseLeave={handleArtMouseLeave}
                   className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] cursor-pointer drop-shadow-[0_20px_45px_rgba(0,0,0,0.8)] rounded-[24px] overflow-hidden border border-white/20 group"
                   style={{
+                    transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                    transition: 'transform 0.15s ease-out',
                     boxShadow: `0 32px 80px -12px ${colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
                   }}
                 >
@@ -386,6 +410,10 @@ export const FullPlayer: React.FC = () => {
                     height={330}
                     loading="eager"
                     decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                   />
                   {/* Subtle Vinyl Mode Hint overlay */}
@@ -656,14 +684,17 @@ export const FullPlayer: React.FC = () => {
                   <ListMusic size={26} />
                 </button>
 
-                {/* Connected Button Group (AirPods / Speed) */}
+                {/* Connected Audio Output / Speed */}
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-white/15 rounded-full p-1 border border-white/20">
-                    <div className="px-4 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold text-white/90">
-                      <Headphones size={15} />
-                      <span>AirPods Pro</span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setShowOutputModal(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-all shadow-sm"
+                    title="Change Audio Output Device"
+                    aria-label="Change Audio Output Device"
+                  >
+                    <Headphones size={15} className="text-[#ED5564]" />
+                    <span>{audioOutputDeviceId !== 'default' ? 'Connected Audio' : 'Audio Output'}</span>
+                  </button>
 
                   <button
                     onClick={handleCycleSpeed}
@@ -714,6 +745,9 @@ export const FullPlayer: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Audio Output & AirPlay / Chromecast Modal */}
+          <AudioOutputModal isOpen={showOutputModal} onClose={() => setShowOutputModal(false)} />
         </motion.div>
       )}
     </AnimatePresence>

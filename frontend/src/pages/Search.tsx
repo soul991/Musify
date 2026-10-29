@@ -507,8 +507,9 @@ export const Search: React.FC<SearchProps> = ({
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <img
-                      src={results.artists[0].thumbnail}
+                      src={results.artists[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.artists[0].name}
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-full object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
                     />
@@ -535,8 +536,9 @@ export const Search: React.FC<SearchProps> = ({
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <img
-                      src={results.songs[0].thumbnail}
+                      src={results.songs[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.songs[0].title}
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-2xl object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
                     />
@@ -621,8 +623,9 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
-                        src={album.thumbnail}
+                        src={album.thumbnail || '/icons/musify-icon.svg'}
                         alt={album.title}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -659,8 +662,9 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-white/10 shadow-xl border border-white/10">
                       <img
-                        src={artist.thumbnail}
+                        src={artist.thumbnail || '/icons/musify-icon.svg'}
                         alt={artist.name}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -697,9 +701,11 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
-                        src={playlist.thumbnail}
+                        src={playlist.thumbnail || '/icons/musify-icon.svg'}
                         alt={playlist.title}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={handleImageError}
                       />
                     </div>
                     <div>

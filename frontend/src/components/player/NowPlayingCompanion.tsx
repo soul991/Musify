@@ -171,6 +171,10 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
                 <img
                   src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
                   alt={currentTrack.title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                  }}
                   className="w-full h-full object-cover"
                 />
                 {/* Center Spindle Hole */}

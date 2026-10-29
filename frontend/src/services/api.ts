@@ -121,6 +121,9 @@ export const api = {
 
   // Radio / Related queue with deduplication against current queue + history
   getRadio: async (id: string, excludeIds?: string[]): Promise<Track[]> => {
+    if (!id || id.length !== 11 || id.startsWith('VL') || id.startsWith('RD') || id.startsWith('MPREb')) {
+      return [];
+    }
     const params = new URLSearchParams();
     if (excludeIds && excludeIds.length > 0) {
       params.set('exclude', excludeIds.slice(0, 50).join(','));
@@ -163,9 +166,17 @@ export const api = {
     const artistName = track.artists?.[0]?.name || '';
     const params = new URLSearchParams({
       title: track.title,
-      artist: artistName,
-      videoId: track.id
+      artist: artistName
     });
+    if (
+      track.id &&
+      track.id.length === 11 &&
+      !track.id.startsWith('VL') &&
+      !track.id.startsWith('RD') &&
+      !track.id.startsWith('MPREb')
+    ) {
+      params.set('videoId', track.id);
+    }
     if (track.album?.name) params.set('album', track.album.name);
     if (track.duration) params.set('duration', track.duration.toString());
 

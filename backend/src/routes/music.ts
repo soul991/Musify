@@ -200,6 +200,8 @@ router.get('/playlist/:id', async (req: Request, res: Response) => {
 
 // Support prefetch via /api/prefetch/:videoId and POST /api/prefetch
 router.get('/prefetch/:videoId', handlePrefetchStream);
+router.get('/resolve/:videoId', handlePrefetchStream);
 router.post('/prefetch', handlePrefetchStream);
+router.post('/resolve', handlePrefetchStream);
 
 export default router;

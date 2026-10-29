@@ -113,7 +113,8 @@ export const Home: React.FC<HomeProps> = ({
   onOpenEqualizer,
   onOpenSettings,
   onSelectArtist,
-  onSelectAlbum
+  onSelectAlbum,
+  onSelectPlaylist
 }) => {
   const { playTrack, currentTrack, isPlaying, addToQueue, playNextInQueue } = usePlayer();
   const { isLiked, toggleLike, history, likedSongs, playStats } = useLibrary();
@@ -234,8 +235,11 @@ export const Home: React.FC<HomeProps> = ({
   // 6. Dynamic Hero Carousel: built from recent history or first real home feed section
   const heroSlides = useMemo<HeroSlide[]>(() => {
     // Priority 1: Top recent history / favorites
-    if (jumpBackIn.length >= 2) {
-      return jumpBackIn.slice(0, 4).map((t, idx) => ({
+    const validHistory = jumpBackIn.filter(
+      (t) => t.id && t.id.length === 11 && !t.id.startsWith('VL') && !t.id.startsWith('RD') && !t.id.startsWith('MPREb')
+    );
+    if (validHistory.length >= 2) {
+      return validHistory.slice(0, 4).map((t, idx) => ({
         id: `hero-history-${t.id}`,
         title: t.title,
         subtitle: t.artists?.map((a) => a.name).join(', ') || 'Unknown Artist',
@@ -245,17 +249,22 @@ export const Home: React.FC<HomeProps> = ({
       }));
     }
 
-    // Priority 2: First section of backend home feed
-    const firstSection = backendSections[0];
-    if (firstSection && firstSection.items && firstSection.items.length >= 2) {
-      return firstSection.items.slice(0, 4).map((item) => ({
-        id: `hero-feed-${item.id}`,
-        title: item.title,
-        subtitle: item.subtitle || 'Trending on Musify',
-        image: item.thumbnail,
-        badge: firstSection.title.toUpperCase(),
-        track: itemToTrack(item)
-      }));
+    // Priority 2: Sections of backend home feed with playable song items
+    for (const sec of backendSections) {
+      if (!sec.items || sec.items.length < 2) continue;
+      const playable = sec.items.filter(
+        (item) => (!item.type || item.type === 'song') && item.id.length === 11 && !item.id.startsWith('VL') && !item.id.startsWith('RD')
+      );
+      if (playable.length >= 2) {
+        return playable.slice(0, 4).map((item, idx) => ({
+          id: `hero-feed-${item.id}-${idx}`,
+          title: item.title,
+          subtitle: item.subtitle || 'Trending on Musify',
+          image: item.thumbnail || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+          badge: sec.title.toUpperCase(),
+          track: itemToTrack(item)
+        }));
+      }
     }
 
     // Fallback: curated slides
@@ -537,10 +546,11 @@ export const Home: React.FC<HomeProps> = ({
                   >
                     <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
                       <img
-                        src={track.thumbnail}
+                        src={track.thumbnail || '/icons/musify-icon.svg'}
                         alt={track.title}
                         loading="lazy"
                         decoding="async"
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -588,10 +598,11 @@ export const Home: React.FC<HomeProps> = ({
                 >
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-white/10 border border-white/10 group-hover:border-white/30 transition-all shadow-md mb-2">
                     <img
-                      src={artist.thumbnail}
+                      src={artist.thumbnail || '/icons/musify-icon.svg'}
                       alt={artist.name}
                       loading="lazy"
                       decoding="async"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={handleImageError}
                     />
@@ -644,6 +655,9 @@ export const Home: React.FC<HomeProps> = ({
         backendSections.map((sec, secIdx) => {
           if (!sec.items || sec.items.length === 0) return null;
           const sectionTracks = sec.items.map(itemToTrack);
+          const playableTracks = sectionTracks.filter(
+            (t) => t.id.length === 11 && !t.id.startsWith('VL') && !t.id.startsWith('RD') && !t.id.startsWith('MPREb')
+          );
 
           return (
             <section key={`${sec.title}-${secIdx}`} className="mb-10">
@@ -653,9 +667,9 @@ export const Home: React.FC<HomeProps> = ({
                     {sec.title}
                   </h2>
                 </div>
-                {sectionTracks.length > 0 && (
+                {playableTracks.length > 0 && (
                   <button
-                    onClick={() => playTrack(sectionTracks[0], sectionTracks)}
+                    onClick={() => playTrack(playableTracks[0], playableTracks)}
                     className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
                   >
                     <Play size={12} className="fill-current" /> Play all
@@ -667,26 +681,31 @@ export const Home: React.FC<HomeProps> = ({
               {sec.items.length >= 8 ? (
                 <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
                   <div className="grid grid-rows-4 grid-flow-col gap-2 min-w-max pb-2">
-                    {sectionTracks.slice(0, 16).map((track) => renderTrackRow(track, sectionTracks))}
+                    {sec.items.slice(0, 16).map((item) => {
+                      const track = itemToTrack(item);
+                      return renderTrackRow(track, playableTracks, item);
+                    })}
                   </div>
                 </div>
               ) : (
                 <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
                   <div className="flex items-center gap-4 min-w-max pb-2">
-                    {sectionTracks.map((track) => {
+                    {sec.items.map((item) => {
+                      const track = itemToTrack(item);
                       const isCurrent = currentTrack?.id === track.id;
                       return (
                         <div
-                          key={track.id}
-                          onClick={() => playTrack(track, sectionTracks)}
+                          key={item.id}
+                          onClick={() => handleFeedItemClick(item, track, playableTracks)}
                           className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                         >
                           <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
                             <img
-                              src={track.thumbnail}
+                              src={track.thumbnail || '/icons/musify-icon.svg'}
                               alt={track.title}
                               loading="lazy"
                               decoding="async"
+                              referrerPolicy="no-referrer"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               onError={handleImageError}
                             />
@@ -715,15 +734,52 @@ export const Home: React.FC<HomeProps> = ({
     </div>
   );
 
+  function handleFeedItemClick(
+    item: { id: string; title: string; subtitle?: string; thumbnail: string; type?: string },
+    track: Track,
+    playableList: Track[]
+  ) {
+    const isPlaylist = item.type === 'playlist' || item.id.startsWith('VL') || item.id.startsWith('RD');
+    const isAlbum = item.type === 'album' || item.id.startsWith('MPREb');
+    const isArtist = item.type === 'artist';
+
+    if (isPlaylist && onSelectPlaylist) {
+      onSelectPlaylist(item.id.replace(/^VL/, ''));
+      return;
+    }
+    if (isAlbum && onSelectAlbum) {
+      onSelectAlbum(item.id);
+      return;
+    }
+    if (isArtist && onSelectArtist) {
+      onSelectArtist(item.id);
+      return;
+    }
+
+    if (track.id.length === 11) {
+      playTrack(track, playableList.length > 0 ? playableList : [track]);
+    }
+  }
+
   // Helper render for 64px track row in snap grid
-  function renderTrackRow(track: Track, currentSectionList: Track[]) {
+  function renderTrackRow(
+    track: Track,
+    playableList: Track[],
+    item?: { id: string; title: string; subtitle?: string; thumbnail: string; type?: string }
+  ) {
     const isCurrent = currentTrack?.id === track.id;
     const liked = isLiked(track.id);
 
     return (
       <div
         key={track.id}
-        onClick={() => playTrack(track, currentSectionList)}
+        onClick={() => {
+          if (item) {
+            handleFeedItemClick(item, track, playableList);
+          } else {
+            playTrack(track, playableList);
+          }
+        }}
         className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-all duration-200 border ${
           isCurrent
             ? 'bg-white/[0.14] border-white/30 shadow-md'
@@ -731,20 +787,17 @@ export const Home: React.FC<HomeProps> = ({
         }`}
       >
         <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10 flex items-center justify-center">
-          {track.thumbnail ? (
-            <img
-              src={track.thumbnail}
-              alt={track.title}
-              width={48}
-              height={48}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover"
-              onError={handleImageError}
-            />
-          ) : (
-            <Disc size={20} className="text-white/40" />
-          )}
+          <img
+            src={track.thumbnail || '/icons/musify-icon.svg'}
+            alt={track.title}
+            width={48}
+            height={48}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
 
           {isCurrent && isPlaying && (
             <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-0.5">

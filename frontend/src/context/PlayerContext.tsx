@@ -45,13 +45,28 @@ interface PlayerContextType {
   setAutoplaySimilar: (val: boolean) => void;
   retryPlayback: () => void;
   prefetchTrack: (videoId: string) => void;
+  audioOutputDeviceId: string;
+  setAudioOutputDeviceId: (deviceId: string) => Promise<boolean>;
+  audioQuality: string;
+  castAudio: () => void;
 }
 
 const getInitialPersistedPlayer = () => {
   if (typeof window === 'undefined') return null;
   try {
     const saved = localStorage.getItem('musify_persisted_player');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (
+        parsed?.currentTrack?.id &&
+        parsed.currentTrack.id.length === 11 &&
+        !parsed.currentTrack.id.startsWith('VL') &&
+        !parsed.currentTrack.id.startsWith('RD')
+      ) {
+        return parsed;
+      }
+      localStorage.removeItem('musify_persisted_player');
+    }
   } catch {
     // ignore
   }
@@ -94,6 +109,48 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setAutoplaySimilarState(val);
     if (typeof window !== 'undefined') {
       localStorage.setItem('musify_autoplay_similar', String(val));
+    }
+  };
+
+  const [audioOutputDeviceId, setAudioOutputDeviceIdState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('musify_audio_output_sink') || 'default';
+    }
+    return 'default';
+  });
+
+  const setAudioOutputDeviceId = async (deviceId: string): Promise<boolean> => {
+    setAudioOutputDeviceIdState(deviceId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('musify_audio_output_sink', deviceId);
+    }
+    try {
+      const audio = audioRef.current;
+      const secAudio = secondaryAudioRef.current;
+      if (audio && typeof (audio as any).setSinkId === 'function') {
+        await (audio as any).setSinkId(deviceId);
+      }
+      if (secAudio && typeof (secAudio as any).setSinkId === 'function') {
+        await (secAudio as any).setSinkId(deviceId);
+      }
+      return true;
+    } catch (err) {
+      console.warn('[Audio Output] Failed to switch output device:', err);
+      return false;
+    }
+  };
+
+  const castAudio = () => {
+    const audio = audioRef.current;
+    if (audio && typeof (audio as any).webkitShowPlaybackTargetPicker === 'function') {
+      (audio as any).webkitShowPlaybackTargetPicker();
+      return;
+    }
+    if (typeof window !== 'undefined' && (window as any).PresentationRequest) {
+      try {
+        const presentationRequest = new (window as any).PresentationRequest([window.location.href]);
+        presentationRequest.start().catch(() => {});
+      } catch {}
     }
   };
 
@@ -308,6 +365,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     secAudio.preload = isCrossfadeInitial ? 'auto' : 'metadata';
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
+
+    const savedSink = typeof window !== 'undefined' ? localStorage.getItem('musify_audio_output_sink') : null;
+    if (savedSink && typeof (audio as any).setSinkId === 'function') {
+      (audio as any).setSinkId(savedSink).catch(() => {});
+    }
+    if (savedSink && typeof (secAudio as any).setSinkId === 'function') {
+      (secAudio as any).setSinkId(savedSink).catch(() => {});
+    }
 
     const onTimeUpdate = (e: Event) => {
       const activeEl = e.target as HTMLAudioElement;
@@ -1091,7 +1156,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         autoplaySimilar,
         setAutoplaySimilar,
         retryPlayback,
-        prefetchTrack
+        prefetchTrack,
+        audioOutputDeviceId,
+        setAudioOutputDeviceId,
+        audioQuality: getEffectiveAudioQuality(),
+        castAudio
       }}
     >
       {playbackError && (

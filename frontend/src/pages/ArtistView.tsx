@@ -291,8 +291,12 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                 >
                   <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-md">
                     <img
-                      src={album.thumbnail}
+                      src={album.thumbnail || '/icons/musify-icon.svg'}
                       alt={album.title}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -332,8 +336,12 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                 >
                   <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-md">
                     <img
-                      src={single.thumbnail}
+                      src={single.thumbnail || '/icons/musify-icon.svg'}
                       alt={single.title}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>

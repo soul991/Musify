@@ -35,10 +35,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
 
         {/* Artwork */}
         <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10 flex items-center justify-center">
-          {track.thumbnail ? (
+          {Boolean(track.thumbnail) ? (
             <img
               src={track.thumbnail}
               alt=""
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+              }}
               className="w-full h-full object-cover"
               loading="lazy"
               decoding="async"

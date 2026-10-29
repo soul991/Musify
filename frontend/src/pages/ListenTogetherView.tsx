@@ -468,8 +468,12 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
           {currentTrack ? (
             <div className="p-5 rounded-[28px] bg-white/[0.04] backdrop-blur-2xl border border-white/15 flex items-center gap-4">
               <img
-                src={currentTrack.thumbnail}
+                src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
                 alt=""
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                }}
                 className="w-16 h-16 rounded-2xl object-cover shadow-md"
               />
               <div className="min-w-0 flex-1">
