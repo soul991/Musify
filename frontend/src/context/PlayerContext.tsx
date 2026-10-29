@@ -49,6 +49,8 @@ interface PlayerContextType {
   setAudioOutputDeviceId: (deviceId: string) => Promise<boolean>;
   audioQuality: string;
   castAudio: () => void;
+  isCasting: boolean;
+  castAvailable: boolean;
 }
 
 const getInitialPersistedPlayer = () => {
@@ -119,6 +121,65 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return 'default';
   });
 
+  const [castAvailable, setCastAvailable] = useState<boolean>(false);
+  const [isCasting, setIsCasting] = useState<boolean>(false);
+
+  // Monitor Remote Playback (Chromecast/AirPlay)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && (audio as any).remote && typeof (audio as any).remote.watchAvailability === 'function') {
+      (audio as any).remote.watchAvailability((available: boolean) => {
+        setCastAvailable(available);
+      }).catch(() => {
+        setCastAvailable(false);
+      });
+      (audio as any).remote.addEventListener('connecting', () => setIsCasting(true));
+      (audio as any).remote.addEventListener('connect', () => setIsCasting(true));
+      (audio as any).remote.addEventListener('disconnect', () => setIsCasting(false));
+    }
+  }, []);
+
+  // Hot-plug detection & auto-pause on unplug
+  useEffect(() => {
+    if (!navigator.mediaDevices || !('addEventListener' in navigator.mediaDevices)) return;
+
+    const handleDeviceChange = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const outputs = devices.filter((d) => d.kind === 'audiooutput');
+        if (audioOutputDeviceId !== 'default') {
+          const stillExists = outputs.some((d) => d.deviceId === audioOutputDeviceId);
+          if (!stillExists) {
+            console.warn('Audio Output device disconnected. Pausing playback.');
+            if (audioRef.current && !audioRef.current.paused) {
+              audioRef.current.pause();
+              setIsPlaying(false);
+            }
+            setAudioOutputDeviceId('default');
+          }
+        }
+      } catch (e) {
+        console.warn('devicechange check failed:', e);
+      }
+    };
+
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
+    };
+  }, [audioOutputDeviceId]);
+
+  // Dynamic Document Title reflecting current playing track
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (currentTrack) {
+      const artistName = currentTrack.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+      document.title = (isPlaying ? '▶ ' : '⏸ ') + currentTrack.title + ' • ' + artistName + ' | Musify';
+    } else {
+      document.title = 'Musify — Liquid Glass Music';
+    }
+  }, [currentTrack, isPlaying]);
+
   const setAudioOutputDeviceId = async (deviceId: string): Promise<boolean> => {
     setAudioOutputDeviceIdState(deviceId);
     if (typeof window !== 'undefined') {
@@ -133,6 +194,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (secAudio && typeof (secAudio as any).setSinkId === 'function') {
         await (secAudio as any).setSinkId(deviceId);
       }
+      await audioEqualizer.setSinkId(deviceId);
       return true;
     } catch (err) {
       console.warn('[Audio Output] Failed to switch output device:', err);
@@ -140,8 +202,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const castAudio = () => {
+  const castAudio = async () => {
     const audio = audioRef.current;
+    if (audio && (audio as any).remote && typeof (audio as any).remote.prompt === 'function') {
+      try {
+        await (audio as any).remote.prompt();
+        return;
+      } catch (err: any) {
+        if (err && err.name !== 'NotFoundError' && err.name !== 'NotAllowedError') {
+          console.warn('[Cast] Remote playback prompt error:', err);
+        }
+      }
+    }
     if (audio && typeof (audio as any).webkitShowPlaybackTargetPicker === 'function') {
       (audio as any).webkitShowPlaybackTargetPicker();
       return;
@@ -1160,7 +1232,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         audioOutputDeviceId,
         setAudioOutputDeviceId,
         audioQuality: getEffectiveAudioQuality(),
-        castAudio
+        castAudio,
+        isCasting,
+        castAvailable
       }}
     >
       {playbackError && (

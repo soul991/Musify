@@ -253,6 +253,9 @@ export const Search: React.FC<SearchProps> = ({
 
           <input
             ref={inputRef}
+            id="musify-search-input"
+            name="musify-search"
+            aria-label="Search songs, albums, and artists"
             type="text"
             value={query}
             onFocus={() => setIsFocused(true)}
@@ -517,9 +520,9 @@ export const Search: React.FC<SearchProps> = ({
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Artist
                       </span>
-                      <h4 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1">
                         {results.artists[0].name}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/50">
                         {results.artists[0].subscribers || 'Verified Artist'}
                       </p>
@@ -546,9 +549,9 @@ export const Search: React.FC<SearchProps> = ({
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Song
                       </span>
-                      <h4 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1">
                         {results.songs[0].title}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/50">
                         {results.songs[0].artists.map((a) => a.name).join(', ')}
                       </p>

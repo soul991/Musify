@@ -159,6 +159,8 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
     return (
       <motion.button
         type="button"
+        aria-label={isPlaying ? 'Pause' : 'Play'}
+        title={isPlaying ? 'Pause' : 'Play'}
         layoutId={layoutId}
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', damping: 20, stiffness: 450 }}
@@ -207,6 +209,8 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
   return (
     <motion.button
       type="button"
+      aria-label={isPlaying ? 'Pause' : 'Play'}
+      title={isPlaying ? 'Pause' : 'Play'}
       layoutId={layoutId}
       whileTap={{ scale: 0.90 }}
       transition={{ type: 'spring', damping: 15, stiffness: 500 }}

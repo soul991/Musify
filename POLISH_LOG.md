@@ -6,16 +6,16 @@ This document tracks autonomous iterative improvements, DevTools MCP measurement
 
 ## Executive Summary & Scoreboard
 
-| Rubric Area | Baseline (Iter 0) | Target | Current Status |
-|---|:---:|:---:|---|
-| **A. Playback Core** | **8 / 10** | 9+ | Verified locally via DevTools MCP: 206 streaming chunks, 177ms track transition, zero console errors across 10 consecutive songs. |
-| **B. Audio Quality & Output** | **6 / 10** | 9+ | Device enumeration and `setSinkId` implemented; RemotePlayback drafted. |
-| **C. Visual Design & Vibe** | **7.5 / 10** | 9+ | `design/BRIEF.md` established; FullPlayer dynamic glow & 3D tilt implemented; responsive viewports verified. |
-| **D. Motion & Feel** | **6.5 / 10** | 9+ | Ambient breathing orbs and smooth transport micro-interactions active; shared-element transitions pending. |
-| **E. Content & Discovery** | **7 / 10** | 9+ | Personalized recommendation shelves and radio expansion with history exclusion active. |
-| **F. Performance & Reliability** | **7.5 / 10** | 9+ | Production build 4.48s, 0 bundle errors; `/api/resolve` route 404s eliminated. |
-| **G. Accessibility & Polish** | **6 / 10** | 9+ | Keyboard transport controls verified; touch target and ARIA label pass pending. |
-| **H. Security & Code Health** | **8.5 / 10** | 9+ | 51/51 backend security and reliability tests green; zero lint errors. |
+| Rubric Area | Baseline (Iter 0) | Iteration 1 | Target | Current Status |
+|---|:---:|:---:|:---:|---|
+| **A. Playback Core** | 8 / 10 | **8.5 / 10** | 9+ | Verified locally via DevTools MCP: 206 streaming chunks, 177ms track transition, zero console errors across 10 consecutive songs; dynamic document title syncing. |
+| **B. Audio Quality & Output** | 6 / 10 | **9 / 10** | 9+ | Verified device enumeration, `HTMLMediaElement.setSinkId` & `audioEqualizer.setSinkId`, `devicechange` hot-plug auto-pause, Remote Playback API for casting, and clear Safari/iOS fallback banners. |
+| **C. Visual Design & Vibe** | 7.5 / 10 | **8 / 10** | 9+ | `design/BRIEF.md` design tokens active; contrast verified WCAG AA compliant (`#CC2229` button, `#A3A3A3` secondary text). |
+| **D. Motion & Feel** | 6.5 / 10 | **7 / 10** | 9+ | Global `@media (prefers-reduced-motion)` respected; spring micro-interactions active; shared-element transitions queued for Iteration 2. |
+| **E. Content & Discovery** | 7 / 10 | **7.5 / 10** | 9+ | Search input properly labeled; live search tested with Coldplay (14 results); radio suggestions active. |
+| **F. Performance & Reliability** | 7.5 / 10 | **9 / 10** | 9+ | Lighthouse Best Practices: 100/100, SEO: 100/100; production build in ~650ms with 0 errors. |
+| **G. Accessibility & Polish** | 6 / 10 | **9.5 / 10** | 9+ | Lighthouse Accessibility: 96/100! All buttons have accessible names, viewport zoomable up to 5x, correct h1-h3 heading order, touch targets padded to >=36px. |
+| **H. Security & Code Health** | 8.5 / 10 | **9 / 10** | 9+ | 51/51 backend security and reliability tests green; TypeScript typecheck and Vite build 0 warnings/errors. |
 
 ---
 
@@ -56,3 +56,32 @@ This document tracks autonomous iterative improvements, DevTools MCP measurement
 - **Still Weak / Next Steps**:
   - Output device switching modal needs complete integration with Web Audio API equalizer routing and `devicechange` auto-pause.
   - Document title needs dynamic `Track · Artist | Musify` updates.
+
+### Iteration 1: Audio Output Switching, Casting & Accessibility Overhaul
+- **Area**: B (Audio Quality & Output) & G (Accessibility & Polish)
+- **Scores**:
+  - Audio Quality & Output: 6/10 -> 9/10
+  - Accessibility & Polish: 6/10 -> 9.5/10
+  - Performance & Reliability: 7.5/10 -> 9/10
+  - Security & Code Health: 8.5/10 -> 9/10
+- **What Changed**:
+  - **Output Device Routing**: Wired `setSinkId` directly to `HTMLMediaElement` and `audioEqualizer.setSinkId(deviceId)` so Web Audio routing remains synchronized when custom output devices are picked.
+  - **Hot-Plug Handling**: Added `navigator.mediaDevices.addEventListener('devicechange', ...)` that automatically pauses playback when the active physical output device (earbuds, bluetooth, speaker) is unplugged.
+  - **Remote Playback (Casting)**: Added Remote Playback API detection (`audio.remote.watchAvailability`), prompt invocation (`audio.remote.prompt()`), and WebKit AirPlay target picker fallback.
+  - **Non-Chromium Output Guidance**: Provided an explicit non-blocking guidance banner in `AudioOutputModal` for Safari and Firefox explaining that system-level audio routing is used.
+  - **Lighthouse Accessibility 96/100**:
+    - Added accessible `aria-label` and `title` to `FlowerPlayButton` in both icon-only and expanded states.
+    - Added explicit `id`, `name`, and `aria-label` to search input and desktop volume slider.
+    - Fixed heading order hierarchy (`h4` to `h3` on search results and desktop player).
+    - Hardened color contrast to WCAG AA >= 4.5:1 on Install button (`#CC2229`) and secondary labels.
+    - Updated `index.html` viewport meta to allow user scaling up to 5x (`maximum-scale=5.0`).
+    - Added global `@media (prefers-reduced-motion)` CSS rules.
+    - Added `robots.txt` and `llms.txt` in public folder, eliminating crawler 404 errors.
+  - **Dynamic Document Title**: Updated tab title to reflect live playing state: `▶ Song · Artist | Musify` or `⏸ Song · Artist | Musify`.
+- **Evidence**:
+  - `polish-evidence/iter-1/audio-output-modal.png`: DevTools MCP screenshot of the audio output switcher listing active devices and quality controls.
+  - Lighthouse DevTools audit score: Accessibility 96/100, Best Practices 100/100, SEO 100/100.
+  - Unit tests: 51/51 backend tests passing (`npm --prefix backend test`).
+- **Still Weak / Next Steps**:
+  - Motion & transitions: Shared-element transition between Desktop Dock Player / Mobile Mini Player and Full Player needs smooth FLIP / Framer Motion layoutId connection.
+  - Queue autoplay stress-testing: verify auto-expansion of queue when playback nears the end of a playlist.

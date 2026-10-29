@@ -37,6 +37,16 @@ class AudioEqualizerEngine {
 
   private analyser: AnalyserNode | null = null;
 
+  async setSinkId(deviceId: string) {
+    if (this.audioCtx && typeof (this.audioCtx as any).setSinkId === 'function') {
+      try {
+        await (this.audioCtx as any).setSinkId(deviceId);
+      } catch (e) {
+        console.warn('[AudioEqualizer] setSinkId error:', e);
+      }
+    }
+  }
+
   attachElement(audioElement: HTMLAudioElement) {
     this.attachedElement = audioElement;
     // On iOS Safari & mobile devices, createMediaElementSource kills background audio on lock screen.

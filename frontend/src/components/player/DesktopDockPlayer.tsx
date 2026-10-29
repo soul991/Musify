@@ -127,12 +127,14 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
 
           {/* Track Details */}
           <div className="flex-1 min-w-0">
-            <h4
+            <div
+              role="heading"
+              aria-level={3}
               onClick={() => setIsPlayerOpen(true)}
               className="text-sm font-bold text-white truncate cursor-pointer hover:underline leading-tight"
             >
               {currentTrack.title}
-            </h4>
+            </div>
             <p className="text-xs text-white/50 truncate font-medium leading-tight mt-0.5">
               {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
             </p>
@@ -141,34 +143,34 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {/* Like Heart Burst Button */}
           <button
             onClick={() => toggleLike(currentTrack)}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0 mx-1 p-2"
             title={liked ? 'Remove from favorites' : 'Add to favorites'}
             aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <HeartBurstIcon isLiked={liked} size={16} />
+            <HeartBurstIcon isLiked={liked} size={18} />
           </button>
         </div>
 
         {/* Center Section: Playback Controls & Waveform Scrubber */}
         <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0">
           {/* Buttons Row */}
-          <div className="flex items-center justify-center gap-5">
+          <div className="flex items-center justify-center gap-3">
             {/* Shuffle */}
             <button
               onClick={toggleShuffle}
-              className={`transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
                 isShuffled ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
               aria-label="Toggle shuffle"
             >
-              <Shuffle size={15} />
+              <Shuffle size={16} />
             </button>
 
             {/* Previous */}
             <button
               onClick={prevTrack}
-              className="text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
               title="Previous Track"
               aria-label="Previous track"
             >
@@ -188,7 +190,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             {/* Next */}
             <button
               onClick={nextTrack}
-              className="text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
               title="Next Track"
               aria-label="Next track"
             >
@@ -198,13 +200,13 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             {/* Repeat */}
             <button
               onClick={toggleRepeat}
-              className={`transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
                 repeatMode !== 'off' ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
               aria-label={`Repeat mode: ${repeatMode}`}
             >
-              {repeatMode === 'one' ? <Repeat1 size={15} /> : <Repeat size={15} />}
+              {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
           </div>
 
@@ -253,6 +255,9 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
             <input
+              id="desktop-volume-slider"
+              name="volume"
+              aria-label="Volume control"
               type="range"
               min="0"
               max="1"

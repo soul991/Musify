@@ -392,7 +392,7 @@ const MusifyMain: React.FC = () => {
                   setShowInstallPrompt(false);
                 }
               }}
-              className="px-2.5 py-1 rounded-lg bg-[#E5303D] hover:bg-[#B8222E] active:scale-95 text-white font-bold text-xs transition-all shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-[#CC2229] hover:bg-[#B8222E] active:scale-95 text-white font-bold text-xs transition-all shadow-sm"
             >
               Install
             </button>

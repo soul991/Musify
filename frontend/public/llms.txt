@@ -1,0 +1,11 @@
+# Musify
+
+> Modern Liquid Glass Web Music Player & PWA
+
+Musify is a web music player built with React, TypeScript, Vite, and Tailwind CSS. It streams audio with low latency and zero ads, providing gapless playback, synchronized lyrics, audio output switching, and responsive design across desktop, tablet, and mobile devices.
+
+## Features
+- Same-origin stream proxying with HTTP 206 Partial Content
+- Synced lyrics via lrclib
+- Web Audio API 5-band equalizer and EBU R128 loudness normalization
+- Device output switching via HTMLMediaElement.setSinkId and Remote Playback casting
