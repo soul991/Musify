@@ -9,6 +9,10 @@ Platform.shim.eval = (data: any, env: any) => {
 
 let innertubeInstance: Innertube | null = null;
 
+export function setInnertubeInstanceForTesting(instance: any) {
+  innertubeInstance = instance;
+}
+
 export async function getInnertube(): Promise<Innertube> {
   if (!innertubeInstance) {
     innertubeInstance = await Innertube.create({
@@ -79,16 +83,21 @@ function parseDuration(durationStr?: string): number {
 }
 
 // Get the highest resolution thumbnail URL safely without corrupting base64 Google hash
-function getBestThumbnail(thumbnails: any[]): string {
+export function getBestThumbnail(thumbnails: any[]): string {
   if (!thumbnails || thumbnails.length === 0) return '';
   const sorted = [...thumbnails].sort((a, b) => (b.width || 0) - (a.width || 0));
   let url = sorted[0]?.url || '';
   if (!url) return '';
   if (url.startsWith('//')) url = 'https:' + url;
 
-  // Safe upgrade: Only replace the query/sizing specifier at the END of the URL after '='
-  if (url.includes('googleusercontent.com') && url.includes('=')) {
+  // Safe upgrade: Only rewrite lh3.googleusercontent.com album-art URLs
+  if (url.includes('lh3.googleusercontent.com') && url.includes('=')) {
     return url.replace(/=[^=]*$/, '=w544-h544-l90-rj');
+  }
+
+  // Channel/avatar URLs: yt3.googleusercontent.com uses =s544-c-k-c0x00ffffff-no-rj to avoid HTTP 400
+  if (url.includes('yt3.googleusercontent.com') && url.includes('=')) {
+    return url.replace(/=[^=]*$/, '=s544-c-k-c0x00ffffff-no-rj');
   }
 
   // Safe upgrade for ytimg (hqdefault is guaranteed to exist on all YouTube videos)

@@ -112,6 +112,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const consecutiveFailuresRef = useRef<number>(0);
   const directStreamFailedRef = useRef<Set<string>>(new Set());
   const playStartTimeRef = useRef<number>(0);
+  const hasPlayedSuccessfullyInSessionRef = useRef<boolean>(false);
+  const stalledTimerRef = useRef<any>(null);
+  const movementCheckTimerRef = useRef<any>(null);
+  const isPlayingRef = useRef<boolean>(false);
+
+  const mapAudioErrorCode = (code?: number): string => {
+    switch (code) {
+      case 1:
+        return 'Playback aborted';
+      case 2:
+        return 'network error'; // code 2 = network
+      case 3:
+        return 'decode error'; // code 3 = decode
+      case 4:
+        return 'unsupported/blocked source'; // code 4 = unsupported/blocked source
+      default:
+        return 'playback failed';
+    }
+  };
 
   // Queue & state sync refs
   const originalQueueRef = useRef<Track[]>([]);
@@ -127,7 +146,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Callback refs to break circular dependencies
   const handleTrackEndRef = useRef<() => void>(() => {});
-  const triggerPlaybackErrorRef = useRef<(track: Track) => void>(() => {});
+  const triggerPlaybackErrorRef = useRef<(track: Track, reason?: string, isStalled?: boolean) => void>(() => {});
   const prevTrackRef = useRef<() => void>(() => {});
   const nextTrackRef = useRef<() => void>(() => {});
   const extractColorsRef = useRef(extractColorsFromImage);
@@ -159,15 +178,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return localStorage.getItem('musify_audio_wifi') || 'lossless';
   };
 
-  // Safe error handling with 3-consecutive-failure cap and proxy fallback
-  const handlePlaybackFailure = (track: Track) => {
+  // Safe error handling with 3-consecutive-failure cap, proxy fallback & no silent fails
+  const handlePlaybackFailure = (track: Track, reason = 'playback failed', isStalled = false) => {
     setIsLoading(false);
     setIsPlaying(false);
 
+    if (stalledTimerRef.current) {
+      clearTimeout(stalledTimerRef.current);
+      stalledTimerRef.current = null;
+    }
+    if (movementCheckTimerRef.current) {
+      clearTimeout(movementCheckTimerRef.current);
+      movementCheckTimerRef.current = null;
+    }
+
     // 1. Direct stream failure fallback: try Netlify proxy route once before giving up
-    if (!directStreamFailedRef.current.has(track.id) && audioRef.current) {
+    if (!isStalled && !directStreamFailedRef.current.has(track.id) && audioRef.current) {
       directStreamFailedRef.current.add(track.id);
-      console.warn(`[STREAM] Direct stream failed for "${track.title}". Falling back to proxy route /api/stream...`);
+      console.warn(`[STREAM] Direct stream failed for "${track.title}" (${reason}). Falling back to proxy route /api/stream...`);
       const proxyUrl = api.getStreamUrl(track.id, getEffectiveAudioQuality(), true);
       audioRef.current.src = proxyUrl;
       audioRef.current.load();
@@ -177,29 +205,41 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         consecutiveFailuresRef.current = 0;
       }).catch((err) => {
         if (err?.name !== 'AbortError') {
-          triggerConsecutiveFailure(track);
+          triggerConsecutiveFailure(track, reason, isStalled);
         }
       });
       return;
     }
 
-    triggerConsecutiveFailure(track);
+    triggerConsecutiveFailure(track, reason, isStalled);
   };
 
-  const triggerConsecutiveFailure = (track: Track) => {
+  const triggerConsecutiveFailure = (track: Track, reason = 'playback failed', isStalled = false) => {
+    // Don't auto-skip through the queue on a stalled or failed first track.
+    // Auto-skip only when a track fails after playing was working earlier in the session.
+    if (!hasPlayedSuccessfullyInSessionRef.current) {
+      console.warn(`[PLAYBACK] First track failed or stalled ("${track.title}"): ${reason}. Auto-skip suppressed.`);
+      setPlaybackError(isStalled ? 'Song is taking too long. Tap Retry.' : `Failed to play "${track.title}" (${reason}). Tap Retry.`);
+      return;
+    }
+
     consecutiveFailuresRef.current += 1;
-    console.warn(`[PLAYBACK] Failure count: ${consecutiveFailuresRef.current} for track: "${track.title}"`);
+    console.warn(`[PLAYBACK] Failure count: ${consecutiveFailuresRef.current} for track: "${track.title}" (${reason})`);
 
     if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
     if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
 
-    // If reached 3 consecutive errors, do NOT auto-skip further; display retry toast
+    // If reached 3 consecutive errors, do NOT auto-skip further; display retry toast with exact failure reason
     if (consecutiveFailuresRef.current >= 3) {
-      setPlaybackError(`Playback stopped after 3 errors. Check network connection or tap Retry.`);
+      setPlaybackError(`Playback stopped after 3 errors: ${reason}. Tap Retry.`);
       return;
     }
 
-    setPlaybackError(`Unable to play "${track.title}". Skipping to next track...`);
+    if (isStalled) {
+      setPlaybackError('Song is taking too long. Skipping to next track...');
+    } else {
+      setPlaybackError(`Unable to play "${track.title}" (${reason}). Skipping to next track...`);
+    }
 
     errorTimeoutRef.current = setTimeout(() => {
       setPlaybackError(null);
@@ -219,6 +259,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Resume Web Audio AudioContext on user interaction & visibility change
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
   useEffect(() => {
     const handleInteraction = () => {
       audioEqualizer.ensureContextRunning();
@@ -270,6 +314,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (activeEl !== audioRef.current) return;
 
       setCurrentTime(activeEl.currentTime);
+      if (activeEl.currentTime > 0 && movementCheckTimerRef.current) {
+        clearTimeout(movementCheckTimerRef.current);
+        movementCheckTimerRef.current = null;
+      }
 
       // Skip Silence Detection
       const isSkipSilence = typeof window !== 'undefined' && localStorage.getItem('musify_skip_silence') === 'true';
@@ -455,6 +503,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const onPlaying = (e: Event) => {
       if (e.target === audioRef.current) {
+        if (stalledTimerRef.current) {
+          clearTimeout(stalledTimerRef.current);
+          stalledTimerRef.current = null;
+        }
+        if (movementCheckTimerRef.current) {
+          clearTimeout(movementCheckTimerRef.current);
+          movementCheckTimerRef.current = null;
+        }
+        hasPlayedSuccessfullyInSessionRef.current = true;
         setIsPlaying(true);
         setIsLoading(false);
         setPlaybackError(null);
@@ -480,13 +537,34 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const onError = (e: Event) => {
-      if (e.target === audioRef.current) {
-        console.warn('Audio playback element error:', e);
+      const target = e.target as HTMLAudioElement;
+      if (target === audioRef.current) {
+        if (stalledTimerRef.current) {
+          clearTimeout(stalledTimerRef.current);
+          stalledTimerRef.current = null;
+        }
+        if (movementCheckTimerRef.current) {
+          clearTimeout(movementCheckTimerRef.current);
+          movementCheckTimerRef.current = null;
+        }
+
+        const err = target.error;
+        const mappedReason = mapAudioErrorCode(err?.code);
+        console.error('[AUDIO ELEMENT ERROR]', {
+          code: err?.code,
+          message: err?.message,
+          mappedReason,
+          streamUrl: target.src,
+          readyState: target.readyState,
+          networkState: target.networkState
+        });
+
         if (currentTrackRef.current) {
-          triggerPlaybackErrorRef.current(currentTrackRef.current);
+          triggerPlaybackErrorRef.current(currentTrackRef.current, mappedReason);
         } else {
           setIsLoading(false);
           setIsPlaying(false);
+          setPlaybackError(`Playback error: ${mappedReason}`);
         }
       }
     };
@@ -525,6 +603,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (fadeInTimerRef.current) clearInterval(fadeInTimerRef.current);
       if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current);
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
+      if (movementCheckTimerRef.current) clearTimeout(movementCheckTimerRef.current);
     };
   }, []);
 
@@ -629,6 +709,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     playStartTimeRef.current = performance.now();
     hasPrefetchedNextHalfwayRef.current = false;
 
+    // Reset stalled and movement check timers
+    if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
+    if (movementCheckTimerRef.current) clearTimeout(movementCheckTimerRef.current);
+
+    // 12-second stalled timer in playTrack (Requirement 4)
+    stalledTimerRef.current = setTimeout(() => {
+      const el = audioRef.current;
+      if (el && !isPlayingRef.current) {
+        setIsLoading(false);
+        setIsPlaying(false);
+        console.error('[PLAYBACK STALLED: 12S TIMEOUT]', {
+          streamUrl: el.src,
+          readyState: el.readyState,
+          networkState: el.networkState,
+          errorCode: el.error?.code,
+          errorMessage: el.error?.message
+        });
+        handlePlaybackFailure(track, 'Song is taking too long. Tap Retry.', true);
+      }
+    }, 12000);
+
     // 1. Show metadata in the immediate tick with zero delay
     setCurrentTrack(track);
     setIsLoading(true);
@@ -683,7 +784,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     audioRef.current.load();
 
-    if (audioEqualizer.getEnabled()) {
+    if (audioEqualizer.getEnabled() || audioEqualizer.getNormalization()) {
       audioEqualizer.init(audioRef.current);
       audioEqualizer.ensureContextRunning();
     }
@@ -693,6 +794,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsPlaying(true);
       setPlaybackError(null);
       consecutiveFailuresRef.current = 0;
+
+      // If play() resolves but currentTime hasn't moved after 3s, treat it as stalled too
+      if (movementCheckTimerRef.current) clearTimeout(movementCheckTimerRef.current);
+      movementCheckTimerRef.current = setTimeout(() => {
+        const el = audioRef.current;
+        if (el && !el.paused && el.currentTime === 0) {
+          setIsLoading(false);
+          setIsPlaying(false);
+          console.error('[PLAYBACK STALLED: NO MOVEMENT AFTER 3S]', {
+            streamUrl: el.src,
+            readyState: el.readyState,
+            networkState: el.networkState,
+            errorCode: el.error?.code,
+            errorMessage: el.error?.message
+          });
+          handlePlaybackFailure(track, 'Song is taking too long. Tap Retry.', true);
+        }
+      }, 3000);
 
       // Smooth fade-in if crossfade is enabled
       if (isCrossfade && audioRef.current) {
@@ -722,7 +841,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setPlaybackError('Tap Play to start listening');
       } else if (err?.name !== 'AbortError') {
         console.warn('Playback error:', err);
-        handlePlaybackFailure(track);
+        handlePlaybackFailure(track, err?.message || 'Playback failed');
       } else {
         setIsPlaying(false);
       }

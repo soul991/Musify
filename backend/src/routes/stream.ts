@@ -1,7 +1,10 @@
 import { Router } from 'express';
-import { handleStreamProxy, handlePrefetchStream } from '../services/stream.js';
+import { handleStreamProxy, handlePrefetchStream, handleDebugStream } from '../services/stream.js';
 
 const router = Router();
+
+// Debug stream route (active only when DEBUG_ENDPOINTS=true)
+router.get('/debug/:videoId', handleDebugStream);
 
 // Prefetch stream URL (resolve and cache without streaming body)
 router.get('/prefetch/:videoId', handlePrefetchStream);

@@ -3,15 +3,59 @@ import { staleWhileRevalidate } from './apiCache';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || '/api';
 
-// In production on Netlify, stream audio directly from Catalyst to avoid Netlify function/rewrite overhead.
-// VITE_STREAM_URL can explicitly override this origin.
-const STREAM_BASE = (import.meta as any).env?.VITE_STREAM_URL ||
-  (typeof window !== 'undefined' && (window.location.hostname === 'musify-live.netlify.app' || window.location.hostname.endsWith('.netlify.app'))
-    ? 'https://musify-backend-50047147406.development.catalystappsail.in/api'
-    : API_BASE);
+// Requirement 3: Use only VITE_STREAM_URL (configured in Netlify env).
+// If missing, use same-origin /api proxy.
+// For Netlify preview deploys (*.netlify.app excluding production host),
+// direct streaming is bypassed in favor of same-origin /api proxy so previews never hit CORS issues.
+const configuredStreamUrl = (import.meta as any).env?.VITE_STREAM_URL;
+const isProductionHost = typeof window !== 'undefined' && window.location.hostname === 'musify-live.netlify.app';
+const isNetlifyPreview = typeof window !== 'undefined' &&
+  window.location.hostname.endsWith('.netlify.app') &&
+  !isProductionHost;
+
+export const STREAM_BASE = (configuredStreamUrl && !isNetlifyPreview)
+  ? configuredStreamUrl.replace(/\/+$/, '')
+  : API_BASE;
 
 // In-memory cache for search suggestions
 const suggestionCache = new Map<string, string[]>();
+
+// Debounced prefetch queue (Requirement B.1: max 3 in-flight)
+const activeResolves = new Set<string>();
+const pendingResolves: { videoId: string; quality?: string }[] = [];
+const resolvedSet = new Set<string>();
+let drainScheduled = false;
+
+function pumpResolveQueue() {
+  while (activeResolves.size < 3 && pendingResolves.length > 0) {
+    const next = pendingResolves.shift()!;
+    if (resolvedSet.has(next.videoId)) continue;
+    activeResolves.add(next.videoId);
+    resolvedSet.add(next.videoId);
+
+    const base = STREAM_BASE;
+    const url = `${base}/resolve/${next.videoId}${next.quality ? `?quality=${encodeURIComponent(next.quality)}` : ''}`;
+    fetch(url, { method: 'GET', keepalive: true })
+      .finally(() => {
+        activeResolves.delete(next.videoId);
+        pumpResolveQueue();
+      });
+  }
+}
+
+export const resolveTrack = (videoId: string, quality?: string): void => {
+  if (!videoId || resolvedSet.has(videoId)) return;
+  if (!pendingResolves.some((item) => item.videoId === videoId)) {
+    pendingResolves.push({ videoId, quality });
+  }
+  if (!drainScheduled) {
+    drainScheduled = true;
+    setTimeout(() => {
+      drainScheduled = false;
+      pumpResolveQueue();
+    }, 120); // 120ms debounce
+  }
+};
 
 export const api = {
   // Search with AbortSignal cancellation support
@@ -63,7 +107,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/explore`);
       if (!res.ok) throw new Error('Failed to load explore feed');
       return res.json();
-    }, 15 * 60 * 1000); // 15 min
+    }, 10 * 60 * 1000); // 10 min
   },
 
   // Song details
@@ -75,13 +119,16 @@ export const api = {
     }, 30 * 60 * 1000);
   },
 
-  // Radio / Related queue
-  getRadio: async (id: string): Promise<Track[]> => {
-    return staleWhileRevalidate(`radio_${id}`, async () => {
-      const res = await fetch(`${API_BASE}/radio/${id}`);
-      if (!res.ok) return [];
-      return res.json();
-    }, 30 * 60 * 1000);
+  // Radio / Related queue with deduplication against current queue + history
+  getRadio: async (id: string, excludeIds?: string[]): Promise<Track[]> => {
+    const params = new URLSearchParams();
+    if (excludeIds && excludeIds.length > 0) {
+      params.set('exclude', excludeIds.slice(0, 50).join(','));
+    }
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/radio/${id}${queryString}`);
+    if (!res.ok) return [];
+    return res.json();
   },
 
   // Album with stale-while-revalidate cache
@@ -108,7 +155,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/playlist/${id}`);
       if (!res.ok) throw new Error('Failed to fetch playlist');
       return res.json();
-    }, 15 * 60 * 1000);
+    }, 30 * 60 * 1000);
   },
 
   // Lyrics
@@ -136,19 +183,21 @@ export const api = {
     }
   },
 
-  // Direct Audio Stream URL (bypasses Netlify proxy when direct origin available)
+  // Audio Stream URL (defaults to same-origin STREAM_BASE)
   getStreamUrl: (videoId: string, quality?: string, forceProxy = false): string => {
     const base = forceProxy ? API_BASE : STREAM_BASE;
     const url = `${base}/stream/${videoId}`;
     return quality ? `${url}?quality=${encodeURIComponent(quality)}` : url;
   },
 
-  // Prefetch Stream URL (resolves and caches upstream stream URL without downloading payload)
+  // Resolve Track (pre-warm stream URL cache without streaming body)
+  resolve: (videoId: string, quality?: string): void => {
+    resolveTrack(videoId, quality);
+  },
+
+  // Prefetch Stream URL
   prefetchStream: (videoId: string, quality?: string): void => {
-    if (!videoId) return;
-    const base = STREAM_BASE;
-    const url = `${base}/stream/prefetch/${videoId}${quality ? `?quality=${encodeURIComponent(quality)}` : ''}`;
-    fetch(url, { method: 'GET', keepalive: true }).catch(() => {});
+    resolveTrack(videoId, quality);
   },
 
   // Backend Wake-up Ping

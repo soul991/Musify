@@ -7,6 +7,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { isValidVideoId } from '../utils/validation.js';
+import { isOriginAllowed, setStreamCorsHeaders } from '../utils/cors.js';
 
 export { isValidVideoId };
 
@@ -113,9 +114,7 @@ export class StreamRateLimitError extends Error {
 
 /**
  * Extracts client key for direct stream requests.
- * Since direct stream requests go directly to Catalyst AppSail (1 reverse proxy hop),
- * the rightmost entry in X-Forwarded-For is guaranteed to be the actual remote client IP
- * appended by Catalyst and cannot be spoofed by forging the left/upstream XFF entries.
+ * Uses client IP derived from configured TRUST_PROXY_HOPS.
  */
 export function getStreamClientKey(req: Request): string {
   const xff = req.headers['x-forwarded-for'];
@@ -185,7 +184,7 @@ function getYtDlpFormat(quality?: string): string {
   return 'bestaudio[ext=m4a]/bestaudio/best';
 }
 
-async function extractWithYtDlp(videoId: string, quality?: string): Promise<CachedStream | null> {
+export async function extractWithYtDlp(videoId: string, quality?: string): Promise<CachedStream | null> {
   if (!isValidVideoId(videoId)) {
     return null;
   }
@@ -260,50 +259,80 @@ export async function resolveStreamUrl(
 
   const resolutionPromise = (async () => {
     try {
-      // 1. Primary: Fast in-process Innertube decipher (~250-400ms)
+      // 1. Primary: Fast in-process Innertube decipher (~250-400ms) with 8s timeout
+      let innertubeError: any = null;
       try {
-        const yt = await getInnertube();
-        const info = await yt.music.getInfo(videoId);
-        const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
-        const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+        const innertubePromise = (async () => {
+          const yt = await getInnertube();
+          const info = await yt.music.getInfo(videoId);
+          const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
+          const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
 
-        if (audioFormats.length > 0) {
-          let selectedFormat: any;
-          if (quality === 'low') {
-            selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
-          } else if (quality === 'medium') {
-            selectedFormat = audioFormats.find((f: any) => f.itag === 140 || f.itag === 251) || audioFormats[0];
-          } else {
-            // Prefer itag 140 (128k AAC/m4a) for native low-latency playback in iOS Safari and browsers
-            const aacFormat = audioFormats.find((f: any) => f.itag === 140);
-            const opusFormat = audioFormats.find((f: any) => f.itag === 251);
-            selectedFormat = aacFormat || opusFormat || audioFormats[0];
-          }
+          if (audioFormats.length > 0) {
+            let selectedFormat: any;
+            if (quality === 'low') {
+              selectedFormat = [...audioFormats].sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0))[0];
+            } else if (quality === 'medium') {
+              selectedFormat = audioFormats.find((f: any) => f.itag === 140 || f.itag === 251) || audioFormats[0];
+            } else {
+              // Prefer itag 140 (128k AAC/m4a) for native low-latency playback in iOS Safari and browsers
+              const aacFormat = audioFormats.find((f: any) => f.itag === 140);
+              const opusFormat = audioFormats.find((f: any) => f.itag === 251);
+              selectedFormat = aacFormat || opusFormat || audioFormats[0];
+            }
 
-          const decipheredUrl = await selectedFormat.decipher(yt.session.player);
-          if (decipheredUrl) {
-            const result: CachedStream = {
-              url: decipheredUrl,
-              mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
-              contentLength: selectedFormat.content_length || 0,
-              expiresAt: now + 5 * 3600 * 1000
-            };
-            setCachedStream(cacheKey, result);
-            return result;
+            const decipheredUrl = await selectedFormat.decipher(yt.session.player);
+            if (decipheredUrl) {
+              const result: CachedStream = {
+                url: decipheredUrl,
+                mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
+                contentLength: selectedFormat.content_length || 0,
+                expiresAt: now + 5 * 3600 * 1000
+              };
+              setCachedStream(cacheKey, result);
+              return result;
+            }
           }
-        }
-      } catch (err) {
-        console.warn(`Innertube primary resolution failed for ${videoId}, falling back to yt-dlp:`, err);
+          throw new Error('No playable audio formats found in Innertube');
+        })();
+
+        let timerId: NodeJS.Timeout;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timerId = setTimeout(() => {
+            reject(new Error('Innertube getInfo/decipher timed out after 8s'));
+          }, 8000);
+          if (timerId.unref) timerId.unref();
+        });
+
+        const result = await Promise.race([innertubePromise, timeoutPromise]);
+        clearTimeout(timerId!);
+        return result;
+      } catch (err: any) {
+        innertubeError = err;
+        console.warn(`[STREAM] Innertube resolution failed for ${videoId}, falling back to yt-dlp: ${err?.message || err}`);
       }
 
       // 2. Fallback: yt-dlp binary extraction
-      const ytdlpStream = await extractWithYtDlp(videoId, quality);
-      if (ytdlpStream) {
-        setCachedStream(cacheKey, ytdlpStream);
-        return ytdlpStream;
+      let ytdlpError: any = null;
+      try {
+        const ytdlpStream = await extractWithYtDlp(videoId, quality);
+        if (ytdlpStream) {
+          setCachedStream(cacheKey, ytdlpStream);
+          return ytdlpStream;
+        }
+      } catch (err: any) {
+        ytdlpError = err;
+        console.warn(`[STREAM] yt-dlp extraction failed for ${videoId}: ${err?.message || err}`);
       }
 
-      throw new Error('Unable to extract playable audio stream for ' + videoId);
+      // If both fail: throw 502 with structured error details
+      const streamErr: any = new Error('stream_unavailable');
+      streamErr.status = 502;
+      streamErr.error = 'stream_unavailable';
+      streamErr.step = 'innertube|ytdlp';
+      streamErr.innertubeError = innertubeError?.message || String(innertubeError);
+      streamErr.ytdlpError = ytdlpError?.message || String(ytdlpError);
+      throw streamErr;
     } finally {
       inFlightResolutions.delete(cacheKey);
     }
@@ -314,6 +343,8 @@ export async function resolveStreamUrl(
 }
 
 export async function handleStreamProxy(req: Request, res: Response) {
+  setStreamCorsHeaders(req, res);
+
   const rawId = req.params.videoId;
   const videoId = Array.isArray(rawId) ? rawId[0] : rawId;
   if (!videoId || !isValidVideoId(videoId)) {
@@ -364,20 +395,27 @@ export async function handleStreamProxy(req: Request, res: Response) {
       const freshInfo = await resolveStreamUrl(videoId, quality, clientKey);
       const retryResponse = await fetch(freshInfo.url, { headers: reqHeaders });
       if (!retryResponse.ok && retryResponse.status !== 206) {
+        setStreamCorsHeaders(req, res);
         res.setHeader('Cache-Control', 'no-store, no-cache');
         res.status(retryResponse.status).send('Upstream stream error');
         return;
       }
-      forwardStream(retryResponse, res, freshInfo.mimeType);
+      forwardStream(req, retryResponse, res, freshInfo.mimeType);
       return;
     }
 
-    forwardStream(upstreamResponse, res, streamInfo.mimeType);
+    forwardStream(req, upstreamResponse, res, streamInfo.mimeType);
   } catch (err: any) {
+    setStreamCorsHeaders(req, res);
     if (err instanceof StreamRateLimitError || err?.status === 429) {
       res.setHeader('Retry-After', String(err.retryAfterSec || 60));
       res.setHeader('Cache-Control', 'no-store, no-cache');
       res.status(429).json({ error: err.message || 'Too many stream resolution requests. Please wait a moment.' });
+      return;
+    }
+    if (err?.status === 502 || err?.error === 'stream_unavailable') {
+      res.setHeader('Cache-Control', 'no-store, no-cache');
+      res.status(502).json({ error: 'stream_unavailable', step: err.step || 'innertube|ytdlp' });
       return;
     }
     console.error('Error in handleStreamProxy:', err);
@@ -388,21 +426,28 @@ export async function handleStreamProxy(req: Request, res: Response) {
   }
 }
 
-function forwardStream(upstreamResponse: any, res: Response, fallbackMimeType: string) {
+function forwardStream(req: Request, upstreamResponse: any, res: Response, fallbackMimeType: string) {
   const status = upstreamResponse.status;
   const contentType = upstreamResponse.headers.get('content-type') || fallbackMimeType;
   const contentLength = upstreamResponse.headers.get('content-length');
   const contentRange = upstreamResponse.headers.get('content-range');
   const acceptRanges = upstreamResponse.headers.get('accept-ranges') || 'bytes';
 
+  const origin = req.headers.origin;
+  const allowOrigin = origin && isOriginAllowed(origin) ? origin : (origin ? '' : '*');
+
   const resHeaders: Record<string, string> = {
     'Content-Type': contentType,
     'Accept-Ranges': acceptRanges,
     'Access-Control-Allow-Headers': 'Range, Content-Range, Accept-Ranges, Content-Type',
     'Access-Control-Expose-Headers': 'Content-Range, Content-Length, Accept-Ranges',
+    'Vary': 'Origin',
     'Cache-Control': status === 206 || status === 200 ? 'public, max-age=86400' : 'no-store, no-cache'
   };
 
+  if (allowOrigin) {
+    resHeaders['Access-Control-Allow-Origin'] = allowOrigin;
+  }
   if (contentLength) {
     resHeaders['Content-Length'] = contentLength;
   }
@@ -452,6 +497,7 @@ function forwardStream(upstreamResponse: any, res: Response, fallbackMimeType: s
 }
 
 export async function handlePrefetchStream(req: Request, res: Response) {
+  setStreamCorsHeaders(req, res);
   const rawId = req.params.videoId || req.body?.videoId;
   const videoId = Array.isArray(rawId) ? rawId[0] : rawId;
   if (!videoId || !isValidVideoId(videoId)) {
@@ -476,4 +522,104 @@ export async function handlePrefetchStream(req: Request, res: Response) {
     console.warn(`Prefetch failed for ${videoId}:`, err?.message || err);
     res.status(500).json({ error: 'Prefetch failed' });
   }
+}
+
+/**
+ * GET /api/debug/stream/:videoId
+ * Diagnostic endpoint active only when DEBUG_ENDPOINTS=true.
+ * Returns which step failed (innertube, ytdlp, or innertube|ytdlp).
+ */
+export async function handleDebugStream(req: Request, res: Response) {
+  setStreamCorsHeaders(req, res);
+
+  if (process.env.DEBUG_ENDPOINTS !== 'true') {
+    res.status(404).json({ error: 'Debug endpoints disabled' });
+    return;
+  }
+
+  const rawId = req.params.videoId;
+  const videoId = Array.isArray(rawId) ? rawId[0] : rawId;
+  if (!videoId || !isValidVideoId(videoId)) {
+    res.status(400).json({ error: 'Invalid or missing videoId' });
+    return;
+  }
+
+  const rawQuality = req.query.quality;
+  const quality = typeof rawQuality === 'string' ? rawQuality : undefined;
+
+  const result: {
+    videoId: string;
+    innertube: { success: boolean; durationMs?: number; error?: string; mimeType?: string };
+    ytdlp: { success: boolean; durationMs?: number; error?: string; mimeType?: string };
+    failedStep: 'innertube|ytdlp' | 'innertube' | 'ytdlp' | null;
+  } = {
+    videoId,
+    innertube: { success: false },
+    ytdlp: { success: false },
+    failedStep: null
+  };
+
+  // Step 1: Test Innertube
+  const t0 = performance.now();
+  try {
+    const innertubePromise = (async () => {
+      const yt = await getInnertube();
+      const info = await yt.music.getInfo(videoId);
+      const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
+      const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+      if (audioFormats.length === 0) throw new Error('No audio formats found in Innertube');
+      const format = audioFormats.find((f: any) => f.itag === 140) || audioFormats[0];
+      const deciphered = await format.decipher(yt.session.player);
+      if (!deciphered) throw new Error('Decipher returned empty URL');
+      return format;
+    })();
+
+    let timerId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timerId = setTimeout(() => reject(new Error('Innertube timed out after 8s')), 8000);
+      if (timerId.unref) timerId.unref();
+    });
+
+    const format = await Promise.race([innertubePromise, timeoutPromise]);
+    clearTimeout(timerId!);
+    result.innertube = {
+      success: true,
+      durationMs: Math.round(performance.now() - t0),
+      mimeType: format.mime_type
+    };
+  } catch (err: any) {
+    result.innertube = {
+      success: false,
+      durationMs: Math.round(performance.now() - t0),
+      error: err?.message || String(err)
+    };
+  }
+
+  // Step 2: Test yt-dlp
+  const t1 = performance.now();
+  try {
+    const ytdlpStream = await extractWithYtDlp(videoId, quality);
+    if (!ytdlpStream) throw new Error('yt-dlp returned null or no stream URL');
+    result.ytdlp = {
+      success: true,
+      durationMs: Math.round(performance.now() - t1),
+      mimeType: ytdlpStream.mimeType
+    };
+  } catch (err: any) {
+    result.ytdlp = {
+      success: false,
+      durationMs: Math.round(performance.now() - t1),
+      error: err?.message || String(err)
+    };
+  }
+
+  if (!result.innertube.success && !result.ytdlp.success) {
+    result.failedStep = 'innertube|ytdlp';
+  } else if (!result.innertube.success) {
+    result.failedStep = 'innertube';
+  } else if (!result.ytdlp.success) {
+    result.failedStep = 'ytdlp';
+  }
+
+  res.json(result);
 }

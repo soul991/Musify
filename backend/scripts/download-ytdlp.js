@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,59 +12,96 @@ if (!fs.existsSync(binDir)) {
 }
 
 const isWin = process.platform === 'win32';
-const filename = isWin ? 'yt-dlp.exe' : 'yt-dlp';
-const targetPath = path.join(binDir, filename);
+// On Linux, always download the standalone PyInstaller binary yt-dlp_linux (never the Python zip script)
+const assetName = isWin ? 'yt-dlp.exe' : 'yt-dlp_linux';
+const targetPath = path.join(binDir, assetName);
+const aliasPath = path.join(binDir, isWin ? 'yt-dlp.exe' : 'yt-dlp');
 
-// Also support yt-dlp_linux name on Linux
-const linuxPath = path.join(binDir, 'yt-dlp_linux');
+async function downloadAndVerify() {
+  const sumsUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/SHA2-256SUMS';
+  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
 
-async function downloadBinary() {
-  if (fs.existsSync(targetPath) && fs.statSync(targetPath).size > 1000000) {
-    console.log(`yt-dlp binary already present at ${targetPath}`);
-    return;
+  console.log(`[yt-dlp setup] Fetching release checksums from ${sumsUrl}...`);
+  const sumsRes = await fetch(sumsUrl, {
+    headers: { 'User-Agent': 'Musify-Backend-Setup' },
+    redirect: 'follow'
+  });
+
+  if (!sumsRes.ok) {
+    throw new Error(`Failed to fetch SHA2-256SUMS: HTTP ${sumsRes.status} ${sumsRes.statusText}`);
   }
 
-  const url = isWin
-    ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
-    : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
-
-  console.log(`Downloading yt-dlp from ${url}...`);
-
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Musify-Backend-Setup'
-      },
-      redirect: 'follow'
-    });
-
-    if (!res.ok) {
-      console.warn(`Failed to download yt-dlp: HTTP ${res.status} ${res.statusText}`);
-      return;
+  const sumsText = await sumsRes.text();
+  let expectedHash = '';
+  for (const line of sumsText.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const parts = trimmed.split(/\s+/);
+    if (parts.length >= 2 && parts[1].replace(/^\*/, '') === assetName) {
+      expectedHash = parts[0].toLowerCase();
+      break;
     }
+  }
 
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(targetPath, buffer);
+  if (!expectedHash) {
+    throw new Error(`Could not find expected SHA256 checksum for ${assetName} in release SHA2-256SUMS`);
+  }
 
-    if (!isWin) {
-      try {
-        fs.chmodSync(targetPath, 0o755);
-        if (!fs.existsSync(linuxPath)) {
-          fs.copyFileSync(targetPath, linuxPath);
-          fs.chmodSync(linuxPath, 0o755);
+  // Check if existing file is already valid
+  if (fs.existsSync(targetPath)) {
+    try {
+      const existingBuffer = fs.readFileSync(targetPath);
+      const existingHash = crypto.createHash('sha256').update(existingBuffer).digest('hex').toLowerCase();
+      if (existingHash === expectedHash) {
+        console.log(`[yt-dlp setup] Existing binary at ${targetPath} matches verified SHA256 (${existingHash}).`);
+        if (!isWin) {
+          fs.chmodSync(targetPath, 0o755);
+          if (targetPath !== aliasPath) {
+            fs.copyFileSync(targetPath, aliasPath);
+            fs.chmodSync(aliasPath, 0o755);
+          }
         }
-      } catch (err) {
-        console.warn('Could not set chmod +x on yt-dlp binary:', err);
+        return;
       }
+      console.warn(`[yt-dlp setup] Existing binary hash mismatch (${existingHash} vs ${expectedHash}). Re-downloading...`);
+    } catch (readErr) {
+      console.warn('[yt-dlp setup] Could not read existing binary:', readErr);
     }
-
-    console.log(`yt-dlp successfully downloaded to ${targetPath} (${buffer.length} bytes)`);
-  } catch (err) {
-    console.warn('Error downloading yt-dlp (will fallback to system PATH if available):', err?.message || err);
   }
+
+  console.log(`[yt-dlp setup] Downloading ${assetName} from ${downloadUrl}...`);
+  const assetRes = await fetch(downloadUrl, {
+    headers: { 'User-Agent': 'Musify-Backend-Setup' },
+    redirect: 'follow'
+  });
+
+  if (!assetRes.ok) {
+    throw new Error(`Failed to download ${assetName}: HTTP ${assetRes.status} ${assetRes.statusText}`);
+  }
+
+  const arrayBuffer = await assetRes.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const downloadedHash = crypto.createHash('sha256').update(buffer).digest('hex').toLowerCase();
+  if (downloadedHash !== expectedHash) {
+    throw new Error(`SHA256 verification failed for ${assetName}! Expected: ${expectedHash}, Computed: ${downloadedHash}`);
+  }
+
+  console.log(`[yt-dlp setup] SHA256 verified successfully (${downloadedHash}). Saving binary...`);
+  fs.writeFileSync(targetPath, buffer);
+
+  if (!isWin) {
+    fs.chmodSync(targetPath, 0o755);
+    if (targetPath !== aliasPath) {
+      fs.copyFileSync(targetPath, aliasPath);
+      fs.chmodSync(aliasPath, 0o755);
+    }
+  }
+
+  console.log(`[yt-dlp setup] yt-dlp standalone binary ready at ${targetPath} (chmod 755).`);
 }
 
-downloadBinary().catch((err) => {
-  console.warn('download-ytdlp script caught error:', err?.message || err);
+downloadAndVerify().catch((err) => {
+  console.error('[yt-dlp setup] FATAL error preparing yt-dlp binary:', err?.message || err);
+  process.exit(1);
 });
