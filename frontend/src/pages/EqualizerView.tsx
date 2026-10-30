@@ -203,6 +203,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
                 {/* Vertical Range Slider */}
                 <div className="relative flex-1 flex items-center justify-center my-2">
                   <input
+                    id={`eq-band-${freq}`}
+                    name={`eq-band-${freq}`}
+                    aria-label={`${formatFreq(freq)} frequency band gain`}
                     type="range"
                     min={-12}
                     max={12}
@@ -236,6 +239,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             <span className="text-xs font-bold text-white/70">{bassBoost}%</span>
           </div>
           <input
+            id="eq-bass-boost-slider"
+            name="bassBoost"
+            aria-label="Bass Boost level percentage"
             type="range"
             min={0}
             max={100}
@@ -262,6 +268,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             <span className="text-xs font-bold text-white/70">{virtualizer}%</span>
           </div>
           <input
+            id="eq-virtualizer-slider"
+            name="spatialVirtualizer"
+            aria-label="Spatial Virtualizer level percentage"
             type="range"
             min={0}
             max={100}

@@ -184,9 +184,9 @@ export const Library: React.FC<LibraryProps> = ({
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3 px-1">
             <Pin size={15} className="text-[var(--accent-color)] fill-[var(--accent-color)]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white/80">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
               Pinned Playlists
-            </h3>
+            </h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -215,9 +215,9 @@ export const Library: React.FC<LibraryProps> = ({
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
+                  <h3 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
                     {pl.name}
-                  </h4>
+                  </h3>
                   <p className="text-xs text-white/45 mt-0.5">{pl.tracks.length} tracks</p>
                 </div>
               </div>
@@ -232,9 +232,9 @@ export const Library: React.FC<LibraryProps> = ({
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <Heart size={18} className="fill-rose-500 text-rose-500" />
-              <h3 className="text-lg font-black tracking-tight text-white/95">
+              <h2 className="text-lg font-black tracking-tight text-white/95">
                 Favorites ({likedSongs.length})
-              </h3>
+              </h2>
             </div>
             {likedSongs.length > 0 && (
               <button
@@ -300,9 +300,9 @@ export const Library: React.FC<LibraryProps> = ({
       {(activeTab === 'all' || activeTab === 'playlists') && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-lg font-black tracking-tight text-white/95">
+            <h2 className="text-lg font-black tracking-tight text-white/95">
               Playlists ({playlists.length})
-            </h3>
+            </h2>
             <button
               onClick={() => setShowCreateModal(true)}
               className="text-xs font-bold text-[var(--accent-color)] hover:underline flex items-center gap-1"
@@ -357,9 +357,9 @@ export const Library: React.FC<LibraryProps> = ({
                   </div>
 
                   <div>
-                    <h4 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
+                    <h3 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
                       {pl.name}
-                    </h4>
+                    </h3>
                     <p className="text-xs text-white/45 mt-0.5">{pl.tracks.length} tracks</p>
                   </div>
                 </div>
@@ -388,9 +388,9 @@ export const Library: React.FC<LibraryProps> = ({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-white/90 truncate group-hover:text-[var(--accent-color)]">
+                      <h3 className="text-sm font-bold text-white/90 truncate group-hover:text-[var(--accent-color)]">
                         {pl.name}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/45">{pl.tracks.length} tracks</p>
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export const Library: React.FC<LibraryProps> = ({
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-white/60" />
-              <h3 className="text-lg font-black tracking-tight text-white/95">Recently Played</h3>
+              <h2 className="text-lg font-black tracking-tight text-white/95">Recently Played</h2>
             </div>
             <button
               onClick={clearHistory}

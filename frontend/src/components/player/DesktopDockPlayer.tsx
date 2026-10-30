@@ -92,9 +92,22 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             transition={{ type: 'spring', damping: 28, stiffness: 350 }}
             className="relative w-full max-w-[1200px] h-[78px] rounded-full backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none overflow-hidden"
             style={{
-              background: colors.primary ? `linear-gradient(135deg, ${colors.primary}26 0%, #141416 100%)` : "#141416"
+              background: colors.primary
+                ? 'linear-gradient(135deg, rgba(26, 26, 32, 0.92) 0%, rgba(18, 18, 22, 0.96) 100%)'
+                : 'rgba(20, 20, 24, 0.94)',
+              boxShadow: colors.primary
+                ? `0 20px 50px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.2), 0 0 40px ${colors.primary}20`
+                : '0 20px 50px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.2)'
             }}
           >
+            {/* Subtle dynamic ambient glow from track accent */}
+            {colors.primary && (
+              <div
+                className="pointer-events-none absolute -left-10 -top-10 w-48 h-48 rounded-full blur-[45px] opacity-25"
+                style={{ backgroundColor: colors.primary }}
+              />
+            )}
+
             {/* Thin 2px progress line at top of dock */}
             <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
               <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
