@@ -152,7 +152,8 @@ function isNetlifySite(urlOrOrigin?: string): boolean {
  * by Express with TRUST_PROXY_HOPS so distinct users don't share a single proxy IP bucket.
  */
 export function getStreamClientKey(req: Request): string {
-  const rawHost = (req.headers?.['x-forwarded-host'] || req.headers?.host || '') as string;
+  // The Host header must be the Netlify host (not spoofable X-Forwarded-Host on direct requests)
+  const rawHost = (req.headers?.host || '') as string;
   const host = Array.isArray(rawHost) ? rawHost[0] : (rawHost || (req as any).hostname || '');
   const rawOrigin = (req.headers?.origin || '') as string;
   const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;

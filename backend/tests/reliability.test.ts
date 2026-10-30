@@ -230,6 +230,22 @@ describe('Phase 1 Backend Reliability & Performance Tests', () => {
       assert.equal(keyClean, '203.0.113.88');
       assert.equal(keySpoofed, '203.0.113.88');
       assert.equal(keyClean, keySpoofed, 'Forged left-most IPs must not change the direct rate-limit key');
+
+      // Direct request attempting to spoof X-Forwarded-Host to pretend it came through Netlify rewrite
+      const directReqSpoofedHost = {
+        headers: {
+          host: 'musify-backend-50047147406.development.catalystappsail.in',
+          'x-forwarded-host': 'musify-live.netlify.app',
+          origin: 'https://musify-live.netlify.app',
+          referer: 'https://musify-live.netlify.app/',
+          'x-forwarded-for': '10.99.99.99, 203.0.113.88'
+        },
+        ip: '10.99.99.99', // What express trust-proxy would resolve if trick succeeded
+        socket: { remoteAddress: '127.0.0.1' }
+      } as any;
+
+      const keySpoofedHost = getStreamClientKey(directReqSpoofedHost);
+      assert.equal(keySpoofedHost, '203.0.113.88', 'Forged X-Forwarded-Host on direct request must NOT bypass rightmost IP');
     });
   });
 
