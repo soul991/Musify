@@ -43,3 +43,6 @@ bin/
 .netlify/
 frontend/.netlify/
 
+# Polish evidence artifacts
+polish-evidence/
+
