@@ -13,14 +13,10 @@ if (!fs.existsSync(binDir)) {
 
 const isWin = process.platform === 'win32';
 // On Linux, always download the standalone PyInstaller binary yt-dlp_linux (never the Python zip script)
-const assetName = isWin ? 'yt-dlp.exe' : 'yt-dlp_linux';
-const targetPath = path.join(binDir, assetName);
-const aliasPath = path.join(binDir, isWin ? 'yt-dlp.exe' : 'yt-dlp');
+const primaryAssetName = isWin ? 'yt-dlp.exe' : 'yt-dlp_linux';
 
-async function downloadAndVerify() {
+async function fetchChecksums() {
   const sumsUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/SHA2-256SUMS';
-  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
-
   console.log(`[yt-dlp setup] Fetching release checksums from ${sumsUrl}...`);
   const sumsRes = await fetch(sumsUrl, {
     headers: { 'User-Agent': 'Musify-Backend-Setup' },
@@ -32,16 +28,23 @@ async function downloadAndVerify() {
   }
 
   const sumsText = await sumsRes.text();
-  let expectedHash = '';
+  const hashes = {};
   for (const line of sumsText.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     const parts = trimmed.split(/\s+/);
-    if (parts.length >= 2 && parts[1].replace(/^\*/, '') === assetName) {
-      expectedHash = parts[0].toLowerCase();
-      break;
+    if (parts.length >= 2) {
+      const cleanName = parts[1].replace(/^\*/, '');
+      hashes[cleanName] = parts[0].toLowerCase();
     }
   }
+  return hashes;
+}
+
+async function ensureAsset(assetName, checksums) {
+  const targetPath = path.join(binDir, assetName);
+  const aliasPath = path.join(binDir, 'yt-dlp');
+  const expectedHash = checksums[assetName];
 
   if (!expectedHash) {
     throw new Error(`Could not find expected SHA256 checksum for ${assetName} in release SHA2-256SUMS`);
@@ -54,12 +57,14 @@ async function downloadAndVerify() {
       const existingHash = crypto.createHash('sha256').update(existingBuffer).digest('hex').toLowerCase();
       if (existingHash === expectedHash) {
         console.log(`[yt-dlp setup] Existing binary at ${targetPath} matches verified SHA256 (${existingHash}).`);
-        if (!isWin) {
-          fs.chmodSync(targetPath, 0o755);
-          if (targetPath !== aliasPath) {
-            fs.copyFileSync(targetPath, aliasPath);
-            fs.chmodSync(aliasPath, 0o755);
-          }
+        if (!isWin || assetName !== 'yt-dlp.exe') {
+          try {
+            fs.chmodSync(targetPath, 0o755);
+            if (targetPath !== aliasPath && !isWin) {
+              fs.copyFileSync(targetPath, aliasPath);
+              fs.chmodSync(aliasPath, 0o755);
+            }
+          } catch {}
         }
         return;
       }
@@ -69,6 +74,7 @@ async function downloadAndVerify() {
     }
   }
 
+  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
   console.log(`[yt-dlp setup] Downloading ${assetName} from ${downloadUrl}...`);
   const assetRes = await fetch(downloadUrl, {
     headers: { 'User-Agent': 'Musify-Backend-Setup' },
@@ -90,15 +96,30 @@ async function downloadAndVerify() {
   console.log(`[yt-dlp setup] SHA256 verified successfully (${downloadedHash}). Saving binary...`);
   fs.writeFileSync(targetPath, buffer);
 
-  if (!isWin) {
-    fs.chmodSync(targetPath, 0o755);
-    if (targetPath !== aliasPath) {
-      fs.copyFileSync(targetPath, aliasPath);
-      fs.chmodSync(aliasPath, 0o755);
-    }
+  if (!isWin || assetName !== 'yt-dlp.exe') {
+    try {
+      fs.chmodSync(targetPath, 0o755);
+      if (targetPath !== aliasPath && !isWin) {
+        fs.copyFileSync(targetPath, aliasPath);
+        fs.chmodSync(aliasPath, 0o755);
+      }
+    } catch {}
   }
 
-  console.log(`[yt-dlp setup] yt-dlp standalone binary ready at ${targetPath} (chmod 755).`);
+  console.log(`[yt-dlp setup] yt-dlp binary ready at ${targetPath}.`);
+}
+
+async function downloadAndVerify() {
+  const checksums = await fetchChecksums();
+  
+  // Always ensure primary platform asset
+  await ensureAsset(primaryAssetName, checksums);
+
+  // If running on Windows, also ensure Linux standalone binary is present for deployment packaging
+  if (isWin && !fs.existsSync(path.join(binDir, 'yt-dlp_linux'))) {
+    console.log('[yt-dlp setup] Windows build detected: also bundling yt-dlp_linux for cloud container deployment...');
+    await ensureAsset('yt-dlp_linux', checksums);
+  }
 }
 
 downloadAndVerify().catch((err) => {

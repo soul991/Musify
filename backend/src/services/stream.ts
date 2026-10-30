@@ -317,9 +317,15 @@ export async function resolveStreamUrl(
       try {
         const innertubePromise = (async () => {
           const yt = await getInnertube();
-          const info = await yt.music.getInfo(videoId);
+          let info: any;
+          try {
+            info = await yt.music.getInfo(videoId);
+          } catch {
+            info = await yt.getInfo(videoId);
+          }
           const adaptiveFormats = info.streaming_data?.adaptive_formats || [];
-          const audioFormats = adaptiveFormats.filter((f: any) => f.has_audio);
+          const normalFormats = info.streaming_data?.formats || [];
+          const audioFormats = [...adaptiveFormats, ...normalFormats].filter((f: any) => f.has_audio);
 
           if (audioFormats.length > 0) {
             let selectedFormat: any;
@@ -340,7 +346,9 @@ export async function resolveStreamUrl(
               const probeRes = await fetch(decipheredUrl, {
                 headers: {
                   Range: 'bytes=0-0',
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Origin': 'https://music.youtube.com',
+                  'Referer': 'https://music.youtube.com/'
                 },
                 signal: AbortSignal.timeout(2500)
               }).catch(() => null);
@@ -440,7 +448,9 @@ export async function handleStreamProxy(req: Request, res: Response) {
 
     const rangeHeader = req.headers.range;
     const reqHeaders: Record<string, string> = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Origin': 'https://music.youtube.com',
+      'Referer': 'https://music.youtube.com/'
     };
 
     if (rangeHeader) {
