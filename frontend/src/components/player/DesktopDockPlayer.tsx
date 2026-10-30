@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shuffle,
   Repeat,
@@ -11,7 +11,10 @@ import {
   Maximize2,
   Users,
   Mic2,
-  ListMusic
+  ListMusic,
+  Headphones,
+  Speaker,
+  Bluetooth
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,6 +22,7 @@ import { useLibrary } from '../../context/LibraryContext';
 import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { FlowerPlayButton } from './FlowerPlayButton';
 import { HeartBurstIcon } from './HeartBurstIcon';
+import { AudioOutputModal } from './AudioOutputModal';
 
 interface DesktopDockPlayerProps {
   onOpenListenTogether?: () => void;
@@ -49,17 +53,16 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
     repeatMode,
     toggleRepeat,
     setIsPlayerOpen,
-    isPlayerOpen
+    isPlayerOpen,
+    audioOutputDeviceId,
+    audioQuality
   } = usePlayer();
 
+  const [showOutputModal, setShowOutputModal] = useState(false);
   const { colors } = useTheme();
   const { isLiked, toggleLike } = useLibrary();
 
-  if (!currentTrack || isPlayerOpen) {
-    return null;
-  }
-
-  const liked = isLiked(currentTrack.id);
+  const liked = currentTrack ? isLiked(currentTrack.id) : false;
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -77,51 +80,73 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
   };
 
   return (
-    <div
-      className={`fixed bottom-5 inset-x-0 z-40 hidden md:flex justify-center px-6 pointer-events-none ${className}`}
-    >
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
-        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className="relative w-full max-w-[1200px] h-[78px] rounded-full backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none overflow-hidden"
-        style={{
-          background: colors.primary ? `linear-gradient(135deg, ${colors.primary}26 0%, #141416 100%)` : "#141416"
-        }}
-      >
-        {/* Thin 2px progress line at top of dock */}
-        <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
-          <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
-        </div>
-
-        {/* Left Section: Track Info & Room Status */}
-        <div className="flex items-center gap-3.5 w-64 lg:w-72 shrink-0 min-w-0">
-          {/* Circular Artwork */}
-          <div
-            onClick={() => setIsPlayerOpen(true)}
-            className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/20 p-0.5 cursor-pointer shadow-md group"
+    <AnimatePresence>
+      {currentTrack && !isPlayerOpen && (
+        <div
+          className={`fixed bottom-5 inset-x-0 z-40 hidden md:flex justify-center px-6 pointer-events-none ${className}`}
+        >
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+            className="relative w-full max-w-[1200px] h-[78px] rounded-full backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none overflow-hidden"
+            style={{
+              background: colors.primary
+                ? 'linear-gradient(135deg, rgba(26, 26, 32, 0.92) 0%, rgba(18, 18, 22, 0.96) 100%)'
+                : 'rgba(20, 20, 24, 0.94)',
+              boxShadow: colors.primary
+                ? `0 20px 50px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.2), 0 0 40px ${colors.primary}20`
+                : '0 20px 50px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.2)'
+            }}
           >
-            <img
-              src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
-              alt={currentTrack.title}
-              className={`w-full h-full object-cover rounded-full ${
-                isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
-              }`}
-            />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
-              <Maximize2 size={14} className="text-white" />
+            {/* Subtle dynamic ambient glow from track accent */}
+            {colors.primary && (
+              <div
+                className="pointer-events-none absolute -left-10 -top-10 w-48 h-48 rounded-full blur-[45px] opacity-25"
+                style={{ backgroundColor: colors.primary }}
+              />
+            )}
+
+            {/* Thin 2px progress line at top of dock */}
+            <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
+              <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
             </div>
-          </div>
+
+            {/* Left Section: Track Info & Room Status */}
+            <div className="flex items-center gap-3.5 w-64 lg:w-72 shrink-0 min-w-0">
+              {/* Circular Artwork */}
+              <motion.div
+                layoutId="player-artwork"
+                onClick={() => setIsPlayerOpen(true)}
+                className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/20 p-0.5 cursor-pointer shadow-md group"
+              >
+                <img
+                  src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
+                  alt={currentTrack.title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                  }}
+                  className={`w-full h-full object-cover rounded-full ${
+                    isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
+                  }`}
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
+                  <Maximize2 size={14} className="text-white" />
+                </div>
+              </motion.div>
 
           {/* Track Details */}
           <div className="flex-1 min-w-0">
-            <h4
+            <div
+              role="heading"
+              aria-level={3}
               onClick={() => setIsPlayerOpen(true)}
               className="text-sm font-bold text-white truncate cursor-pointer hover:underline leading-tight"
             >
               {currentTrack.title}
-            </h4>
+            </div>
             <p className="text-xs text-white/50 truncate font-medium leading-tight mt-0.5">
               {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
             </p>
@@ -130,34 +155,34 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {/* Like Heart Burst Button */}
           <button
             onClick={() => toggleLike(currentTrack)}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0 mx-1 p-2"
             title={liked ? 'Remove from favorites' : 'Add to favorites'}
             aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <HeartBurstIcon isLiked={liked} size={16} />
+            <HeartBurstIcon isLiked={liked} size={18} />
           </button>
         </div>
 
         {/* Center Section: Playback Controls & Waveform Scrubber */}
         <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0">
           {/* Buttons Row */}
-          <div className="flex items-center justify-center gap-5">
+          <div className="flex items-center justify-center gap-3">
             {/* Shuffle */}
             <button
               onClick={toggleShuffle}
-              className={`transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
                 isShuffled ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
               aria-label="Toggle shuffle"
             >
-              <Shuffle size={15} />
+              <Shuffle size={16} />
             </button>
 
             {/* Previous */}
             <button
               onClick={prevTrack}
-              className="text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
               title="Previous Track"
               aria-label="Previous track"
             >
@@ -177,7 +202,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             {/* Next */}
             <button
               onClick={nextTrack}
-              className="text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
               title="Next Track"
               aria-label="Next track"
             >
@@ -187,13 +212,13 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             {/* Repeat */}
             <button
               onClick={toggleRepeat}
-              className={`transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
                 repeatMode !== 'off' ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
               aria-label={`Repeat mode: ${repeatMode}`}
             >
-              {repeatMode === 'one' ? <Repeat1 size={15} /> : <Repeat size={15} />}
+              {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
           </div>
 
@@ -242,6 +267,9 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
             <input
+              id="desktop-volume-slider"
+              name="volume"
+              aria-label="Volume control"
               type="range"
               min="0"
               max="1"
@@ -281,6 +309,16 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             </button>
           )}
 
+          {/* Audio Output Selector Trigger */}
+          <button
+            onClick={() => setShowOutputModal(true)}
+            className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1"
+            title="Audio Output & AirPlay"
+            aria-label="Audio Output & AirPlay"
+          >
+            <Headphones size={16} />
+          </button>
+
           {/* Full Player Expand */}
           <button
             onClick={() => setIsPlayerOpen(true)}
@@ -292,6 +330,11 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           </button>
         </div>
       </motion.div>
-    </div>
+
+      {/* Audio Output Selector Modal */}
+      <AudioOutputModal isOpen={showOutputModal} onClose={() => setShowOutputModal(false)} />
+        </div>
+      )}
+    </AnimatePresence>
   );
 };

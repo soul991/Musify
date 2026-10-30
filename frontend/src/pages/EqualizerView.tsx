@@ -137,6 +137,58 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
           <span className="text-xs font-semibold text-white/50">±12 dB range</span>
         </div>
 
+        {/* Dynamic Interactive Frequency Response Curve (SVG Bezier) */}
+        <div className="relative w-full h-28 mb-4 rounded-2xl bg-black/40 border border-white/5 overflow-hidden flex items-center justify-center p-2">
+          {(() => {
+            const width = 500;
+            const height = 110;
+            const points = gains.map((g, i) => {
+              const x = 50 + i * 100;
+              const y = height / 2 - (g / 12) * (height / 2 - 18);
+              return { x, y, g };
+            });
+
+            let d = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 0; i < points.length - 1; i++) {
+              const p0 = points[i];
+              const p1 = points[i + 1];
+              const cpx = p0.x + (p1.x - p0.x) / 2;
+              d += ` C ${cpx} ${p0.y}, ${cpx} ${p1.y}, ${p1.x} ${p1.y}`;
+            }
+            const areaPath = `${d} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+
+            return (
+              <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="eq-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#ED5564" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#ED5564" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                {/* 0dB Reference Line */}
+                <line x1="30" y1={height / 2} x2="470" y2={height / 2} stroke="rgba(255,255,255,0.12)" strokeDasharray="3 3" />
+                {/* Gradient area under curve */}
+                <path d={areaPath} fill="url(#eq-glow)" className="transition-all duration-300" />
+                {/* Neon bezier curve */}
+                <path d={d} fill="none" stroke="#ED5564" strokeWidth="2.5" strokeLinecap="round" className="transition-all duration-300 filter drop-shadow-[0_0_8px_#ED5564]" />
+                {/* Nodes on each frequency band */}
+                {points.map((p, idx) => (
+                  <circle
+                    key={idx}
+                    cx={p.x}
+                    cy={p.y}
+                    r={4}
+                    fill="#FFFFFF"
+                    stroke="#ED5564"
+                    strokeWidth="2"
+                    className="transition-all duration-300"
+                  />
+                ))}
+              </svg>
+            );
+          })()}
+        </div>
+
         {/* 5 Vertical Sliders Grid */}
         <div className="grid grid-cols-5 gap-2 sm:gap-6 items-end h-[240px] pt-4 pb-2">
           {EQ_FREQUENCIES.map((freq, idx) => {
@@ -151,6 +203,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
                 {/* Vertical Range Slider */}
                 <div className="relative flex-1 flex items-center justify-center my-2">
                   <input
+                    id={`eq-band-${freq}`}
+                    name={`eq-band-${freq}`}
+                    aria-label={`${formatFreq(freq)} frequency band gain`}
                     type="range"
                     min={-12}
                     max={12}
@@ -184,6 +239,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             <span className="text-xs font-bold text-white/70">{bassBoost}%</span>
           </div>
           <input
+            id="eq-bass-boost-slider"
+            name="bassBoost"
+            aria-label="Bass Boost level percentage"
             type="range"
             min={0}
             max={100}
@@ -210,6 +268,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             <span className="text-xs font-bold text-white/70">{virtualizer}%</span>
           </div>
           <input
+            id="eq-virtualizer-slider"
+            name="spatialVirtualizer"
+            aria-label="Spatial Virtualizer level percentage"
             type="range"
             min={0}
             max={100}

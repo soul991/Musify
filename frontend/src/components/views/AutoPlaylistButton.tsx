@@ -34,12 +34,12 @@ export const AutoPlaylistButton: React.FC<AutoPlaylistButtonProps> = ({
         {icon}
       </div>
 
-      <div className="flex flex-col min-w-0 pr-1">
+      <div className="flex flex-col flex-1 min-w-0 pr-1">
         <span className="text-sm font-bold text-white/95 leading-tight group-hover:text-white truncate">
           {title}
         </span>
         {subtitle && (
-          <span className="text-[11px] font-medium text-white/45 mt-0.5 truncate">
+          <span className="text-[11px] font-medium text-white/50 mt-0.5 truncate">
             {subtitle}
           </span>
         )}

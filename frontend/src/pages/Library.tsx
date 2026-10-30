@@ -184,9 +184,9 @@ export const Library: React.FC<LibraryProps> = ({
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3 px-1">
             <Pin size={15} className="text-[var(--accent-color)] fill-[var(--accent-color)]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white/80">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
               Pinned Playlists
-            </h3>
+            </h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -201,10 +201,11 @@ export const Library: React.FC<LibraryProps> = ({
                 </div>
 
                 <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
-                  {pl.tracks[0]?.thumbnail ? (
+                  {Boolean(pl.tracks[0]?.thumbnail) ? (
                     <img
                       src={pl.tracks[0].thumbnail}
                       alt={pl.name}
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                       onError={handleImageError}
                     />
@@ -214,9 +215,9 @@ export const Library: React.FC<LibraryProps> = ({
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
+                  <h3 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
                     {pl.name}
-                  </h4>
+                  </h3>
                   <p className="text-xs text-white/45 mt-0.5">{pl.tracks.length} tracks</p>
                 </div>
               </div>
@@ -231,9 +232,9 @@ export const Library: React.FC<LibraryProps> = ({
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <Heart size={18} className="fill-rose-500 text-rose-500" />
-              <h3 className="text-lg font-black tracking-tight text-white/95">
+              <h2 className="text-lg font-black tracking-tight text-white/95">
                 Favorites ({likedSongs.length})
-              </h3>
+              </h2>
             </div>
             {likedSongs.length > 0 && (
               <button
@@ -299,9 +300,9 @@ export const Library: React.FC<LibraryProps> = ({
       {(activeTab === 'all' || activeTab === 'playlists') && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-lg font-black tracking-tight text-white/95">
+            <h2 className="text-lg font-black tracking-tight text-white/95">
               Playlists ({playlists.length})
-            </h3>
+            </h2>
             <button
               onClick={() => setShowCreateModal(true)}
               className="text-xs font-bold text-[var(--accent-color)] hover:underline flex items-center gap-1"
@@ -342,10 +343,11 @@ export const Library: React.FC<LibraryProps> = ({
                   </button>
 
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
-                    {pl.tracks[0]?.thumbnail ? (
+                    {Boolean(pl.tracks[0]?.thumbnail) ? (
                       <img
                         src={pl.tracks[0].thumbnail}
                         alt={pl.name}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
                       />
@@ -355,9 +357,9 @@ export const Library: React.FC<LibraryProps> = ({
                   </div>
 
                   <div>
-                    <h4 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
+                    <h3 className="font-bold text-sm text-white/95 truncate group-hover:text-[var(--accent-color)]">
                       {pl.name}
-                    </h4>
+                    </h3>
                     <p className="text-xs text-white/45 mt-0.5">{pl.tracks.length} tracks</p>
                   </div>
                 </div>
@@ -373,20 +375,22 @@ export const Library: React.FC<LibraryProps> = ({
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                      {pl.tracks[0]?.thumbnail ? (
+                      {Boolean(pl.tracks[0]?.thumbnail) ? (
                         <img
                           src={pl.tracks[0].thumbnail}
                           alt={pl.name}
+                          referrerPolicy="no-referrer"
                           className="w-full h-full object-cover"
+                          onError={handleImageError}
                         />
                       ) : (
                         <ListMusic size={22} className="text-white/40" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-white/90 truncate group-hover:text-[var(--accent-color)]">
+                      <h3 className="text-sm font-bold text-white/90 truncate group-hover:text-[var(--accent-color)]">
                         {pl.name}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/45">{pl.tracks.length} tracks</p>
                     </div>
                   </div>
@@ -430,7 +434,7 @@ export const Library: React.FC<LibraryProps> = ({
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-white/60" />
-              <h3 className="text-lg font-black tracking-tight text-white/95">Recently Played</h3>
+              <h2 className="text-lg font-black tracking-tight text-white/95">Recently Played</h2>
             </div>
             <button
               onClick={clearHistory}
@@ -466,9 +470,11 @@ export const Library: React.FC<LibraryProps> = ({
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowFabModal(true)}
-          className="w-14 h-14 rounded-full bg-white text-black shadow-2xl flex items-center justify-center border border-white/20"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#ED5564] text-white shadow-[0_10px_30px_rgba(237,85,100,0.45)] hover:shadow-[0_14px_40px_rgba(237,85,100,0.65)] flex items-center justify-center border border-white/25 transition-all"
+          title="New playlist or import"
+          aria-label="New playlist or import"
         >
-          <Plus size={26} strokeWidth={2.5} />
+          <Plus size={24} strokeWidth={2.5} />
         </motion.button>
       </div>
 

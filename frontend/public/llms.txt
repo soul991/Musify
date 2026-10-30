@@ -1,0 +1,18 @@
+# Musify
+
+> Musify is an open-source modern web music player and progressive web app (PWA) with low-latency lossless audio streaming, synchronized lyrics, audio output switching, and responsive design across desktop, tablet, and mobile devices.
+
+Musify delivers an ad-free listening experience using modern web standards including Web Audio API, Media Session API, Remote Playback API, and service worker caching.
+
+## Features
+
+- [Playback Engine](https://musify-live.netlify.app/): Same-origin audio streaming with HTTP 206 Partial Content, instant seek, and auto-skip resilience.
+- [Synced Lyrics](https://musify-live.netlify.app/): Synchronized real-time lyric scrolling and line-by-line preview.
+- [Axion Equalizer](https://musify-live.netlify.app/): 5-band frequency response with interactive Bezier curve, bass boost, and loudness normalization.
+- [Audio Output & Casting](https://musify-live.netlify.app/): Physical output switching via setSinkId and Remote Playback casting.
+- [Progressive Web App](https://musify-live.netlify.app/): Installable standalone app with offline app shell support and responsive layouts.
+
+## Optional
+
+- [Source Code](https://github.com/soul991/Musify): GitHub repository for Musify web player.
+- [Design Brief](https://github.com/soul991/Musify/blob/main/design/BRIEF.md): Design tokens, typography, and color palette.

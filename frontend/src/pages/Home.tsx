@@ -113,7 +113,8 @@ export const Home: React.FC<HomeProps> = ({
   onOpenEqualizer,
   onOpenSettings,
   onSelectArtist,
-  onSelectAlbum
+  onSelectAlbum,
+  onSelectPlaylist
 }) => {
   const { playTrack, currentTrack, isPlaying, addToQueue, playNextInQueue } = usePlayer();
   const { isLiked, toggleLike, history, likedSongs, playStats } = useLibrary();
@@ -234,8 +235,11 @@ export const Home: React.FC<HomeProps> = ({
   // 6. Dynamic Hero Carousel: built from recent history or first real home feed section
   const heroSlides = useMemo<HeroSlide[]>(() => {
     // Priority 1: Top recent history / favorites
-    if (jumpBackIn.length >= 2) {
-      return jumpBackIn.slice(0, 4).map((t, idx) => ({
+    const validHistory = jumpBackIn.filter(
+      (t) => t.id && t.id.length === 11 && !t.id.startsWith('VL') && !t.id.startsWith('RD') && !t.id.startsWith('MPREb')
+    );
+    if (validHistory.length >= 2) {
+      return validHistory.slice(0, 4).map((t, idx) => ({
         id: `hero-history-${t.id}`,
         title: t.title,
         subtitle: t.artists?.map((a) => a.name).join(', ') || 'Unknown Artist',
@@ -245,17 +249,22 @@ export const Home: React.FC<HomeProps> = ({
       }));
     }
 
-    // Priority 2: First section of backend home feed
-    const firstSection = backendSections[0];
-    if (firstSection && firstSection.items && firstSection.items.length >= 2) {
-      return firstSection.items.slice(0, 4).map((item) => ({
-        id: `hero-feed-${item.id}`,
-        title: item.title,
-        subtitle: item.subtitle || 'Trending on Musify',
-        image: item.thumbnail,
-        badge: firstSection.title.toUpperCase(),
-        track: itemToTrack(item)
-      }));
+    // Priority 2: Sections of backend home feed with playable song items
+    for (const sec of backendSections) {
+      if (!sec.items || sec.items.length < 2) continue;
+      const playable = sec.items.filter(
+        (item) => (!item.type || item.type === 'song') && item.id.length === 11 && !item.id.startsWith('VL') && !item.id.startsWith('RD')
+      );
+      if (playable.length >= 2) {
+        return playable.slice(0, 4).map((item, idx) => ({
+          id: `hero-feed-${item.id}-${idx}`,
+          title: item.title,
+          subtitle: item.subtitle || 'Trending on Musify',
+          image: item.thumbnail || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+          badge: sec.title.toUpperCase(),
+          track: itemToTrack(item)
+        }));
+      }
     }
 
     // Fallback: curated slides
@@ -392,53 +401,121 @@ export const Home: React.FC<HomeProps> = ({
       {/* 4. DYNAMIC HERO CAROUSEL */}
       {activeHero && (
         <section
-          className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
+          className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.75)] border border-white/15 min-h-[240px] sm:h-[300px] cursor-pointer group select-none"
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
           onClick={() => handleHeroClick(activeHero)}
         >
+          {/* Base Atmospheric Gradient Background */}
+          <div
+            className="absolute inset-0 transition-colors duration-700"
+            style={{
+              background: `linear-gradient(135deg, ${colors.primary}45 0%, #1a1622 50%, #0d0d11 100%)`
+            }}
+          />
+
+          {/* Blurred Artwork Bleed */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeHero.id}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="absolute inset-0 bg-cover bg-center"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 0.35, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
+              className="absolute -inset-4 bg-cover bg-center blur-[70px] pointer-events-none"
               style={{ backgroundImage: `url(${activeHero.image})` }}
             />
           </AnimatePresence>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-40% to-transparent pointer-events-none" />
+          {/* Subtle Radial Refraction Highlight */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 p-5 sm:p-7 flex flex-col justify-end pointer-events-none">
-            {activeHero.badge && (
-              <span
-                className="self-start text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full border border-white/20 text-white mb-2 shadow-sm"
-                style={{ backgroundColor: `${colors.primary}90` }}
+          {/* Content Flex Container */}
+          <div className="relative z-10 h-full p-6 sm:p-8 flex items-center justify-between gap-6 pointer-events-none">
+            {/* Left: Metadata & Call to Action */}
+            <div className="flex-1 flex flex-col justify-center min-w-0 max-w-[75%] sm:max-w-[65%]">
+              {activeHero.badge && (
+                <div className="flex items-center gap-1.5 self-start mb-2.5">
+                  <span
+                    className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full border border-white/20 text-white shadow-md flex items-center gap-1.5"
+                    style={{ backgroundColor: `${colors.primary}B0` }}
+                  >
+                    <Sparkles size={11} className="text-white" />
+                    {activeHero.badge}
+                  </span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white drop-shadow-lg leading-tight line-clamp-2">
+                {activeHero.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-white/80 font-medium truncate drop-shadow mt-1.5 max-w-[90%]">
+                {activeHero.subtitle}
+              </p>
+
+              {/* Action Buttons Row */}
+              <div className="flex items-center gap-3 mt-5 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleHeroClick(activeHero);
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-all"
+                >
+                  <Play size={16} className="fill-current ml-0.5" />
+                  <span>Play Now</span>
+                </button>
+                {activeHero.track && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (activeHero.track) addToQueue(activeHero.track);
+                    }}
+                    className="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-all"
+                    title="Add to queue"
+                  >
+                    <ListPlus size={15} />
+                    <span className="hidden sm:inline">Add to Queue</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Featured Album Art Display with 3D Tilt */}
+            <div className="hidden sm:flex relative shrink-0 items-center justify-center pointer-events-none">
+              {/* Subtle Ambient Disc behind cover */}
+              <div
+                className="absolute w-40 h-40 sm:w-48 sm:h-48 rounded-full blur-[35px] opacity-60"
+                style={{ backgroundColor: colors.primary }}
+              />
+              <motion.div
+                key={activeHero.id}
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group-hover:scale-105 transition-transform duration-500 bg-[#16161a]"
               >
-                {activeHero.badge}
-              </span>
-            )}
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-md leading-tight">
-              {activeHero.title}
-            </h2>
-            <p className="text-xs sm:text-sm text-white/80 font-medium truncate drop-shadow mt-1 max-w-[85%]">
-              {activeHero.subtitle}
-            </p>
+                <img
+                  src={activeHero.image || '/icons/musify-icon.svg'}
+                  alt={activeHero.title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            </div>
           </div>
 
-          <div className="absolute right-5 bottom-5 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-2xl group-hover:scale-110 active:scale-95 transition-transform duration-200">
-            <Play size={20} className="fill-current ml-0.5" />
-          </div>
-
+          {/* Bottom Pagination Dots */}
           {heroSlides.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none">
+            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none z-20">
               {heroSlides.map((slide, idx) => (
                 <div
                   key={slide.id}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    idx === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
+                    idx === heroIndex ? 'w-7 bg-white shadow-sm' : 'w-1.5 bg-white/40'
                   }`}
                 />
               ))}
@@ -537,10 +614,11 @@ export const Home: React.FC<HomeProps> = ({
                   >
                     <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
                       <img
-                        src={track.thumbnail}
+                        src={track.thumbnail || '/icons/musify-icon.svg'}
                         alt={track.title}
                         loading="lazy"
                         decoding="async"
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -588,10 +666,11 @@ export const Home: React.FC<HomeProps> = ({
                 >
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-white/10 border border-white/10 group-hover:border-white/30 transition-all shadow-md mb-2">
                     <img
-                      src={artist.thumbnail}
+                      src={artist.thumbnail || '/icons/musify-icon.svg'}
                       alt={artist.name}
                       loading="lazy"
                       decoding="async"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={handleImageError}
                     />
@@ -644,6 +723,9 @@ export const Home: React.FC<HomeProps> = ({
         backendSections.map((sec, secIdx) => {
           if (!sec.items || sec.items.length === 0) return null;
           const sectionTracks = sec.items.map(itemToTrack);
+          const playableTracks = sectionTracks.filter(
+            (t) => t.id.length === 11 && !t.id.startsWith('VL') && !t.id.startsWith('RD') && !t.id.startsWith('MPREb')
+          );
 
           return (
             <section key={`${sec.title}-${secIdx}`} className="mb-10">
@@ -653,9 +735,9 @@ export const Home: React.FC<HomeProps> = ({
                     {sec.title}
                   </h2>
                 </div>
-                {sectionTracks.length > 0 && (
+                {playableTracks.length > 0 && (
                   <button
-                    onClick={() => playTrack(sectionTracks[0], sectionTracks)}
+                    onClick={() => playTrack(playableTracks[0], playableTracks)}
                     className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
                   >
                     <Play size={12} className="fill-current" /> Play all
@@ -667,26 +749,31 @@ export const Home: React.FC<HomeProps> = ({
               {sec.items.length >= 8 ? (
                 <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
                   <div className="grid grid-rows-4 grid-flow-col gap-2 min-w-max pb-2">
-                    {sectionTracks.slice(0, 16).map((track) => renderTrackRow(track, sectionTracks))}
+                    {sec.items.slice(0, 16).map((item) => {
+                      const track = itemToTrack(item);
+                      return renderTrackRow(track, playableTracks, item);
+                    })}
                   </div>
                 </div>
               ) : (
                 <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
                   <div className="flex items-center gap-4 min-w-max pb-2">
-                    {sectionTracks.map((track) => {
+                    {sec.items.map((item) => {
+                      const track = itemToTrack(item);
                       const isCurrent = currentTrack?.id === track.id;
                       return (
                         <div
-                          key={track.id}
-                          onClick={() => playTrack(track, sectionTracks)}
+                          key={item.id}
+                          onClick={() => handleFeedItemClick(item, track, playableTracks)}
                           className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                         >
                           <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
                             <img
-                              src={track.thumbnail}
+                              src={track.thumbnail || '/icons/musify-icon.svg'}
                               alt={track.title}
                               loading="lazy"
                               decoding="async"
+                              referrerPolicy="no-referrer"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               onError={handleImageError}
                             />
@@ -715,15 +802,52 @@ export const Home: React.FC<HomeProps> = ({
     </div>
   );
 
+  function handleFeedItemClick(
+    item: { id: string; title: string; subtitle?: string; thumbnail: string; type?: string },
+    track: Track,
+    playableList: Track[]
+  ) {
+    const isPlaylist = item.type === 'playlist' || item.id.startsWith('VL') || item.id.startsWith('RD');
+    const isAlbum = item.type === 'album' || item.id.startsWith('MPREb');
+    const isArtist = item.type === 'artist';
+
+    if (isPlaylist && onSelectPlaylist) {
+      onSelectPlaylist(item.id.replace(/^VL/, ''));
+      return;
+    }
+    if (isAlbum && onSelectAlbum) {
+      onSelectAlbum(item.id);
+      return;
+    }
+    if (isArtist && onSelectArtist) {
+      onSelectArtist(item.id);
+      return;
+    }
+
+    if (track.id.length === 11) {
+      playTrack(track, playableList.length > 0 ? playableList : [track]);
+    }
+  }
+
   // Helper render for 64px track row in snap grid
-  function renderTrackRow(track: Track, currentSectionList: Track[]) {
+  function renderTrackRow(
+    track: Track,
+    playableList: Track[],
+    item?: { id: string; title: string; subtitle?: string; thumbnail: string; type?: string }
+  ) {
     const isCurrent = currentTrack?.id === track.id;
     const liked = isLiked(track.id);
 
     return (
       <div
         key={track.id}
-        onClick={() => playTrack(track, currentSectionList)}
+        onClick={() => {
+          if (item) {
+            handleFeedItemClick(item, track, playableList);
+          } else {
+            playTrack(track, playableList);
+          }
+        }}
         className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-all duration-200 border ${
           isCurrent
             ? 'bg-white/[0.14] border-white/30 shadow-md'
@@ -731,20 +855,17 @@ export const Home: React.FC<HomeProps> = ({
         }`}
       >
         <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10 flex items-center justify-center">
-          {track.thumbnail ? (
-            <img
-              src={track.thumbnail}
-              alt={track.title}
-              width={48}
-              height={48}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover"
-              onError={handleImageError}
-            />
-          ) : (
-            <Disc size={20} className="text-white/40" />
-          )}
+          <img
+            src={track.thumbnail || '/icons/musify-icon.svg'}
+            alt={track.title}
+            width={48}
+            height={48}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
 
           {isCurrent && isPlaying && (
             <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-0.5">

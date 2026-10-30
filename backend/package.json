@@ -6,12 +6,13 @@
   "main": "dist/index.js",
   "scripts": {
     "download-ytdlp": "node scripts/download-ytdlp.js",
+    "postinstall": "node scripts/download-ytdlp.js",
     "prebuild": "node scripts/download-ytdlp.js",
     "build": "tsc",
     "prestart": "node scripts/download-ytdlp.js",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "tsx --test tests/security.test.ts tests/reliability.test.ts tests/playback_regression.test.ts"
+    "test": "tsx --test tests/security.test.ts tests/reliability.test.ts tests/playback_regression.test.ts tests/playback_fix.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",

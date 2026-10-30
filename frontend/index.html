@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="description" content="Musify is a modern, high-performance web music player and PWA featuring liquid-glass aesthetics, instant gapless playback, and synchronized lyrics." />
+    <meta name="referrer" content="no-referrer" />
     <title>Musify — Liquid Glass Music</title>
     
     <!-- PWA & Mobile Web App Meta -->
@@ -18,13 +20,13 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
-        <!-- Preconnect to image CDNs and Stream Backend for instant audio start -->
+    <!-- Preconnect to image CDNs and Stream Backend for instant audio start -->
     <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
     <link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
-    <link rel="preconnect" href="https://musify-backend-50047147406.development.catalystappsail.in" crossorigin>
+    <link rel="preconnect" href="https://yt3.googleusercontent.com" crossorigin>
     <link rel="dns-prefetch" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
-    <link rel="dns-prefetch" href="https://musify-backend-50047147406.development.catalystappsail.in">
+    <link rel="dns-prefetch" href="https://yt3.googleusercontent.com">
 
     <!-- Google Fonts Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +36,6 @@
     <!-- Neutralize Netlify Injected Badge & HUD Script -->
     <script>
       (function() {
-        // Prevent Netlify HUD script from executing by removing dataset attributes and removing script
         var removeHud = function() {
           var s = document.querySelector('script[data-nf-variant], script[src*="/.netlify/scripts/hud"]');
           if (s) {

@@ -253,6 +253,9 @@ export const Search: React.FC<SearchProps> = ({
 
           <input
             ref={inputRef}
+            id="musify-search-input"
+            name="musify-search"
+            aria-label="Search songs, albums, and artists"
             type="text"
             value={query}
             onFocus={() => setIsFocused(true)}
@@ -507,8 +510,9 @@ export const Search: React.FC<SearchProps> = ({
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <img
-                      src={results.artists[0].thumbnail}
+                      src={results.artists[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.artists[0].name}
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-full object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
                     />
@@ -516,9 +520,9 @@ export const Search: React.FC<SearchProps> = ({
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Artist
                       </span>
-                      <h4 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1">
                         {results.artists[0].name}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/50">
                         {results.artists[0].subscribers || 'Verified Artist'}
                       </p>
@@ -535,8 +539,9 @@ export const Search: React.FC<SearchProps> = ({
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <img
-                      src={results.songs[0].thumbnail}
+                      src={results.songs[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.songs[0].title}
+                      referrerPolicy="no-referrer"
                       className="w-16 h-16 rounded-2xl object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
                     />
@@ -544,9 +549,9 @@ export const Search: React.FC<SearchProps> = ({
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Song
                       </span>
-                      <h4 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1">
                         {results.songs[0].title}
-                      </h4>
+                      </h3>
                       <p className="text-xs text-white/50">
                         {results.songs[0].artists.map((a) => a.name).join(', ')}
                       </p>
@@ -621,8 +626,9 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
-                        src={album.thumbnail}
+                        src={album.thumbnail || '/icons/musify-icon.svg'}
                         alt={album.title}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -659,8 +665,9 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-white/10 shadow-xl border border-white/10">
                       <img
-                        src={artist.thumbnail}
+                        src={artist.thumbnail || '/icons/musify-icon.svg'}
                         alt={artist.name}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={handleImageError}
                       />
@@ -697,9 +704,11 @@ export const Search: React.FC<SearchProps> = ({
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
-                        src={playlist.thumbnail}
+                        src={playlist.thumbnail || '/icons/musify-icon.svg'}
                         alt={playlist.title}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={handleImageError}
                       />
                     </div>
                     <div>
