@@ -114,19 +114,69 @@ export class StreamRateLimitError extends Error {
   }
 }
 
+function isNetlifyHost(host?: string): boolean {
+  if (!host) return false;
+  const h = host.split(':')[0].toLowerCase();
+  return (
+    h === 'musify-live.netlify.app' ||
+    h.endsWith('.netlify.app') ||
+    /^([a-zA-Z0-9_-]+--)?musify-live\.netlify\.app$/.test(h)
+  );
+}
+
+function isNetlifySite(urlOrOrigin?: string): boolean {
+  if (!urlOrOrigin) return false;
+  try {
+    const parsed = new URL(urlOrOrigin);
+    return isNetlifyHost(parsed.host);
+  } catch {
+    return (
+      urlOrOrigin.includes('musify-live.netlify.app') ||
+      /^https?:\/\/([a-zA-Z0-9_-]+--)?musify-live\.netlify\.app/.test(urlOrOrigin) ||
+      urlOrOrigin.endsWith('.netlify.app')
+    );
+  }
+}
+
 /**
- * Extracts client key for direct stream requests.
- * Uses client IP derived from configured TRUST_PROXY_HOPS.
+ * Extracts client key for stream rate limiting.
+ *
+ * For direct requests hitting the Catalyst backend directly, Catalyst AppSail acts
+ * as a single reverse-proxy hop (one-hop assumption). Catalyst appends the true client IP
+ * to the far right of the X-Forwarded-For header, making the rightmost entry untampered
+ * by clients attempting to spoof upstream IPs.
+ *
+ * If the request arrives through the Netlify rewrite (detected by Origin/Referer being
+ * the Netlify site and Host header being the Netlify host), the request traversed multiple
+ * reverse proxies (Netlify edge + Catalyst AppSail). In that case, we use `req.ip` computed
+ * by Express with TRUST_PROXY_HOPS so distinct users don't share a single proxy IP bucket.
  */
 export function getStreamClientKey(req: Request): string {
-  const xff = req.headers['x-forwarded-for'];
-  if (typeof xff === 'string' && xff.trim()) {
-    const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
+  const rawHost = (req.headers?.['x-forwarded-host'] || req.headers?.host || '') as string;
+  const host = Array.isArray(rawHost) ? rawHost[0] : (rawHost || (req as any).hostname || '');
+  const rawOrigin = (req.headers?.origin || '') as string;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  const rawReferer = (req.headers?.referer || '') as string;
+  const referer = Array.isArray(rawReferer) ? rawReferer[0] : rawReferer;
+
+  const isNetlifyRewrite =
+    isNetlifyHost(host) &&
+    (isNetlifySite(origin) || isNetlifySite(referer));
+
+  if (isNetlifyRewrite && req.ip) {
+    return req.ip;
+  }
+
+  // Direct requests: use rightmost X-Forwarded-For under the one-hop assumption
+  const xff = req.headers?.['x-forwarded-for'];
+  const xffStr = Array.isArray(xff) ? xff.join(',') : xff;
+  if (typeof xffStr === 'string' && xffStr.trim()) {
+    const parts = xffStr.split(',').map((s) => s.trim()).filter(Boolean);
     if (parts.length > 0) {
       return parts[parts.length - 1]; // rightmost entry: untampered client IP from immediate reverse proxy
     }
   }
-  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+  return req.ip || req.socket?.remoteAddress || '127.0.0.1';
 }
 
 function findYtDlpBinary(): string {

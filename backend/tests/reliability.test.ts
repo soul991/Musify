@@ -157,6 +157,80 @@ describe('Phase 1 Backend Reliability & Performance Tests', () => {
 
       streamMissLimiter.reset();
     });
+
+    test('two different clients through the proxy path must not share one bucket', () => {
+      streamMissLimiter.reset();
+
+      // Netlify proxy rewrite requests: Host is Netlify host, Origin/Referer is Netlify site
+      const reqClient1 = {
+        headers: {
+          host: 'musify-live.netlify.app',
+          origin: 'https://musify-live.netlify.app',
+          referer: 'https://musify-live.netlify.app/',
+          'x-forwarded-for': '203.0.113.10, 54.240.196.1, 10.0.0.1'
+        },
+        ip: '203.0.113.10',
+        socket: { remoteAddress: '10.0.0.1' }
+      } as any;
+
+      const reqClient2 = {
+        headers: {
+          host: 'musify-live.netlify.app',
+          origin: 'https://musify-live.netlify.app',
+          referer: 'https://musify-live.netlify.app/',
+          'x-forwarded-for': '198.51.100.20, 54.240.196.1, 10.0.0.1'
+        },
+        ip: '198.51.100.20',
+        socket: { remoteAddress: '10.0.0.1' }
+      } as any;
+
+      const key1 = getStreamClientKey(reqClient1);
+      const key2 = getStreamClientKey(reqClient2);
+
+      assert.equal(key1, '203.0.113.10');
+      assert.equal(key2, '198.51.100.20');
+      assert.notEqual(key1, key2, 'Two clients through proxy must have distinct keys');
+
+      // Client 1 fills their bucket up to 30 requests
+      for (let i = 0; i < 30; i++) {
+        const res = streamMissLimiter.isAllowed(key1);
+        assert.equal(res.allowed, true);
+      }
+      // Client 1 is now rate-limited
+      assert.equal(streamMissLimiter.isAllowed(key1).allowed, false);
+
+      // Client 2 must NOT be blocked because they do not share the bucket
+      assert.equal(streamMissLimiter.isAllowed(key2).allowed, true);
+
+      streamMissLimiter.reset();
+    });
+
+    test('direct requests with a forged left-most X-Forwarded-For must not change the key', () => {
+      const directReqClean = {
+        headers: {
+          host: 'musify-backend-50047147406.development.catalystappsail.in',
+          'x-forwarded-for': '203.0.113.88'
+        },
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' }
+      } as any;
+
+      const directReqSpoofed = {
+        headers: {
+          host: 'musify-backend-50047147406.development.catalystappsail.in',
+          'x-forwarded-for': '1.1.1.1, 10.0.0.5, 172.16.2.1, 203.0.113.88'
+        },
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' }
+      } as any;
+
+      const keyClean = getStreamClientKey(directReqClean);
+      const keySpoofed = getStreamClientKey(directReqSpoofed);
+
+      assert.equal(keyClean, '203.0.113.88');
+      assert.equal(keySpoofed, '203.0.113.88');
+      assert.equal(keyClean, keySpoofed, 'Forged left-most IPs must not change the direct rate-limit key');
+    });
   });
 
   describe('3. Stream limiter skips cached streams and range requests', () => {
