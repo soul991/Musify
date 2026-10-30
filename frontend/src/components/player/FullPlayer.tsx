@@ -323,18 +323,18 @@ export const FullPlayer: React.FC = () => {
           {/* ========================================================= */}
           {/* MAIN PLAYER BODY */}
           {/* ========================================================= */}
-          <div className="relative z-10 flex-1 flex flex-col justify-between max-w-lg w-full mx-auto px-6 pt-3 pb-8 overflow-hidden">
+          <div className="relative z-10 flex-1 flex flex-col justify-between max-w-lg md:max-w-xl lg:max-w-2xl w-full mx-auto px-6 pt-3 pb-8 overflow-hidden">
             {/* TRACK ARTWORK / REALISTIC VINYL TURNTABLE */}
             <div className="flex-1 flex items-center justify-center min-h-0 my-auto py-2">
               {isRotatingThumbnail ? (
                 /* Realistic Vinyl Turntable Mode */
-                <div className="relative w-[300px] h-[300px] sm:w-[340px] sm:h-[340px] flex items-center justify-center select-none">
+                <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] flex items-center justify-center select-none">
                   {/* Vinyl Record Disc */}
                   <motion.div
                     animate={{ rotate: isPlaying ? 360 : 0 }}
                     transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
                     onClick={() => setIsRotatingThumbnail(false)}
-                    className="relative w-[280px] h-[280px] sm:w-[310px] sm:h-[310px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
+                    className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] lg:w-[390px] lg:h-[390px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
                     style={{
                       background:
                         'radial-gradient(circle, #25262c 0%, #16171d 40%, #0d0d11 100%), repeating-radial-gradient(circle, transparent 0, transparent 4px, rgba(255, 255, 255, 0.04) 5px, transparent 8px)'
@@ -350,7 +350,7 @@ export const FullPlayer: React.FC = () => {
                     />
 
                     {/* Center Album Artwork Label */}
-                    <div className="relative w-[110px] h-[110px] sm:w-[125px] sm:h-[125px] rounded-full overflow-hidden border-2 border-white/30 shadow-inner flex items-center justify-center">
+                    <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border-2 border-white/30 shadow-inner flex items-center justify-center">
                       <img
                         src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
                         alt={currentTrack.title}
@@ -371,7 +371,7 @@ export const FullPlayer: React.FC = () => {
                     animate={{ rotate: isPlaying ? 24 : -5 }}
                     transition={{ type: 'spring', damping: 22, stiffness: 140 }}
                     style={{ transformOrigin: 'top right' }}
-                    className="absolute top-2 right-4 w-[120px] sm:w-[140px] h-[160px] sm:h-[180px] pointer-events-none z-20"
+                    className="absolute top-2 right-4 w-[120px] sm:w-[150px] lg:w-[170px] h-[160px] sm:h-[200px] lg:h-[220px] pointer-events-none z-20"
                   >
                     {/* Tonearm Pivot Base */}
                     <div className="absolute top-0 right-0 w-8 h-8 rounded-full bg-gradient-to-br from-neutral-300 via-neutral-500 to-neutral-700 border border-white/40 shadow-xl flex items-center justify-center">
@@ -380,7 +380,7 @@ export const FullPlayer: React.FC = () => {
 
                     {/* Metallic Arm Rod */}
                     <div
-                      className="absolute top-4 right-3.5 w-1 h-[130px] sm:h-[150px] bg-gradient-to-b from-neutral-200 via-neutral-400 to-neutral-600 rounded-full shadow-md"
+                      className="absolute top-4 right-3.5 w-1 h-[130px] sm:h-[165px] lg:h-[185px] bg-gradient-to-b from-neutral-200 via-neutral-400 to-neutral-600 rounded-full shadow-md"
                       style={{ transform: 'rotate(12deg)', transformOrigin: 'top center' }}
                     />
 
@@ -402,7 +402,7 @@ export const FullPlayer: React.FC = () => {
                   onClick={() => setIsRotatingThumbnail(true)}
                   onMouseMove={handleArtMouseMove}
                   onMouseLeave={handleArtMouseLeave}
-                  className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] cursor-pointer drop-shadow-[0_20px_45px_rgba(0,0,0,0.8)] rounded-[24px] overflow-hidden border border-white/20 group"
+                  className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] cursor-pointer drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] rounded-[28px] overflow-hidden border border-white/20 group"
                   style={{
                     transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                     transition: 'transform 0.15s ease-out',
