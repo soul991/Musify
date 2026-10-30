@@ -190,7 +190,26 @@ describe('Phase 1 Backend Reliability & Performance Tests', () => {
   });
 
   describe('4. Warmup endpoint /api/warm', () => {
-    test('GET /api/warm returns warm status and session indicator', async () => {
+    test('GET /api/warm returns warm status and session indicator', async (t) => {
+      let isOnline = false;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const probe = await fetch('https://music.youtube.com', {
+          method: 'HEAD',
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        isOnline = probe.status < 500;
+      } catch {
+        isOnline = false;
+      }
+
+      if (!isOnline) {
+        t.skip('YouTube Music is unreachable (offline or restricted environment)');
+        return;
+      }
+
       const res = await fetch(`http://127.0.0.1:${port}/api/warm`);
       assert.equal(res.status, 200);
       const data = await res.json();
