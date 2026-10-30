@@ -416,6 +416,8 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
             <h3 className="text-sm font-bold text-white/80">Have an invite code?</h3>
             <div className="flex items-center gap-2">
               <input
+                id="listen-together-code-input"
+                name="joinRoomCode"
                 type="text"
                 placeholder="Enter 6-char code..."
                 value={joinInput}

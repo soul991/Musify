@@ -326,7 +326,18 @@ const MusifyMain: React.FC = () => {
         <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
           <ErrorBoundary fallbackTitle="View unavailable" onReset={() => setViewHistory([{ type: 'tab', tab: 'home' }])}>
             <Suspense fallback={<ViewLoader />}>
-              {renderActiveView()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentView.type + (currentView.type === 'tab' ? currentView.tab : '') + (('id' in currentView && currentView.id) ? currentView.id : '')}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full w-full min-h-0 flex flex-col overflow-hidden"
+                >
+                  {renderActiveView()}
+                </motion.div>
+              </AnimatePresence>
             </Suspense>
           </ErrorBoundary>
         </main>
