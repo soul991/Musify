@@ -272,33 +272,35 @@ const MusifyMain: React.FC = () => {
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
       {/* Ambient Blurred Crossfade Orbs that breathe with the music */}
-      <motion.div
-        animate={{
-          scale: isPlaying ? [1, 1.14, 1.03, 1.1, 1] : 1,
-          opacity: isPlaying ? [0.18, 0.28, 0.2, 0.25, 0.18] : 0.12
-        }}
-        transition={{
-          duration: 4.5,
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
-        className="pointer-events-none absolute -top-32 -left-32 w-[540px] h-[540px] rounded-full blur-[140px] transition-colors duration-700"
-        style={{ backgroundColor: colors.primary }}
-      />
-      <motion.div
-        animate={{
-          scale: isPlaying ? [1, 1.12, 1.05, 1.15, 1] : 1,
-          opacity: isPlaying ? [0.14, 0.22, 0.16, 0.2, 0.14] : 0.1
-        }}
-        transition={{
-          duration: 5.5,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 0.8
-        }}
-        className="pointer-events-none absolute -bottom-32 -right-32 w-[640px] h-[640px] rounded-full blur-[160px] transition-colors duration-700"
-        style={{ backgroundColor: colors.secondary || '#B8222E' }}
-      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.14, 1.03, 1.1, 1] : 1,
+            opacity: isPlaying ? [0.18, 0.28, 0.2, 0.25, 0.18] : 0.12
+          }}
+          transition={{
+            duration: 4.5,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+          className="pointer-events-none absolute -top-32 -left-32 w-[540px] h-[540px] rounded-full blur-[140px] transition-colors duration-700"
+          style={{ backgroundColor: colors.primary }}
+        />
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.12, 1.05, 1.15, 1] : 1,
+            opacity: isPlaying ? [0.14, 0.22, 0.16, 0.2, 0.14] : 0.1
+          }}
+          transition={{
+            duration: 5.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 0.8
+          }}
+          className="pointer-events-none absolute -bottom-32 -right-32 w-[640px] h-[640px] rounded-full blur-[160px] transition-colors duration-700"
+          style={{ backgroundColor: colors.secondary || '#B8222E' }}
+        />
+      </div>
 
       {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar
@@ -378,13 +380,13 @@ const MusifyMain: React.FC = () => {
       {/* Real-time Network Connectivity Offline Banner */}
       <OfflineBanner />
 
-      {/* PWA Standalone Install Prompt positioned cleanly at top-right without obscuring sidebar or dock */}
+      {/* PWA Standalone Install Prompt positioned cleanly at bottom-left without obscuring sidebar or companion */}
       {showInstallPrompt && installPrompt && (
         <motion.div
-          initial={{ y: -30, opacity: 0 }}
+          initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -30, opacity: 0 }}
-          className="fixed top-5 right-6 z-[110] bg-[#141416]/95 border border-white/15 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-2xl"
+          exit={{ y: 30, opacity: 0 }}
+          className="fixed bottom-28 left-6 md:bottom-8 md:left-8 z-[110] bg-[#141416]/95 border border-white/15 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-2xl"
         >
           <div className="w-8 h-8 rounded-xl bg-[#E5303D] flex items-center justify-center font-black text-white text-xs shadow-md">
             M

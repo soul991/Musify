@@ -272,14 +272,20 @@ export const FullPlayer: React.FC = () => {
 
               <button
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
-                aria-label="Sleep timer"
-                className={`w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                title={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
+                aria-label={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
+                className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent-color)]/25 border-[var(--accent-color)] text-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
                 }`}
               >
                 <Moon size={18} />
+                {remainingSleepSeconds ? (
+                  <span className="absolute -bottom-1 -right-1 text-[9px] font-black px-1 rounded-full bg-[#E5303D] text-white leading-tight shadow-md">
+                    {Math.ceil(remainingSleepSeconds / 60)}m
+                  </span>
+                ) : null}
               </button>
 
               {/* Sleep Menu Popup */}

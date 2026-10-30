@@ -83,10 +83,14 @@ function parseDuration(durationStr?: string): number {
 }
 
 // Get the highest resolution thumbnail URL safely without corrupting base64 Google hash
-export function getBestThumbnail(thumbnails: any[]): string {
-  if (!thumbnails || thumbnails.length === 0) return '';
-  const sorted = [...thumbnails].sort((a, b) => (b.width || 0) - (a.width || 0));
-  let url = sorted[0]?.url || '';
+export function getBestThumbnail(thumbnails: any): string {
+  if (!thumbnails) return '';
+  const list = Array.isArray(thumbnails)
+    ? (Array.isArray(thumbnails[0]) ? thumbnails.flat() : thumbnails)
+    : [thumbnails];
+  if (list.length === 0) return '';
+  const sorted = [...list].filter(Boolean).sort((a, b) => (b.width || 0) - (a.width || 0));
+  let url = sorted[0]?.url || (typeof sorted[0] === 'string' ? sorted[0] : '');
   if (!url) return '';
   if (url.startsWith('//')) url = 'https:' + url;
 

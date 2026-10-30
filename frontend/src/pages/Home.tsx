@@ -401,53 +401,121 @@ export const Home: React.FC<HomeProps> = ({
       {/* 4. DYNAMIC HERO CAROUSEL */}
       {activeHero && (
         <section
-          className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-white/15 h-[220px] sm:h-[300px] cursor-pointer group"
+          className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.75)] border border-white/15 min-h-[240px] sm:h-[300px] cursor-pointer group select-none"
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
           onClick={() => handleHeroClick(activeHero)}
         >
+          {/* Base Atmospheric Gradient Background */}
+          <div
+            className="absolute inset-0 transition-colors duration-700"
+            style={{
+              background: `linear-gradient(135deg, ${colors.primary}45 0%, #1a1622 50%, #0d0d11 100%)`
+            }}
+          />
+
+          {/* Blurred Artwork Bleed */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeHero.id}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="absolute inset-0 bg-cover bg-center"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 0.35, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
+              className="absolute -inset-4 bg-cover bg-center blur-[70px] pointer-events-none"
               style={{ backgroundImage: `url(${activeHero.image})` }}
             />
           </AnimatePresence>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-40% to-transparent pointer-events-none" />
+          {/* Subtle Radial Refraction Highlight */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 p-5 sm:p-7 flex flex-col justify-end pointer-events-none">
-            {activeHero.badge && (
-              <span
-                className="self-start text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full border border-white/20 text-white mb-2 shadow-sm"
-                style={{ backgroundColor: `${colors.primary}90` }}
+          {/* Content Flex Container */}
+          <div className="relative z-10 h-full p-6 sm:p-8 flex items-center justify-between gap-6 pointer-events-none">
+            {/* Left: Metadata & Call to Action */}
+            <div className="flex-1 flex flex-col justify-center min-w-0 max-w-[75%] sm:max-w-[65%]">
+              {activeHero.badge && (
+                <div className="flex items-center gap-1.5 self-start mb-2.5">
+                  <span
+                    className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full border border-white/20 text-white shadow-md flex items-center gap-1.5"
+                    style={{ backgroundColor: `${colors.primary}B0` }}
+                  >
+                    <Sparkles size={11} className="text-white" />
+                    {activeHero.badge}
+                  </span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white drop-shadow-lg leading-tight line-clamp-2">
+                {activeHero.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-white/80 font-medium truncate drop-shadow mt-1.5 max-w-[90%]">
+                {activeHero.subtitle}
+              </p>
+
+              {/* Action Buttons Row */}
+              <div className="flex items-center gap-3 mt-5 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleHeroClick(activeHero);
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-all"
+                >
+                  <Play size={16} className="fill-current ml-0.5" />
+                  <span>Play Now</span>
+                </button>
+                {activeHero.track && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (activeHero.track) addToQueue(activeHero.track);
+                    }}
+                    className="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-all"
+                    title="Add to queue"
+                  >
+                    <ListPlus size={15} />
+                    <span className="hidden sm:inline">Add to Queue</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Featured Album Art Display with 3D Tilt */}
+            <div className="hidden sm:flex relative shrink-0 items-center justify-center pointer-events-none">
+              {/* Subtle Ambient Disc behind cover */}
+              <div
+                className="absolute w-40 h-40 sm:w-48 sm:h-48 rounded-full blur-[35px] opacity-60"
+                style={{ backgroundColor: colors.primary }}
+              />
+              <motion.div
+                key={activeHero.id}
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group-hover:scale-105 transition-transform duration-500 bg-[#16161a]"
               >
-                {activeHero.badge}
-              </span>
-            )}
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-md leading-tight">
-              {activeHero.title}
-            </h2>
-            <p className="text-xs sm:text-sm text-white/80 font-medium truncate drop-shadow mt-1 max-w-[85%]">
-              {activeHero.subtitle}
-            </p>
+                <img
+                  src={activeHero.image || '/icons/musify-icon.svg'}
+                  alt={activeHero.title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            </div>
           </div>
 
-          <div className="absolute right-5 bottom-5 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-2xl group-hover:scale-110 active:scale-95 transition-transform duration-200">
-            <Play size={20} className="fill-current ml-0.5" />
-          </div>
-
+          {/* Bottom Pagination Dots */}
           {heroSlides.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none">
+            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none z-20">
               {heroSlides.map((slide, idx) => (
                 <div
                   key={slide.id}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    idx === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
+                    idx === heroIndex ? 'w-7 bg-white shadow-sm' : 'w-1.5 bg-white/40'
                   }`}
                 />
               ))}
