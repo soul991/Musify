@@ -344,6 +344,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const triggerConsecutiveFailure = (track: Track, reason = 'playback failed', isStalled = false) => {
+    // 429 rate limit errors do not count as a bad track and do not trigger auto-skip
+    if (
+      reason.includes('429') ||
+      reason.toLowerCase().includes('rate limit') ||
+      reason.toLowerCase().includes('too many')
+    ) {
+      console.warn(`[PLAYBACK] 429 rate limit encountered for "${track.title}". Not counted as a bad track.`);
+      setPlaybackError('Too many requests (429). Please wait a moment before trying again.');
+      return;
+    }
+
     // Don't auto-skip through the queue on a stalled or failed first track.
     // Auto-skip only when a track fails after playing was working earlier in the session.
     if (!hasPlayedSuccessfullyInSessionRef.current) {
