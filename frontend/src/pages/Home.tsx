@@ -62,13 +62,13 @@ const MOOD_CHIPS = [
 // Fallback curated hits for hero carousel when user is completely new and backend is loading
 const FALLBACK_HERO_SLIDES: HeroSlide[] = [
   {
-    id: 'khalasi-hero',
+    id: 'hero-thc0FnfgW9k',
     title: 'KHALASI',
     subtitle: 'Achint x Aditya Gadhvi • Coke Studio Bharat',
     image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
     badge: 'COKE STUDIO BHARAT',
     track: {
-      id: 'khalasi-hero',
+      id: 'thc0FnfgW9k',
       title: 'Khalasi',
       artists: [{ name: 'Achint x Aditya Gadhvi' }],
       duration: 250,
@@ -77,13 +77,13 @@ const FALLBACK_HERO_SLIDES: HeroSlide[] = [
     }
   },
   {
-    id: 'starboy-hero',
+    id: 'hero-34Na4j8AVgA',
     title: 'Starboy',
     subtitle: 'The Weeknd ft. Daft Punk • Global Top 50',
     image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop',
     badge: 'GLOBAL TOP 50',
     track: {
-      id: 'starboy-hero',
+      id: '34Na4j8AVgA',
       title: 'Starboy',
       artists: [{ name: 'The Weeknd' }],
       duration: 230,
