@@ -30,18 +30,28 @@ class AudioEqualizerEngine {
   private filters: BiquadFilterNode[] = [];
   private compressor: DynamicsCompressorNode | null = null;
   private isEnabled: boolean = typeof window !== 'undefined' ? localStorage.getItem('musify_eq_enabled') === 'true' : false;
-  private isNormalized: boolean = typeof window !== 'undefined' ? localStorage.getItem('musify_normalization') !== 'false' : true;
+  private isNormalized: boolean = typeof window !== 'undefined' ? localStorage.getItem('musify_normalization') === 'true' : false;
   private currentGains: number[] = [0, 0, 0, 0, 0];
   private currentBassBoost: number = 0; // 0 to 100%
   private attachedElement: HTMLAudioElement | null = null;
 
   private analyser: AnalyserNode | null = null;
 
+  async setSinkId(deviceId: string) {
+    if (this.audioCtx && typeof (this.audioCtx as any).setSinkId === 'function') {
+      try {
+        await (this.audioCtx as any).setSinkId(deviceId);
+      } catch (e) {
+        console.warn('[AudioEqualizer] setSinkId error:', e);
+      }
+    }
+  }
+
   attachElement(audioElement: HTMLAudioElement) {
     this.attachedElement = audioElement;
     // On iOS Safari & mobile devices, createMediaElementSource kills background audio on lock screen.
-    // Strictly bypass Web Audio graph when EQ is off.
-    if (this.isEnabled) {
+    // Strictly bypass Web Audio graph when EQ and leveler are off.
+    if (this.isEnabled || this.isNormalized) {
       this.init(audioElement);
     }
   }
@@ -71,11 +81,11 @@ class AudioEqualizerEngine {
         return filter;
       });
 
-      // Compressor for loudness normalization (EBU R128 dynamics)
+      // Dynamics compressor for volume leveling
       this.compressor = this.audioCtx.createDynamicsCompressor();
-      this.compressor.threshold.value = this.isNormalized ? -24 : 0;
+      this.compressor.threshold.value = this.isNormalized ? -18 : 0;
       this.compressor.knee.value = 30;
-      this.compressor.ratio.value = this.isNormalized ? 12 : 1;
+      this.compressor.ratio.value = this.isNormalized ? 3 : 1;
       this.compressor.attack.value = 0.003;
       this.compressor.release.value = 0.25;
 
@@ -166,8 +176,8 @@ class AudioEqualizerEngine {
     }
     this.ensureContextRunning();
     if (this.compressor && this.audioCtx) {
-      this.compressor.ratio.setTargetAtTime(enabled ? 12 : 1, this.audioCtx.currentTime, 0.05);
-      this.compressor.threshold.setTargetAtTime(enabled ? -24 : 0, this.audioCtx.currentTime, 0.05);
+      this.compressor.ratio.setTargetAtTime(enabled ? 3 : 1, this.audioCtx.currentTime, 0.05);
+      this.compressor.threshold.setTargetAtTime(enabled ? -18 : 0, this.audioCtx.currentTime, 0.05);
     }
   }
 

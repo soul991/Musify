@@ -58,7 +58,16 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [history, setHistory] = useState<Track[]>(() => {
     try {
       const saved = localStorage.getItem('musify_history');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed: Track[] = JSON.parse(saved);
+      return parsed.filter(
+        (t) =>
+          t?.id &&
+          t.id.length === 11 &&
+          !t.id.startsWith('VL') &&
+          !t.id.startsWith('RD') &&
+          !t.id.startsWith('MPREb')
+      );
     } catch {
       return [];
     }
@@ -170,6 +179,15 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addToHistory = (track: Track) => {
+    if (
+      !track?.id ||
+      track.id.length !== 11 ||
+      track.id.startsWith('VL') ||
+      track.id.startsWith('RD') ||
+      track.id.startsWith('MPREb')
+    ) {
+      return;
+    }
     setHistory((prev) => {
       const filtered = prev.filter((t) => t.id !== track.id);
       return [track, ...filtered].slice(0, 50); // Keep last 50

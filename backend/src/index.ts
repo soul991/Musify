@@ -8,6 +8,8 @@ import streamRouter from './routes/stream.js';
 import lyricsRouter from './routes/lyrics.js';
 import roomRouter from './routes/room.js';
 import { getInnertube, getHomeFeed } from './services/innertube.js';
+import { handleDebugStream } from './services/stream.js';
+import { isOriginAllowed } from './utils/cors.js';
 
 dotenv.config();
 
@@ -23,24 +25,18 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// CORS allowlist configuration
-const defaultAllowedOrigins = [
-  'https://musify-live.netlify.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:3000'
-];
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
-  : defaultAllowedOrigins;
+// CORS allowlist configuration (production origin is always merged with env origins)
+const rejectedOriginsLogged = new Set<string>();
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || isOriginAllowed(origin)) {
       return callback(null, true);
+    }
+    if (!rejectedOriginsLogged.has(origin)) {
+      rejectedOriginsLogged.add(origin);
+      console.warn(`[CORS] Rejected origin: ${origin}`);
     }
     const corsErr: any = new Error('CORS origin not allowed');
     corsErr.status = 403;
@@ -49,6 +45,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Range', 'Authorization', 'Accept', 'Accept-Ranges', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'Content-Length', 'Accept-Ranges'],
   optionsSuccessStatus: 204
 }));
 
@@ -66,7 +63,6 @@ const apiLimiter = rateLimit({
   },
   message: { error: 'Too many requests, please try again later.' }
 });
-
 
 // Health check endpoint (exempt from rate limiting)
 app.get('/api/health', (_req, res) => {
@@ -92,6 +88,9 @@ app.get('/api/warm', async (_req, res) => {
     res.status(500).json({ error: 'Warmup failed' });
   }
 });
+
+// Diagnostic stream endpoint: GET /api/debug/stream/:videoId
+app.get('/api/debug/stream/:videoId', handleDebugStream);
 
 // Register rate limits
 app.use('/api', apiLimiter);

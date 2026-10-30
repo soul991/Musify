@@ -60,7 +60,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     return (localStorage.getItem('musify_audio_cellular') as AudioQualityLevel) || 'high';
   });
   const [audioNormalization, setAudioNormalization] = useState<boolean>(() => {
-    return localStorage.getItem('musify_normalization') !== 'false';
+    return localStorage.getItem('musify_normalization') === 'true';
   });
   const [crossfadeEnabled, setCrossfadeEnabled] = useState<boolean>(() => {
     return localStorage.getItem('musify_crossfade_enabled') === 'true';
@@ -411,6 +411,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         {/* Group 3: Playback Dynamics & Crossfade */}
         {(matchesSearch('playback') ||
           matchesSearch('crossfade') ||
+          matchesSearch('leveler') ||
           matchesSearch('normalization') ||
           matchesSearch('silence') ||
           matchesSearch('timer')) && (
@@ -419,8 +420,8 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             items={[
               {
                 icon: <Volume2 size={20} className="text-purple-400" />,
-                title: 'Audio Normalization (EBU R128)',
-                description: 'Balances perceived volume across distinct albums and tracks',
+                title: 'Volume leveler',
+                description: 'Off by default. Balances track volume, but may affect lock-screen playback on iPhone',
                 trailingContent: (
                   <div
                     onClick={(e) => {

@@ -52,7 +52,7 @@ type ViewMode =
 
 const MusifyMain: React.FC = () => {
   const { colors } = useTheme();
-  const { currentTrack, togglePlay, nextTrack, prevTrack, seek, currentTime, duration, volume, setVolume } = usePlayer();
+  const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, seek, currentTime, duration, volume, setVolume } = usePlayer();
   const { toggleLike } = useLibrary();
 
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
@@ -271,15 +271,36 @@ const MusifyMain: React.FC = () => {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
-      {/* Ambient Blurred Crossfade Orbs (10-18% opacity) */}
-      <div
-        className="pointer-events-none absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-[140px] opacity-15 transition-all duration-700"
-        style={{ backgroundColor: colors.primary }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-32 -right-32 w-[620px] h-[620px] rounded-full blur-[160px] opacity-12 transition-all duration-700"
-        style={{ backgroundColor: colors.secondary || '#B8222E' }}
-      />
+      {/* Ambient Blurred Crossfade Orbs that breathe with the music */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.14, 1.03, 1.1, 1] : 1,
+            opacity: isPlaying ? [0.18, 0.28, 0.2, 0.25, 0.18] : 0.12
+          }}
+          transition={{
+            duration: 4.5,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+          className="pointer-events-none absolute -top-32 -left-32 w-[540px] h-[540px] rounded-full blur-[140px] transition-colors duration-700"
+          style={{ backgroundColor: colors.primary }}
+        />
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.12, 1.05, 1.15, 1] : 1,
+            opacity: isPlaying ? [0.14, 0.22, 0.16, 0.2, 0.14] : 0.1
+          }}
+          transition={{
+            duration: 5.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 0.8
+          }}
+          className="pointer-events-none absolute -bottom-32 -right-32 w-[640px] h-[640px] rounded-full blur-[160px] transition-colors duration-700"
+          style={{ backgroundColor: colors.secondary || '#B8222E' }}
+        />
+      </div>
 
       {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar
@@ -307,7 +328,18 @@ const MusifyMain: React.FC = () => {
         <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
           <ErrorBoundary fallbackTitle="View unavailable" onReset={() => setViewHistory([{ type: 'tab', tab: 'home' }])}>
             <Suspense fallback={<ViewLoader />}>
-              {renderActiveView()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentView.type + (currentView.type === 'tab' ? currentView.tab : '') + (('id' in currentView && currentView.id) ? currentView.id : '')}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full w-full min-h-0 flex flex-col overflow-hidden"
+                >
+                  {renderActiveView()}
+                </motion.div>
+              </AnimatePresence>
             </Suspense>
           </ErrorBoundary>
         </main>
@@ -348,10 +380,15 @@ const MusifyMain: React.FC = () => {
       {/* Real-time Network Connectivity Offline Banner */}
       <OfflineBanner />
 
-      {/* PWA Standalone Install Prompt */}
+      {/* PWA Standalone Install Prompt positioned cleanly at bottom-left without obscuring sidebar or companion */}
       {showInstallPrompt && installPrompt && (
-        <div className="fixed bottom-24 sm:bottom-6 left-6 z-[110] bg-[#1A1A1A]/95 border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-xl">
-          <div className="w-8 h-8 rounded-xl bg-[#E5303D] flex items-center justify-center font-black text-white text-xs">
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 30, opacity: 0 }}
+          className="fixed bottom-28 left-6 md:bottom-8 md:left-8 z-[110] bg-[#141416]/95 border border-white/15 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-2xl"
+        >
+          <div className="w-8 h-8 rounded-xl bg-[#E5303D] flex items-center justify-center font-black text-white text-xs shadow-md">
             M
           </div>
           <div className="text-xs">
@@ -368,7 +405,7 @@ const MusifyMain: React.FC = () => {
                   setShowInstallPrompt(false);
                 }
               }}
-              className="px-2.5 py-1 rounded-lg bg-[#E5303D] hover:bg-[#B8222E] text-white font-bold text-xs transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-[#CC2229] hover:bg-[#B8222E] active:scale-95 text-white font-bold text-xs transition-all shadow-sm"
             >
               Install
             </button>
@@ -379,13 +416,13 @@ const MusifyMain: React.FC = () => {
                   sessionStorage.setItem('pwa_prompt_dismissed', 'true');
                 }
               }}
-              className="p-1 text-white/40 hover:text-white"
+              className="p-1 text-white/40 hover:text-white transition-colors"
               aria-label="Dismiss install prompt"
             >
               ✕
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
       {/* Keyboard Shortcuts Help Sheet ('?') */}
       {showShortcutsSheet && (

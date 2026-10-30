@@ -203,8 +203,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
                   {/* Artwork */}
                   <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10">
                     <img
-                      src={stat.track.thumbnail}
+                      src={stat.track.thumbnail || '/icons/musify-icon.svg'}
                       alt=""
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                      }}
                       className="w-full h-full object-cover"
                     />
                   </div>

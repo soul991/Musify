@@ -141,12 +141,16 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
             className="relative rounded-full overflow-hidden shadow-inner bg-black/40 flex items-center justify-center"
             style={{ width: artSize, height: artSize }}
           >
-            {track.thumbnail ? (
+            {Boolean(track.thumbnail) ? (
               <img
                 src={track.thumbnail}
                 alt={track.title}
                 width={artSize}
                 height={artSize}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                }}
                 className="w-full h-full object-cover"
                 loading="eager"
               />

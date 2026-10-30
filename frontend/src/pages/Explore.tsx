@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Flame, TrendingUp, Music2, Sparkles, Play, Disc } from 'lucide-react';
+import {
+  TrendingUp,
+  Play,
+  Disc,
+  Coffee,
+  Zap,
+  Sparkles,
+  PartyPopper,
+  Guitar,
+  Heart,
+  Moon
+} from 'lucide-react';
 import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,14 +31,14 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
   const [loading, setLoading] = useState(true);
 
   const moodsAndGenres = [
-    { title: 'Chill & Relax', color: 'from-blue-600 to-indigo-900', query: 'Chill music acoustic' },
-    { title: 'Workout Energy', color: 'from-red-600 to-orange-800', query: 'Workout motivation music' },
-    { title: 'Deep Focus', color: 'from-emerald-600 to-teal-900', query: 'Deep focus study ambient' },
-    { title: 'Party & Dance', color: 'from-purple-600 to-pink-800', query: 'Party dance chartbusters' },
-    { title: 'Acoustic & Indie', color: 'from-amber-600 to-yellow-800', query: 'Acoustic indie folk' },
-    { title: 'Romance & Love', color: 'from-rose-600 to-pink-900', query: 'Romantic songs hindi english' },
-    { title: 'Late Night Melodies', color: 'from-slate-700 to-cyan-900', query: 'Late night chill melodies' },
-    { title: 'Nostalgia 2000s', color: 'from-indigo-900 to-slate-900', query: '2000s nostalgia super hits' }
+    { title: 'Chill & Relax', color: 'from-sky-500/90 via-blue-600/80 to-indigo-950', icon: Coffee, query: 'Chill music acoustic' },
+    { title: 'Workout Energy', color: 'from-rose-500/90 via-red-600/80 to-amber-950', icon: Zap, query: 'Workout motivation music' },
+    { title: 'Deep Focus', color: 'from-emerald-500/90 via-teal-600/80 to-slate-950', icon: Sparkles, query: 'Deep focus study ambient' },
+    { title: 'Party & Dance', color: 'from-fuchsia-500/90 via-purple-600/80 to-pink-950', icon: PartyPopper, query: 'Party dance chartbusters' },
+    { title: 'Acoustic & Indie', color: 'from-amber-500/90 via-orange-600/80 to-amber-950', icon: Guitar, query: 'Acoustic indie folk' },
+    { title: 'Romance & Love', color: 'from-pink-500/90 via-rose-600/80 to-purple-950', icon: Heart, query: 'Romantic songs hindi english' },
+    { title: 'Late Night Melodies', color: 'from-indigo-600/90 via-slate-800/80 to-blue-950', icon: Moon, query: 'Late night chill melodies' },
+    { title: 'Nostalgia 2000s', color: 'from-violet-600/90 via-purple-900/80 to-slate-950', icon: Disc, query: '2000s nostalgia super hits' }
   ];
 
   useEffect(() => {
@@ -60,23 +71,37 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
         <h2 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
           MOODS & GENRES
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {moodsAndGenres.map((mood, idx) => (
-            <div
-              key={idx}
-              onClick={() => handleMoodClick(mood.query)}
-              className={`relative h-24 rounded-[24px] p-3.5 bg-gradient-to-br ${mood.color} cursor-pointer shadow-lg overflow-hidden flex flex-col justify-between group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-white/10`}
-            >
-              <span className="font-extrabold text-sm sm:text-base leading-tight drop-shadow-md">
-                {mood.title}
-              </span>
-              <div className="flex justify-end">
-                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play size={14} className="fill-white ml-0.5" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          {moodsAndGenres.map((mood, idx) => {
+            const Icon = mood.icon;
+            return (
+              <div
+                key={idx}
+                onClick={() => handleMoodClick(mood.query)}
+                className={`relative h-24 rounded-[24px] p-3.5 bg-gradient-to-br ${mood.color} cursor-pointer shadow-[0_8px_20px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] border border-white/15 hover:border-white/30`}
+              >
+                {/* Top Glass Highlight Reflection */}
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+                {/* Ambient Watermark Icon */}
+                <Icon
+                  size={60}
+                  strokeWidth={1.5}
+                  className="absolute -right-2 -bottom-2 text-white/[0.12] group-hover:text-white/[0.22] group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 pointer-events-none"
+                />
+
+                <span className="font-black text-sm sm:text-base leading-snug drop-shadow-md text-white z-10">
+                  {mood.title}
+                </span>
+
+                <div className="flex justify-end z-10">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+                    <Play size={13} className="fill-white ml-0.5" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -133,6 +158,10 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
                       <img
                         src={track.thumbnail}
                         alt=""
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                        }}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
@@ -187,6 +216,10 @@ export const Explore: React.FC<ExploreProps> = ({ onSelectAlbum, onSelectPlaylis
                     <img
                       src={release.thumbnail}
                       alt=""
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
