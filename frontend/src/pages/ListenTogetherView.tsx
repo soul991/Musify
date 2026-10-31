@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 
 interface ListenTogetherViewProps {
   onBack: () => void;
+  initialRoomCode?: string;
 }
 
 interface Participant {
@@ -14,7 +15,7 @@ interface Participant {
   lastSeen: number;
 }
 
-export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }) => {
+export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, initialRoomCode }) => {
   const { currentTrack, isPlaying, currentTime, playTrack } = usePlayer();
   const { colors } = useTheme();
 
@@ -24,8 +25,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(userName);
 
+  const sanitizedInitial = initialRoomCode ? initialRoomCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) : '';
   const [roomCode, setRoomCode] = useState<string | null>(null);
-  const [joinInput, setJoinInput] = useState('');
+  const [joinInput, setJoinInput] = useState(sanitizedInitial);
+  const autoJoinedRef = useRef(false);
   const [isHost, setIsHost] = useState(false);
   const [copied, setCopied] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -240,9 +243,11 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
     ]);
   };
 
-  const handleJoinRoom = async () => {
-    if (joinInput.trim().length >= 4) {
-      const code = joinInput.trim().toUpperCase();
+  const handleJoinRoom = async (codeOverride?: string) => {
+    const rawCode = typeof codeOverride === 'string' ? codeOverride : joinInput;
+    if (rawCode.trim().length >= 4) {
+      const code = rawCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      if (code.length < 4) return;
       try {
         const res = await fetch('/api/room/join', {
           method: 'POST',
@@ -282,6 +287,13 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
     }
   };
 
+  useEffect(() => {
+    if (sanitizedInitial && sanitizedInitial.length >= 4 && !autoJoinedRef.current) {
+      autoJoinedRef.current = true;
+      handleJoinRoom(sanitizedInitial);
+    }
+  }, [sanitizedInitial]);
+
   const handleLeaveRoom = () => {
     if (channelRef.current) {
       channelRef.current.postMessage({
@@ -298,7 +310,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack }
 
   const handleCopyLink = () => {
     if (roomCode && navigator.clipboard) {
-      navigator.clipboard.writeText(`https://musify-live.netlify.app/?room=${roomCode}`);
+      navigator.clipboard.writeText(`${window.location.origin}/app?room=${roomCode}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

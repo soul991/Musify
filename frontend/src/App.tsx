@@ -46,7 +46,7 @@ type ViewMode =
   | { type: 'stats' }
   | { type: 'history' }
   | { type: 'equalizer' }
-  | { type: 'listen_together' }
+  | { type: 'listen_together'; initialRoomCode?: string }
   | { type: 'album'; id: string }
   | { type: 'artist'; id: string }
   | { type: 'playlist'; id?: string; customPlaylist?: UserPlaylist };
@@ -58,6 +58,24 @@ const MusifyMain: React.FC = () => {
 
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
   const [navDirection, setNavDirection] = useState<'forward' | 'backward'>('forward');
+
+  // Handle ?room=CODE invite link on app load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const rawRoom = searchParams.get('room');
+      if (rawRoom) {
+        const sanitized = rawRoom.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+        if (sanitized.length >= 4) {
+          setViewHistory([{ type: 'tab', tab: 'home' }, { type: 'listen_together', initialRoomCode: sanitized }]);
+        }
+        searchParams.delete('room');
+        const remaining = searchParams.toString();
+        const cleanUrl = window.location.pathname + (remaining ? `?${remaining}` : '') + window.location.hash;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    }
+  }, []);
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
   const [showShortcutsSheet, setShowShortcutsSheet] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -245,7 +263,7 @@ const MusifyMain: React.FC = () => {
         return <EqualizerView onBack={popView} />;
 
       case 'listen_together':
-        return <ListenTogetherView onBack={popView} />;
+        return <ListenTogetherView onBack={popView} initialRoomCode={currentView.type === 'listen_together' ? currentView.initialRoomCode : undefined} />;
 
       case 'album':
         return <AlbumView albumId={currentView.id} onBack={popView} />;
