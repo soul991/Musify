@@ -12,6 +12,7 @@ import { NowPlayingCompanion } from './components/player/NowPlayingCompanion';
 import { FullPlayer } from './components/player/FullPlayer';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { forwardTransition, backwardTransition } from './utils/motion';
 
 // Code-split page components with React.lazy
 const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
@@ -56,6 +57,7 @@ const MusifyMain: React.FC = () => {
   const { toggleLike } = useLibrary();
 
   const [viewHistory, setViewHistory] = useState<ViewMode[]>([{ type: 'tab', tab: 'home' }]);
+  const [navDirection, setNavDirection] = useState<'forward' | 'backward'>('forward');
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
   const [showShortcutsSheet, setShowShortcutsSheet] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -105,6 +107,7 @@ const MusifyMain: React.FC = () => {
         if (currentTrack) toggleLike(currentTrack);
       } else if (e.key === '/') {
         e.preventDefault();
+        setNavDirection('forward');
         setViewHistory((prev) => [...prev, { type: 'search' }]);
       }
     };
@@ -122,16 +125,19 @@ const MusifyMain: React.FC = () => {
   const currentView = viewHistory[viewHistory.length - 1];
 
   const pushView = (view: ViewMode) => {
+    setNavDirection('forward');
     setViewHistory((prev) => [...prev, view]);
   };
 
   const popView = () => {
     if (viewHistory.length > 1) {
-      setViewHistory((prev) => prev.slice(0, prev.length - 1));
+      setNavDirection('backward');
     }
+    setViewHistory((prev) => (prev.length > 1 ? prev.slice(0, prev.length - 1) : prev));
   };
 
   const handleTabChange = (tab: NavTab) => {
+    setNavDirection('forward');
     setViewHistory([{ type: 'tab', tab }]);
   };
 
@@ -331,10 +337,10 @@ const MusifyMain: React.FC = () => {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentView.type + (currentView.type === 'tab' ? currentView.tab : '') + (('id' in currentView && currentView.id) ? currentView.id : '')}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  variants={navDirection === 'forward' ? forwardTransition : backwardTransition}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
                   className="h-full w-full min-h-0 flex flex-col overflow-hidden"
                 >
                   {renderActiveView()}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search as SearchIcon,
   X,
@@ -11,7 +12,8 @@ import {
   Mic,
   ArrowLeft,
   User,
-  Play
+  Play,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
 import { usePlayer } from '../context/PlayerContext';
@@ -21,6 +23,16 @@ import { ChipsRow } from '../components/views/ChipsRow';
 import { TrackRow } from '../components/views/TrackRow';
 import { TrackListSkeleton, EmptyState } from '../components/common/SkeletonLoader';
 import { VirtualList } from '../components/common/VirtualList';
+import { springEffects } from '../utils/motion';
+
+const BROWSE_CATEGORIES = [
+  { name: 'Pop', gradient: 'from-pink-500/80 to-rose-700/80', query: 'Pop hits' },
+  { name: 'Hindi', gradient: 'from-orange-500/80 to-amber-700/80', query: 'Hindi latest' },
+  { name: 'Rock', gradient: 'from-red-600/80 to-stone-800/80', query: 'Rock classics' },
+  { name: 'EDM', gradient: 'from-cyan-500/80 to-blue-700/80', query: 'EDM dance' },
+  { name: 'Lo-fi', gradient: 'from-emerald-500/80 to-teal-800/80', query: 'Lo-fi chill' },
+  { name: 'Classical', gradient: 'from-amber-400/80 to-yellow-800/80', query: 'Classical piano' },
+];
 
 interface SearchProps {
   onBack?: () => void;
@@ -235,13 +247,22 @@ export const Search: React.FC<SearchProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 pt-safe pb-56 text-white no-scrollbar max-w-4xl mx-auto w-full">
-      {/* Jetpack Compose Pill SearchBar (56dp height, glass effect, source toggle) */}
+      {/* Jetpack Compose Pill SearchBar with springEffects expanding glow */}
       <div className="sticky top-0 z-30 pt-2 pb-4 bg-[var(--bg-primary)]/80 backdrop-blur-xl">
-        <div className="relative flex items-center h-14 rounded-full bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] border border-white/10 shadow-lg px-4 transition-all duration-200">
+        <motion.div
+          animate={{
+            borderColor: isFocused ? 'rgba(229, 48, 61, 0.45)' : 'rgba(255, 255, 255, 0.1)',
+            boxShadow: isFocused
+              ? '0 0 0 3px rgba(229, 48, 61, 0.12), 0 8px 24px -4px rgba(229, 48, 61, 0.15)'
+              : '0 0 0 0px transparent',
+          }}
+          transition={springEffects}
+          className="relative flex items-center h-14 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/10 shadow-lg px-4 transition-colors"
+        >
           {onBack ? (
             <button
               onClick={onBack}
-              className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-all shrink-0"
+              className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-all shrink-0 cursor-pointer"
               title="Go back"
               aria-label="Go back"
             >
@@ -259,6 +280,9 @@ export const Search: React.FC<SearchProps> = ({
             type="text"
             value={query}
             onFocus={() => setIsFocused(true)}
+            onBlur={() => {
+              setTimeout(() => setIsFocused(false), 200);
+            }}
             onChange={(e) => { const val = e.target.value; setQuery(val); if (!val.trim()) { setSuggestions([]); setResults(null); } }}
             onKeyDown={handleKeyDown}
             placeholder={
@@ -275,7 +299,7 @@ export const Search: React.FC<SearchProps> = ({
               onClick={handleVoiceSearch}
               title={isListening ? 'Listening...' : 'Voice Search'}
               aria-label={isListening ? 'Listening...' : 'Voice Search'}
-              className={`p-2 rounded-full transition-all ${
+              className={`p-2 rounded-full transition-all cursor-pointer ${
                 isListening
                   ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]'
                   : 'text-white/50 hover:text-white hover:bg-white/10'
@@ -284,21 +308,28 @@ export const Search: React.FC<SearchProps> = ({
               <Mic size={16} />
             </button>
 
-            {query && (
-              <button
-                onClick={() => {
-                  setQuery('');
-                  setSuggestions([]);
-                  setResults(null);
-                  inputRef.current?.focus();
-                }}
-                className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-                title="Clear query"
-                aria-label="Clear query"
-              >
-                <X size={16} />
-              </button>
-            )}
+            <AnimatePresence>
+              {query && (
+                <motion.button
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 800, damping: 28 }}
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => {
+                    setQuery('');
+                    setSuggestions([]);
+                    setResults(null);
+                    inputRef.current?.focus();
+                  }}
+                  className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Clear query"
+                  aria-label="Clear query"
+                >
+                  <X size={16} />
+                </motion.button>
+              )}
+            </AnimatePresence>
 
             {/* Source Switcher: Online YouTube Music vs Local Library */}
             <button
@@ -308,7 +339,7 @@ export const Search: React.FC<SearchProps> = ({
                 if (query.trim()) executeSearch(query);
               }}
               title={searchSource === 'online' ? 'Source: YouTube Music (Online)' : 'Source: Library (Local)'}
-              className={`p-2 rounded-full border transition-all flex items-center gap-1.5 text-xs font-bold ${
+              className={`p-2 rounded-full border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
                 searchSource === 'online'
                   ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)] border-[var(--accent-color)]/30'
                   : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -320,7 +351,7 @@ export const Search: React.FC<SearchProps> = ({
               </span>
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Live Filter Chips Row */}
         {results && (
@@ -334,40 +365,52 @@ export const Search: React.FC<SearchProps> = ({
         )}
       </div>
 
-      {/* Suggestion Dropdown or Recents View when focused / idle */}
-      {(!results || isFocused) && query.trim() !== '' && suggestions.length > 0 && (
-        <div className="mb-6 rounded-3xl bg-white/[0.06] border border-white/10 p-2 shadow-2xl backdrop-blur-xl flex flex-col gap-0.5">
-          <div className="px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40">
-            Suggestions
-          </div>
-          {suggestions.map((sug, i) => (
-            <div
-              key={i}
-              onClick={() => {
-                setQuery(sug);
-                executeSearch(sug);
-              }}
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl hover:bg-white/10 cursor-pointer text-sm font-medium text-white/90 group transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <SearchIcon size={15} className="text-white/40 group-hover:text-white" />
-                <span className="truncate">{sug}</span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setQuery(sug);
-                  inputRef.current?.focus();
-                }}
-                className="p-1 rounded-lg text-white/30 hover:text-white hover:bg-white/10"
-                title="Fill in textfield"
-              >
-                <ArrowUpLeft size={15} />
-              </button>
+      {/* Suggestion Dropdown with origin-anchored spring entrance & staggered rows */}
+      <AnimatePresence>
+        {(!results || isFocused) && query.trim() !== '' && suggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            style={{ transformOrigin: 'top center' }}
+            className="mb-6 rounded-3xl bg-white/[0.07] border border-white/12 p-2 shadow-2xl backdrop-blur-2xl flex flex-col gap-0.5"
+          >
+            <div className="px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40">
+              Suggestions
             </div>
-          ))}
-        </div>
-      )}
+            {suggestions.map((sug, i) => (
+              <motion.div
+                key={sug}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.03, duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                onClick={() => {
+                  setQuery(sug);
+                  executeSearch(sug);
+                }}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl hover:bg-white/10 cursor-pointer text-sm font-medium text-white/90 group transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <SearchIcon size={15} className="text-white/40 group-hover:text-white" />
+                  <span className="truncate">{sug}</span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setQuery(sug);
+                    inputRef.current?.focus();
+                  }}
+                  className="p-1 rounded-lg text-white/30 hover:text-white hover:bg-white/10 cursor-pointer"
+                  title="Fill in textfield"
+                >
+                  <ArrowUpLeft size={15} />
+                </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Recent Searches (Search History) with Material 3 Expressive grouped list items */}
       {!results && !loading && (
@@ -453,12 +496,12 @@ export const Search: React.FC<SearchProps> = ({
             </div>
           )}
 
-          {/* Trending Suggestions / Genre Shortcuts */}
+          {/* Trending Searches */}
           <div>
             <div className="flex items-center gap-2 mb-3 px-1">
               <TrendingUp size={16} className="text-[var(--accent-color)]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white/80">
-                Trending Searches
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white/80 font-display flex items-center gap-1.5">
+                <span>🔥</span> Trending Searches
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -471,18 +514,64 @@ export const Search: React.FC<SearchProps> = ({
                 'EDM Festival Hits',
                 'Synthwave 80s'
               ].map((trend) => (
-                <button
+                <motion.button
                   key={trend}
+                  whileHover={{ scale: 1.04, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 800, damping: 28 }}
                   onClick={() => {
                     setQuery(trend);
                     executeSearch(trend);
                   }}
-                  className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/5 text-xs font-semibold text-white/80 hover:text-white transition-all active:scale-95"
+                  className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/8 text-xs font-semibold text-white/85 hover:text-white transition-colors cursor-pointer select-none"
                 >
                   {trend}
-                </button>
+                </motion.button>
               ))}
             </div>
+          </div>
+
+          {/* Browse Categories (2x3 grid of vibrant gradient genre cards with spring reveal) */}
+          <div className="mt-2">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <Sparkles size={16} className="text-[var(--accent-color)]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white/80 font-display">
+                Browse Categories
+              </h3>
+            </div>
+            <motion.div
+              className="grid grid-cols-2 md:grid-cols-3 gap-3"
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+            >
+              {BROWSE_CATEGORIES.map((cat) => (
+                <motion.button
+                  key={cat.name}
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.92 },
+                    visible: {
+                      opacity: 1,
+                      scale: 1,
+                      transition: { type: 'spring', stiffness: 420, damping: 28 }
+                    }
+                  }}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setQuery(cat.query);
+                    executeSearch(cat.query);
+                  }}
+                  className={`relative h-24 rounded-2xl overflow-hidden bg-gradient-to-br ${cat.gradient}
+                    flex items-end p-4 font-bold text-white text-base shadow-lg border border-white/10 cursor-pointer select-none group text-left`}
+                >
+                  <span className="font-display font-extrabold text-white text-base drop-shadow-md z-10">
+                    {cat.name}
+                  </span>
+                  <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
+                </motion.button>
+              ))}
+            </motion.div>
           </div>
         </div>
       )}
@@ -504,23 +593,28 @@ export const Search: React.FC<SearchProps> = ({
                 Top Result
               </span>
               {results.artists[0] ? (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                  whileHover={{ y: -2 }}
                   onClick={() => onSelectArtist?.(results.artists[0].id)}
-                  className="p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-all group"
+                  className="glass-card p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-colors group"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <img
+                    <motion.img
                       src={results.artists[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.artists[0].name}
                       referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-full object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
+                      className="w-18 h-18 rounded-full object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
+                      layoutId={`search-art-${results.artists[0].id}`}
                     />
                     <div className="min-w-0">
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Artist
                       </span>
-                      <h3 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1 font-display">
                         {results.artists[0].name}
                       </h3>
                       <p className="text-xs text-white/50">
@@ -528,39 +622,56 @@ export const Search: React.FC<SearchProps> = ({
                       </p>
                     </div>
                   </div>
-                  <div className="p-3 rounded-full bg-white/10 text-white group-hover:bg-[var(--accent-color)] transition-colors">
+                  <motion.div
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center shadow-lg shadow-[var(--accent-color)]/25 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  >
                     <User size={20} />
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               ) : results.songs[0] ? (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                  whileHover={{ y: -2 }}
                   onClick={() => playTrack(results.songs[0], results.songs)}
-                  className="p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-all group"
+                  className="glass-card p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-colors group"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <img
+                    <motion.img
                       src={results.songs[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.songs[0].title}
                       referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-2xl object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
+                      className="w-18 h-18 rounded-2xl object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
                       onError={handleImageError}
+                      layoutId={`search-art-${results.songs[0].id}`}
                     />
                     <div className="min-w-0">
                       <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
                         Song
                       </span>
-                      <h3 className="text-lg font-black text-white truncate mt-1">
+                      <h3 className="text-lg font-black text-white truncate mt-1 font-display">
                         {results.songs[0].title}
                       </h3>
-                      <p className="text-xs text-white/50">
+                      <p className="text-xs text-white/50 truncate">
                         {results.songs[0].artists.map((a) => a.name).join(', ')}
                       </p>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                    <Play size={20} className="fill-white ml-0.5" />
-                  </div>
-                </div>
+                  <motion.button
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playTrack(results.songs[0], results.songs);
+                    }}
+                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center shadow-lg shadow-[var(--accent-color)]/25 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
+                  >
+                    <Play size={18} className="fill-white ml-0.5 text-white" />
+                  </motion.button>
+                </motion.div>
               ) : null}
             </div>
           )}

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'musify-cache-v7';
+const CACHE_NAME = 'musify-cache-v8';
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/app.html',
   '/manifest.json',
   '/icons/musify-icon.svg'
 ];
@@ -50,8 +51,10 @@ self.addEventListener('fetch', (event) => {
 
   // Network-first for navigation requests to ensure fresh bundles
   if (event.request.mode === 'navigate') {
+    const isApp = url.pathname === '/app' || url.pathname.startsWith('/app/');
+    const fallbackHtml = isApp ? '/app.html' : '/index.html';
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/index.html'))
+      fetch(event.request).catch(() => caches.match(fallbackHtml))
     );
     return;
   }
@@ -64,7 +67,8 @@ self.addEventListener('fetch', (event) => {
       }
       return fetch(event.request).catch(() => {
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          const isApp = url.pathname === '/app' || url.pathname.startsWith('/app/');
+          return caches.match(isApp ? '/app.html' : '/index.html');
         }
       });
     })

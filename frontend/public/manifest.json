@@ -20,7 +20,7 @@
       "sizes": "any"
     }
   ],
-  "start_url": "/",
+  "start_url": "/app",
   "background_color": "#0B0B0C",
   "theme_color": "#0B0B0C",
   "display": "standalone",
