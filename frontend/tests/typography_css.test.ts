@@ -35,11 +35,11 @@ describe('Tier 1: Typography System, Satoshi Variable Loading & Tokens', () => {
     );
   });
 
-  it('declares Fontshare CDN fallback import for Satoshi font weights', () => {
-    assert.match(
+  it('verifies Fontshare CDN references are completely removed in favor of self-hosted woff2', () => {
+    assert.doesNotMatch(
       cssContent,
-      /@import\s+url\(['"]https:\/\/api\.fontshare\.com\/v2\/css\?f\[\]=satoshi@[\d,]+&display=swap['"]\);/,
-      'index.css must include Fontshare CDN fallback import'
+      /api\.fontshare\.com/,
+      'index.css must NOT reference Fontshare CDN'
     );
   });
 

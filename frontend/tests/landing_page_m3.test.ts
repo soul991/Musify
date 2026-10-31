@@ -38,9 +38,10 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
     // Script entry points
     assert.match(indexHtml, /<script\s+type=["']module["']\s+src=["']\/src\/landing\/main-landing\.tsx["']><\/script>/);
     assert.match(appHtml, /<script\s+type=["']module["']\s+src=["']\/src\/main\.tsx["']><\/script>/);
-
-    // Fontshare preconnect
-    assert.match(indexHtml, /api\.fontshare\.com/);
+    // Self-hosted Satoshi font preload and zero Fontshare CDN links
+    assert.doesNotMatch(indexHtml, /api\.fontshare\.com/, 'index.html must not contain Fontshare CDN links');
+    assert.match(indexHtml, /<link\s+rel=["']preload["'][^>]*href=["']\/fonts\/Satoshi-Variable\.woff2["']/);
+    assert.match(appHtml, /<link\s+rel=["']preload["'][^>]*href=["']\/fonts\/Satoshi-Variable\.woff2["']/);
   });
 
   it('verifies vite.config.ts multi-page rollup inputs and rewrite middleware', () => {
