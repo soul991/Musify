@@ -61,7 +61,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
   useEffect(() => {
     if (!roomCode) {
       if (channelRef.current) {
-        channelRef.current.close();
+        try { channelRef.current.close(); } catch {}
         channelRef.current = null;
       }
       return;
@@ -73,12 +73,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
       channelRef.current = channel;
 
       // Announce presence
-      channel.postMessage({
-        type: 'PEER_JOIN',
+      try { channel.postMessage({ type: 'PEER_JOIN',
         id: myId,
         name: userName,
-        isHost
-      });
+        isHost }); } catch {}
 
       channel.onmessage = (event) => {
         const data = event.data;
@@ -100,12 +98,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
 
           // Reply with own presence if receiving a join
           if (data.type === 'PEER_JOIN') {
-            channel.postMessage({
-              type: 'PEER_PING',
+            try { channel.postMessage({ type: 'PEER_PING',
               id: myId,
               name: userName,
-              isHost
-            });
+              isHost }); } catch {}
           }
         } else if (data.type === 'PEER_LEAVE') {
           setParticipants((prev) => prev.filter((p) => p.id !== data.id));
@@ -120,12 +116,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
 
       // Periodic heartbeat ping to keep peer list fresh
       const interval = setInterval(() => {
-        channel.postMessage({
-          type: 'PEER_PING',
+        try { channel.postMessage({ type: 'PEER_PING',
           id: myId,
           name: userName,
-          isHost
-        });
+          isHost }); } catch {}
         // Prune peers silent for > 15 seconds
         setParticipants((prev) =>
           prev.filter((p) => p.id === myId || Date.now() - p.lastSeen < 15000)
@@ -134,11 +128,9 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
 
       return () => {
         clearInterval(interval);
-        channel.postMessage({
-          type: 'PEER_LEAVE',
-          id: myId
-        });
-        channel.close();
+        try { channel.postMessage({ type: 'PEER_LEAVE',
+          id: myId }); } catch {}
+        try { channel.close(); } catch {}
       };
     } catch {
       // BroadcastChannel unavailable fallback
@@ -201,12 +193,10 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
   // Host broadcasts playing track changes to local BroadcastChannel
   useEffect(() => {
     if (isHost && roomCode && channelRef.current && currentTrack) {
-      channelRef.current.postMessage({
-        type: 'SYNC_TRACK',
+      try { channelRef.current.postMessage({ type: 'SYNC_TRACK',
         track: currentTrack,
         isPlaying,
-        time: currentTime
-      });
+        time: currentTime }); } catch {}
     }
   }, [isHost, roomCode, currentTrack, isPlaying, currentTime]);
 
@@ -296,11 +286,9 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
 
   const handleLeaveRoom = () => {
     if (channelRef.current) {
-      channelRef.current.postMessage({
-        type: 'PEER_LEAVE',
-        id: myIdRef.current
-      });
-      channelRef.current.close();
+      try { channelRef.current.postMessage({ type: 'PEER_LEAVE',
+        id: myIdRef.current }); } catch {}
+      try { channelRef.current.close(); } catch {}
       channelRef.current = null;
     }
     setRoomCode(null);
