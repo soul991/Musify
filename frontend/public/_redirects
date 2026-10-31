@@ -1,2 +1,4 @@
 /api/*  https://musify-backend-50047147406.development.catalystappsail.in/api/:splat  200!
+/app    /app.html                                                                     200
+/app/*  /app.html                                                                     200
 /*      /index.html                                                                   200

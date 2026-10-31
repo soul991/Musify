@@ -1,17 +1,13 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useMemo } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   Play,
   Search,
   MoreVertical,
-  History,
   Radio,
   Users,
-  Sliders,
   Settings as SettingsIcon,
   ListPlus,
-  Disc,
-  Bookmark,
   Sparkles,
   Clock,
   User as UserIcon
@@ -22,7 +18,7 @@ import { useLibrary } from '../context/LibraryContext';
 import { useTheme } from '../context/ThemeContext';
 import { Track, HomeFeedSection } from '../types';
 import { HeartBurstIcon } from '../components/player/HeartBurstIcon';
-import { SkeletonShimmer, HomeFeedSkeleton } from '../components/common/SkeletonLoader';
+import { HomeFeedSkeleton } from '../components/common/SkeletonLoader';
 
 export interface HomeProps {
   onSelectAlbum?: (id: string) => void;
@@ -45,34 +41,34 @@ interface HeroSlide {
   track: Track;
 }
 
-// InnerTube / Echo Music home chips matching ChipsRow.kt
+// InnerTube / Echo Music home chips with emoji & gradient-backed glass pills
 const MOOD_CHIPS = [
-  { label: 'Feel good', query: 'feel good upbeat hits' },
-  { label: 'Romance', query: 'romantic hindi english songs' },
-  { label: 'Relax', query: 'chill acoustic lo-fi relax' },
-  { label: 'Party', query: 'dance party edm chartbusters' },
-  { label: 'Energy', query: 'high energy workout motivational' },
-  { label: 'Focus', query: 'deep focus study ambient instrumental' },
-  { label: 'Workout', query: 'gym workout cardio beats' },
-  { label: 'Nostalgia', query: '2000s 90s nostalgia super hits' },
-  { label: 'Commute', query: 'road trip driving music chill' },
-  { label: 'Late Night', query: 'late night acoustic soulful melodies' }
+  { label: 'Feel good', emoji: '😌', query: 'feel good upbeat hits' },
+  { label: 'Romance', emoji: '💕', query: 'romantic hindi english songs' },
+  { label: 'Relax', emoji: '🧘', query: 'chill acoustic lo-fi relax' },
+  { label: 'Party', emoji: '🎉', query: 'dance party edm chartbusters' },
+  { label: 'Energy', emoji: '⚡', query: 'high energy workout motivational' },
+  { label: 'Focus', emoji: '🎯', query: 'deep focus study ambient instrumental' },
+  { label: 'Workout', emoji: '💪', query: 'gym workout cardio beats' },
+  { label: 'Nostalgia', emoji: '📻', query: '2000s 90s nostalgia super hits' },
+  { label: 'Commute', emoji: '🚗', query: 'road trip driving music chill' },
+  { label: 'Late Night', emoji: '🌙', query: 'late night acoustic soulful melodies' }
 ];
 
-// Fallback curated hits for hero carousel when user is completely new and backend is loading
+// Fallback curated hits for hero carousel when backend is loading or cold
 const FALLBACK_HERO_SLIDES: HeroSlide[] = [
   {
     id: 'hero-thc0FnfgW9k',
-    title: 'KHALASI',
-    subtitle: 'Achint x Aditya Gadhvi • Coke Studio Bharat',
-    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
-    badge: 'COKE STUDIO BHARAT',
+    title: 'Khalasi',
+    subtitle: 'Achint × Aditya Gadhvi • Coke Studio Bharat',
+    image: 'https://i.ytimg.com/vi/thc0FnfgW9k/hqdefault.jpg',
+    badge: 'FEATURED NOW TRENDING',
     track: {
       id: 'thc0FnfgW9k',
       title: 'Khalasi',
-      artists: [{ name: 'Achint x Aditya Gadhvi' }],
+      artists: [{ name: 'Achint × Aditya Gadhvi' }],
       duration: 250,
-      thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop',
+      thumbnail: 'https://i.ytimg.com/vi/thc0FnfgW9k/hqdefault.jpg',
       type: 'song'
     }
   },
@@ -80,14 +76,29 @@ const FALLBACK_HERO_SLIDES: HeroSlide[] = [
     id: 'hero-34Na4j8AVgA',
     title: 'Starboy',
     subtitle: 'The Weeknd ft. Daft Punk • Global Top 50',
-    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop',
-    badge: 'GLOBAL TOP 50',
+    image: 'https://i.ytimg.com/vi/34Na4j8AVgA/hqdefault.jpg',
+    badge: 'FEATURED NOW TRENDING',
     track: {
       id: '34Na4j8AVgA',
       title: 'Starboy',
       artists: [{ name: 'The Weeknd' }],
       duration: 230,
-      thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop',
+      thumbnail: 'https://i.ytimg.com/vi/34Na4j8AVgA/hqdefault.jpg',
+      type: 'song'
+    }
+  },
+  {
+    id: 'hero-kJQP7kiw5Fk',
+    title: 'Despacito',
+    subtitle: 'Luis Fonsi ft. Daddy Yankee • Global Hits',
+    image: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg',
+    badge: 'GLOBAL TOP 50',
+    track: {
+      id: 'kJQP7kiw5Fk',
+      title: 'Despacito',
+      artists: [{ name: 'Luis Fonsi ft. Daddy Yankee' }],
+      duration: 228,
+      thumbnail: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg',
       type: 'song'
     }
   }
@@ -105,12 +116,36 @@ function itemToTrack(item: { id: string; title: string; subtitle?: string; thumb
   };
 }
 
+// Section scroll choreography animation variants
+const sectionVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const headerVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.25 } }
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 16, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 420, damping: 28 }
+  }
+};
+
 export const Home: React.FC<HomeProps> = ({
   onOpenSearch,
-  onOpenHistory,
-  onOpenStats,
   onOpenListenTogether,
-  onOpenEqualizer,
   onOpenSettings,
   onSelectArtist,
   onSelectAlbum,
@@ -260,8 +295,8 @@ export const Home: React.FC<HomeProps> = ({
           id: `hero-feed-${item.id}-${idx}`,
           title: item.title,
           subtitle: item.subtitle || 'Trending on Musify',
-          image: item.thumbnail || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
-          badge: sec.title.toUpperCase(),
+          image: item.thumbnail || '/icons/musify-icon.svg',
+          badge: 'FEATURED NOW TRENDING',
           track: itemToTrack(item)
         }));
       }
@@ -372,243 +407,279 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* 3. MOOD FILTER CHIPS ROW */}
       <section className="mb-6 overflow-x-auto no-scrollbar py-1">
-        <div className="flex items-center gap-2 min-w-max px-0.5">
+        <div className="flex items-center gap-2.5 min-w-max px-0.5">
           {MOOD_CHIPS.map((mood) => {
             const isSelected = activeMood === mood.label;
             return (
               <motion.button
                 key={mood.label}
                 onClick={() => handleMoodSelect(mood)}
-                whileTap={{ scale: 0.94 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 400 }}
-                className={`relative px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 border select-none ${
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 800, damping: 28 }}
+                className={`glass-pill px-4 py-2 flex items-center gap-2 text-xs font-semibold shrink-0 cursor-pointer select-none transition-colors border ${
                   isSelected
                     ? 'text-white border-white/40 shadow-lg'
-                    : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white border-white/10'
+                    : 'hover:bg-white/[0.08] hover:border-white/20 text-white/80 hover:text-white border-white/10'
                 }`}
                 style={{
-                  backgroundColor: isSelected ? colors.primary : undefined,
+                  backgroundColor: isSelected ? colors.primary : 'rgba(255, 255, 255, 0.05)',
                   boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
                 }}
               >
-                {mood.label}
+                <span className="text-sm">{mood.emoji}</span>
+                <span>{mood.label}</span>
               </motion.button>
             );
           })}
         </div>
       </section>
 
-      {/* 4. DYNAMIC HERO CAROUSEL */}
+      {/* 4. DYNAMIC "NOW TRENDING" MARQUEE HERO CARD */}
       {activeHero && (
         <section
-          className="relative mb-8 rounded-[28px] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.75)] border border-white/15 min-h-[240px] sm:h-[300px] cursor-pointer group select-none"
+          className="relative mb-8"
           onMouseEnter={() => setIsCarouselHovered(true)}
           onMouseLeave={() => setIsCarouselHovered(false)}
-          onClick={() => handleHeroClick(activeHero)}
         >
-          {/* Base Atmospheric Gradient Background */}
-          <div
-            className="absolute inset-0 transition-colors duration-700"
-            style={{
-              background: `linear-gradient(135deg, ${colors.primary}45 0%, #1a1622 50%, #0d0d11 100%)`
-            }}
-          />
-
-          {/* Blurred Artwork Bleed */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeHero.id}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 0.35, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="absolute -inset-4 bg-cover bg-center blur-[70px] pointer-events-none"
-              style={{ backgroundImage: `url(${activeHero.image})` }}
-            />
-          </AnimatePresence>
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => handleHeroClick(activeHero)}
+              className="relative h-[280px] md:h-[330px] rounded-[24px] overflow-hidden group cursor-pointer border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.65)] select-none"
+            >
+              {/* Background Art with Ken Burns subtle zoom */}
+              <motion.img
+                src={activeHero.image}
+                alt={activeHero.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                animate={{ scale: [1, 1.06] }}
+                transition={{ duration: 12, ease: 'linear', repeat: Infinity, repeatType: 'reverse' }}
+                onError={handleImageError}
+              />
 
-          {/* Subtle Radial Refraction Highlight */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+              {/* Blurred Artwork Bleed Layer */}
+              <div
+                className="absolute inset-0 bg-cover bg-center blur-[60px] opacity-40 scale-110 pointer-events-none"
+                style={{ backgroundImage: `url(${activeHero.image})` }}
+              />
 
-          {/* Content Flex Container */}
-          <div className="relative z-10 h-full p-6 sm:p-8 flex items-center justify-between gap-6 pointer-events-none">
-            {/* Left: Metadata & Call to Action */}
-            <div className="flex-1 flex flex-col justify-center min-w-0 max-w-[75%] sm:max-w-[65%]">
-              {activeHero.badge && (
-                <div className="flex items-center gap-1.5 self-start mb-2.5">
-                  <span
-                    className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full border border-white/20 text-white shadow-md flex items-center gap-1.5"
-                    style={{ backgroundColor: `${colors.primary}B0` }}
+              {/* Multi-Stop Atmospheric Gradient Overlays for High Contrast Text */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/25 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent pointer-events-none" />
+
+              {/* Hero Content */}
+              <div className="relative z-10 h-full p-6 md:p-8 flex items-end justify-between gap-6">
+                <div className="max-w-[78%] sm:max-w-[65%] flex flex-col justify-end">
+                  <motion.p
+                    className="text-xs font-bold tracking-widest uppercase text-white/70 mb-2 flex items-center gap-1.5"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
                   >
-                    <Sparkles size={11} className="text-white" />
-                    {activeHero.badge}
-                  </span>
+                    <Sparkles size={13} className="text-[#E5303D]" />
+                    <span>{activeHero.badge || 'FEATURED NOW TRENDING'}</span>
+                  </motion.p>
+                  <motion.h2
+                    className="text-[26px] sm:text-[34px] md:text-[38px] font-black tracking-tight leading-tight text-white line-clamp-2 font-display"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25, type: 'spring', stiffness: 420, damping: 28 }}
+                  >
+                    {activeHero.title}
+                  </motion.h2>
+                  <motion.p
+                    className="text-sm sm:text-base text-white/70 mt-1 font-medium truncate"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.35 }}
+                  >
+                    {activeHero.subtitle}
+                  </motion.p>
+
+                  {/* Action Buttons Row */}
+                  <div className="flex items-center gap-3 mt-5">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleHeroClick(activeHero);
+                      }}
+                      className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-all cursor-pointer"
+                    >
+                      <Play size={16} className="fill-current ml-0.5" />
+                      <span>Play Now</span>
+                    </motion.button>
+                    {activeHero.track && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (activeHero.track) addToQueue(activeHero.track);
+                        }}
+                        className="px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-all cursor-pointer"
+                        title="Add to queue"
+                      >
+                        <ListPlus size={15} />
+                        <span className="hidden sm:inline">Add to Queue</span>
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Album Art Display with subtle floating aura */}
+                <div className="hidden sm:flex relative shrink-0 items-center justify-center pointer-events-none">
+                  <div
+                    className="absolute w-40 h-40 rounded-full blur-[35px] opacity-50"
+                    style={{ backgroundColor: colors.primary }}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] bg-[#16161a]"
+                  >
+                    <img
+                      src={activeHero.image || '/icons/musify-icon.svg'}
+                      alt={activeHero.title}
+                      referrerPolicy="no-referrer"
+                      onError={handleImageError}
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Bottom Pagination Dots */}
+              {heroSlides.length > 1 && (
+                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none z-20">
+                  {heroSlides.map((slide, idx) => (
+                    <div
+                      key={slide.id}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === heroIndex ? 'w-7 bg-white shadow-sm' : 'w-1.5 bg-white/40'
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white drop-shadow-lg leading-tight line-clamp-2">
-                {activeHero.title}
-              </h2>
-              <p className="text-xs sm:text-sm text-white/80 font-medium truncate drop-shadow mt-1.5 max-w-[90%]">
-                {activeHero.subtitle}
-              </p>
-
-              {/* Action Buttons Row */}
-              <div className="flex items-center gap-3 mt-5 pointer-events-auto">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleHeroClick(activeHero);
-                  }}
-                  className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-all"
-                >
-                  <Play size={16} className="fill-current ml-0.5" />
-                  <span>Play Now</span>
-                </button>
-                {activeHero.track && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (activeHero.track) addToQueue(activeHero.track);
-                    }}
-                    className="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-all"
-                    title="Add to queue"
-                  >
-                    <ListPlus size={15} />
-                    <span className="hidden sm:inline">Add to Queue</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Right: Featured Album Art Display with 3D Tilt */}
-            <div className="hidden sm:flex relative shrink-0 items-center justify-center pointer-events-none">
-              {/* Subtle Ambient Disc behind cover */}
-              <div
-                className="absolute w-40 h-40 sm:w-48 sm:h-48 rounded-full blur-[35px] opacity-60"
-                style={{ backgroundColor: colors.primary }}
-              />
-              <motion.div
-                key={activeHero.id}
-                initial={{ opacity: 0, scale: 0.9, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group-hover:scale-105 transition-transform duration-500 bg-[#16161a]"
-              >
-                <img
-                  src={activeHero.image || '/icons/musify-icon.svg'}
-                  alt={activeHero.title}
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                  }}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Bottom Pagination Dots */}
-          {heroSlides.length > 1 && (
-            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none z-20">
-              {heroSlides.map((slide, idx) => (
-                <div
-                  key={slide.id}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    idx === heroIndex ? 'w-7 bg-white shadow-sm' : 'w-1.5 bg-white/40'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+            </motion.div>
+          </AnimatePresence>
         </section>
       )}
 
       {/* 5. MOOD RESULTS (When a mood chip is active) */}
       {activeMood && moodTracks && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={sectionVariants}
+          className="mb-10"
+        >
+          <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
               <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
                 MOOD: {activeMood.toUpperCase()}
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Soundtrack for {activeMood}
               </h2>
             </div>
             {moodTracks.length > 0 && (
               <button
                 onClick={() => playTrack(moodTracks[0], moodTracks)}
-                className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors cursor-pointer"
               >
                 <Play size={12} className="fill-current" /> Play all
               </button>
             )}
-          </div>
+          </motion.div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
             <div className="grid grid-rows-4 grid-flow-col gap-2 min-w-max pb-2">
               {moodTracks.slice(0, 16).map((track) => renderTrackRow(track, moodTracks))}
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* 6. PERSONAL SECTION: JUMP BACK IN (Recent Listening History) */}
       {jumpBackIn.length > 0 && !activeMood && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={sectionVariants}
+          className="mb-10"
+        >
+          <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
               <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
                 <Clock size={12} className="text-[#E5303D]" /> RECENT HISTORY
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Jump Back In
               </h2>
             </div>
             <button
               onClick={() => playTrack(jumpBackIn[0], jumpBackIn)}
-              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors cursor-pointer"
             >
               <Play size={12} className="fill-current" /> Play all
             </button>
-          </div>
+          </motion.div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
             <div className="grid grid-rows-4 grid-flow-col gap-2 min-w-max pb-2">
               {jumpBackIn.slice(0, 16).map((track) => renderTrackRow(track, jumpBackIn))}
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* 7. PERSONAL SECTION: BECAUSE YOU LISTENED TO X */}
       {seedTrack && becauseListenedTracks.length > 0 && !activeMood && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={sectionVariants}
+          className="mb-10"
+        >
+          <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
               <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
                 <Sparkles size={12} className="text-[#E5303D]" /> SIMILAR TO YOUR TASTE
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Because you listened to {seedTrack.title}
               </h2>
             </div>
             <button
               onClick={() => playTrack(becauseListenedTracks[0], becauseListenedTracks)}
-              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors cursor-pointer"
             >
               <Play size={12} className="fill-current" /> Play radio
             </button>
-          </div>
+          </motion.div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
             <div className="flex items-center gap-4 min-w-max pb-2">
               {becauseListenedTracks.slice(0, 12).map((track) => {
                 const isCurrent = currentTrack?.id === track.id;
                 return (
-                  <div
+                  <motion.div
                     key={track.id}
+                    variants={cardVariants}
+                    whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => playTrack(track, becauseListenedTracks)}
                     className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                   >
@@ -634,33 +705,42 @@ export const Home: React.FC<HomeProps> = ({
                     <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
                       {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                     </p>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* 8. PERSONAL SECTION: YOUR TOP ARTISTS */}
       {topArtists.length > 0 && !activeMood && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={sectionVariants}
+          className="mb-10"
+        >
+          <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
               <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
                 <UserIcon size={12} className="text-[#E5303D]" /> YOUR FREQUENT ROTATION
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Your Top Artists
               </h2>
             </div>
-          </div>
+          </motion.div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
             <div className="flex items-center gap-5 min-w-max pb-2">
               {topArtists.map((artist) => (
-                <div
+                <motion.div
                   key={artist.name}
+                  variants={cardVariants}
+                  whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => onSelectArtist?.(artist.name)}
                   className="flex flex-col items-center group cursor-pointer select-none w-24 sm:w-28 text-center"
                 >
@@ -679,39 +759,45 @@ export const Home: React.FC<HomeProps> = ({
                     {artist.name}
                   </p>
                   <span className="text-[10px] text-white/50 font-medium">Artist</span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* 9. PERSONAL SECTION: FORGOTTEN FAVORITES */}
       {forgottenFavorites.length > 0 && !activeMood && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={sectionVariants}
+          className="mb-10"
+        >
+          <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
               <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
                 SONGS YOU USED TO PLAY ON REPEAT
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Forgotten Favorites
               </h2>
             </div>
             <button
               onClick={() => playTrack(forgottenFavorites[0], forgottenFavorites)}
-              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors cursor-pointer"
             >
               <Play size={12} className="fill-current" /> Play all
             </button>
-          </div>
+          </motion.div>
 
           <div className="overflow-x-auto no-scrollbar -mx-4 px-4">
             <div className="grid grid-rows-4 grid-flow-col gap-2 min-w-max pb-2">
               {forgottenFavorites.slice(0, 16).map((track) => renderTrackRow(track, forgottenFavorites))}
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* 10. REAL BACKEND FEED SECTIONS (/api/home from Innertube) */}
@@ -728,22 +814,29 @@ export const Home: React.FC<HomeProps> = ({
           );
 
           return (
-            <section key={`${sec.title}-${secIdx}`} className="mb-10">
-              <div className="flex items-center justify-between mb-4">
+            <motion.section
+              key={`${sec.title}-${secIdx}`}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-40px' }}
+              variants={sectionVariants}
+              className="mb-10"
+            >
+              <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                     {sec.title}
                   </h2>
                 </div>
                 {playableTracks.length > 0 && (
                   <button
                     onClick={() => playTrack(playableTracks[0], playableTracks)}
-                    className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors cursor-pointer"
                   >
                     <Play size={12} className="fill-current" /> Play all
                   </button>
                 )}
-              </div>
+              </motion.div>
 
               {/* Responsive Shelf: If 10+ items, show 4-row grid; if fewer, show horizontal card row */}
               {sec.items.length >= 8 ? (
@@ -762,8 +855,11 @@ export const Home: React.FC<HomeProps> = ({
                       const track = itemToTrack(item);
                       const isCurrent = currentTrack?.id === track.id;
                       return (
-                        <div
+                        <motion.div
                           key={item.id}
+                          variants={cardVariants}
+                          whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                          whileTap={{ scale: 0.97 }}
                           onClick={() => handleFeedItemClick(item, track, playableTracks)}
                           className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                         >
@@ -789,13 +885,13 @@ export const Home: React.FC<HomeProps> = ({
                           <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
                             {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                           </p>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 </div>
               )}
-            </section>
+            </motion.section>
           );
         })
       )}
@@ -839,8 +935,11 @@ export const Home: React.FC<HomeProps> = ({
     const liked = isLiked(track.id);
 
     return (
-      <div
+      <motion.div
         key={track.id}
+        variants={cardVariants}
+        whileHover={{ y: -2, transition: { duration: 0.15 } }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => {
           if (item) {
             handleFeedItemClick(item, track, playableList);
@@ -946,7 +1045,7 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           )}
         </button>
-      </div>
+      </motion.div>
     );
   }
 };

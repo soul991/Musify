@@ -46,3 +46,7 @@ frontend/.netlify/
 # Polish evidence artifacts
 polish-evidence/
 
+
+# Teamwork agent state
+.agents/
+
