@@ -438,7 +438,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
                 className="flex-1 bg-white/[0.06] border border-white/15 rounded-full px-4 py-2.5 text-sm font-bold text-white uppercase placeholder:text-white/40 outline-none focus:border-white/40 transition-colors"
               />
               <button
-                onClick={handleJoinRoom}
+                onClick={() => handleJoinRoom()}
                 disabled={joinInput.trim().length < 4}
                 className="px-5 py-2.5 rounded-full bg-white text-black font-extrabold text-sm disabled:opacity-40 disabled:pointer-events-none hover:scale-105 active:scale-95 transition-all shadow-md"
               >

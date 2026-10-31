@@ -462,8 +462,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 1: Liquid Glass Design */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(1)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
@@ -497,8 +495,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 2: Synced Lyrics */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(2)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
@@ -527,8 +523,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 3: Music Flow */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(3)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
@@ -556,8 +550,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 4: Listen Together */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(4)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
@@ -603,8 +595,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 5: Wavy Seekbar */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(5)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
@@ -645,8 +635,6 @@ export const Landing: React.FC = () => {
           {/* Bento Card 6: PWA Install */}
           <motion.div
             whileHover={{ y: -4, transition: { duration: 0.18 } }}
-            onMouseEnter={() => setActiveBentoCard(6)}
-            onMouseLeave={() => setActiveBentoCard(null)}
             className="glass-card p-7 rounded-[24px] border border-white/[0.08] relative overflow-hidden flex flex-col justify-between group"
           >
             <div className="relative z-10">
