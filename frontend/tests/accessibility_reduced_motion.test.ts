@@ -123,12 +123,3 @@ describe('Tier 3: Mathematical WCAG AA/AAA Contrast Ratio Verification', () => {
   });
 });
 
-describe('Tier 4: Touch Ergonomics & Apple HIG Minimum Targets', () => {
-  it('validates touch target guidelines: interactive targets must support at least 44pt / 48px hit bounds', () => {
-    const minTouchSizePt = 44; // Apple HIG specification
-    const minTouchSizePx = 48; // Android / Material / Web specification
-
-    assert.ok(minTouchSizePt >= 44, 'Apple HIG touch target threshold is 44pt');
-    assert.ok(minTouchSizePx >= 44, 'Web touch target threshold is >= 44px');
-  });
-});
