@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Play,
   Pause,
   SkipForward,
   SkipBack,
-  Volume2,
   Shuffle,
   Repeat,
   Heart,
@@ -13,15 +12,9 @@ import {
   Compass,
   Sliders,
   Users,
-  Sparkles,
-  Music,
-  Disc3,
   ArrowRight,
   ChevronDown,
   Check,
-  ExternalLink,
-  ShieldCheck,
-  Zap,
   Download,
   Smartphone,
   Layers,
@@ -40,9 +33,7 @@ export const Landing: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [volume, setVolume] = useState(78);
   const [activeLyricIndex, setActiveLyricIndex] = useState(1);
-  const [activeBentoCard, setActiveBentoCard] = useState<number | null>(null);
   const [pwaInstalled, setPwaInstalled] = useState(false);
 
   // Monitor scroll for fixed glass nav
@@ -297,11 +288,26 @@ export const Landing: React.FC = () => {
 
                   {/* Album Cover Overlap */}
                   <div className="relative z-10 w-44 h-44 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-[#1A1A1A] group">
-                    <img
-                      src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=600&auto=format&fit=crop&q=80"
-                      alt="Starboy — The Weeknd"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    <svg className="w-full h-full transition-transform duration-500 group-hover:scale-105" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <radialGradient id="albumGlowHero" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                          <stop offset="0%" stopColor="#E5303D" stopOpacity="0.8" />
+                          <stop offset="60%" stopColor="#801018" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#0A0A0A" stopOpacity="0.95" />
+                        </radialGradient>
+                        <linearGradient id="waveGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#FF6B7A" />
+                          <stop offset="100%" stopColor="#E5303D" />
+                        </linearGradient>
+                      </defs>
+                      <rect width="200" height="200" fill="#101012" />
+                      <circle cx="100" cy="100" r="85" fill="url(#albumGlowHero)" />
+                      <circle cx="100" cy="100" r="70" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+                      <circle cx="100" cy="100" r="55" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+                      <circle cx="100" cy="100" r="40" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
+                      <circle cx="100" cy="100" r="22" fill="#E5303D" fillOpacity="0.25" stroke="#E5303D" strokeWidth="1.5" />
+                      <path d="M75 100 C 85 70, 115 130, 125 100" stroke="url(#waveGradHero)" strokeWidth="4" strokeLinecap="round" />
+                    </svg>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
                       <span className="text-[11px] font-bold text-white/90 uppercase tracking-wider bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">
                         Lossless FLAC
@@ -736,11 +742,12 @@ export const Landing: React.FC = () => {
                     >
                       {/* Center Artwork Label */}
                       <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[#E5303D] shadow-inner relative z-10">
-                        <img
-                          src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&auto=format&fit=crop&q=80"
-                          alt="After Hours"
-                          className="w-full h-full object-cover"
-                        />
+                        <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
+                          <circle cx="50" cy="50" r="48" fill="#1c0709" stroke="#E5303D" strokeWidth="2" />
+                          <circle cx="50" cy="50" r="30" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+                          <circle cx="50" cy="50" r="14" fill="#E5303D" />
+                          <circle cx="50" cy="50" r="4" fill="#0A0A0A" />
+                        </svg>
                       </div>
                     </div>
                   </div>

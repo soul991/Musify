@@ -18,7 +18,6 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
   const redirectsPath = path.join(frontendRoot, 'public', '_redirects');
   const manifestPath = path.join(frontendRoot, 'public', 'manifest.json');
   const swPath = path.join(frontendRoot, 'public', 'sw.js');
-  const netlifyTomlPath = path.join(frontendRoot, 'netlify.toml');
 
   it('verifies index.html and app.html dual-entry contract', () => {
     assert.ok(fs.existsSync(indexHtmlPath), 'index.html must exist for Landing Page');
@@ -53,18 +52,14 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
     assert.match(viteConfig, /req\.url\s*===\s*['"]\/app['"]/);
   });
 
-  it('verifies public/_redirects and netlify.toml route /app and /app/* to app.html', () => {
+  it('verifies public/_redirects is the single source of truth for routing /app, /app/*, and /', () => {
     const redirects = fs.readFileSync(redirectsPath, 'utf8');
-    const netlifyToml = fs.readFileSync(netlifyTomlPath, 'utf8');
 
     // _redirects check
     assert.match(redirects, /\/app\s+\/app\.html\s+200/);
     assert.match(redirects, /\/app\/\*\s+\/app\.html\s+200/);
     assert.match(redirects, /\/\*\s+\/index\.html\s+200/);
-
-    // netlify.toml check
-    assert.match(netlifyToml, /from\s*=\s*["']\/app["'][\s\S]*to\s*=\s*["']\/app\.html["']/);
-    assert.match(netlifyToml, /from\s*=\s*["']\/app\/\*["'][\s\S]*to\s*=\s*["']\/app\.html["']/);
+    assert.match(redirects, /\/api\/\*\s+https:\/\/musify-backend[^\s]+\s+200!/);
   });
 
   it('verifies PWA manifest and service worker include /app', () => {
