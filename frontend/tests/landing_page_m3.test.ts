@@ -27,7 +27,7 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
     const appHtml = fs.readFileSync(appHtmlPath, 'utf8');
 
     // Title checks
-    assert.match(indexHtml, /<title>Musify — Music, Liquid \| High-Performance Web Player<\/title>/);
+    assert.match(indexHtml, /<title>Musify — Ad-free music player with synced lyrics<\/title>/);
     assert.match(appHtml, /<title>Musify — Web Music Player<\/title>/);
 
     // Root containers
@@ -74,6 +74,9 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
   it('verifies landing.css allows document scrolling and styles CTAs per design spec', () => {
     assert.ok(fs.existsSync(landingCssPath), 'landing.css must exist');
     const css = fs.readFileSync(landingCssPath, 'utf8');
+
+    // Fontshare check
+    assert.doesNotMatch(css, /api\.fontshare\.com/, 'landing.css must not contain Fontshare CDN links');
 
     // Window scroll contract
     assert.match(css, /html,\s*body\s*\{[^}]*overflow-y:\s*auto\s*!important/);

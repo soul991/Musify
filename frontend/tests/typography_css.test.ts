@@ -41,6 +41,14 @@ describe('Tier 1: Typography System, Satoshi Variable Loading & Tokens', () => {
       /api\.fontshare\.com/,
       'index.css must NOT reference Fontshare CDN'
     );
+
+    const landingCssPath = path.join(frontendRoot, 'src', 'landing', 'landing.css');
+    const landingCssContent = fs.readFileSync(landingCssPath, 'utf8');
+    assert.doesNotMatch(
+      landingCssContent,
+      /api\.fontshare\.com/,
+      'landing.css must NOT reference Fontshare CDN'
+    );
   });
 
   it('verifies local Satoshi-Variable.woff2 binary asset exists and is non-empty', () => {
