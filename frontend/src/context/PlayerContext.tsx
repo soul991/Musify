@@ -950,8 +950,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audioEqualizer.ensureContextRunning();
     }
 
-    try {
-      await audioRef.current.play();
+    // Invoke play() immediately without unnecessary await, preserving all error handling
+    audioRef.current.play().then(() => {
       setIsPlaying(true);
       setPlaybackError(null);
       consecutiveFailuresRef.current = 0;
@@ -994,7 +994,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }, intervalMs);
       }
-    } catch (err: any) {
+    }).catch((err: any) => {
       if (err?.name === 'NotAllowedError') {
         // Browser autoplay policy: leave track paused with clear button to tap
         setIsPlaying(false);
@@ -1006,7 +1006,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         setIsPlaying(false);
       }
-    }
+    });
 
     // 4. Run non-blocking background tasks after audio starts
     setTimeout(() => {
