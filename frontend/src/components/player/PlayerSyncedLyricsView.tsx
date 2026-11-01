@@ -53,11 +53,11 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
           animate={{ y: 0, opacity: isIntro ? 0.45 : 1 }}
           exit={{ y: -14, opacity: 0 }}
           transition={{ duration: 0.28, ease: 'easeOut' }}
-          className={`text-center font-bold text-base sm:text-lg tracking-wide truncate max-w-full ${
+          className={`text-center font-bold text-base sm:text-lg  truncate max-w-full ${
             isIntro ? 'text-white/50 italic' : 'text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]'
           }`}
         >
-          {isIntro ? `♪ ${displayLine.text}` : displayLine.text}
+          {isIntro ? `... ${displayLine.text}` : displayLine.text}
         </motion.p>
       </AnimatePresence>
     </div>

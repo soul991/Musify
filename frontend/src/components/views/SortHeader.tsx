@@ -57,7 +57,7 @@ export function SortHeader<T extends string>({
         {/* Leading Pill: Sort Type Selector */}
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="px-3.5 py-1.5 rounded-xl hover:bg-white/10 text-xs font-bold tracking-wide text-white/90 flex items-center gap-2 transition-all active:scale-95"
+          className="px-3.5 py-1.5 rounded-xl hover:bg-white/10 text-xs font-bold text-white/90 flex items-center gap-2 transition-colors active:scale-95"
         >
           <span>{activeOption?.label}</span>
           <ChevronDown
@@ -74,7 +74,7 @@ export function SortHeader<T extends string>({
         <button
           onClick={() => onSortDescendingChange(!sortDescending)}
           title={sortDescending ? 'Order: Descending' : 'Order: Ascending'}
-          className="p-1.5 px-2 rounded-xl hover:bg-white/10 text-white/80 transition-all active:scale-95 flex items-center justify-center"
+          className="p-1.5 px-2 rounded-xl hover:bg-white/10 text-white/80 transition-colors active:scale-95 flex items-center justify-center"
         >
           <motion.div
             animate={{ rotate: sortDescending ? 180 : 0 }}
@@ -97,7 +97,7 @@ export function SortHeader<T extends string>({
           <button
             onClick={() => onViewTypeChange(viewType === 'grid' ? 'list' : 'grid')}
             title={viewType === 'grid' ? 'Switch to List view' : 'Switch to Grid view'}
-            className="p-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white/80 active:scale-95 transition-all shadow-sm"
+            className="p-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white/80 active:scale-95 transition-colors shadow-sm"
           >
             {viewType === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
           </button>
@@ -114,7 +114,7 @@ export function SortHeader<T extends string>({
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-12 z-30 min-w-[190px] rounded-2xl bg-[#1C1D24]/95 backdrop-blur-xl border border-white/15 shadow-2xl p-1.5 flex flex-col gap-0.5"
           >
-            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
+            <div className="px-3 py-1.5 text-[10px] font-black tracking-normal text-white/40">
               Sort by
             </div>
             {sortOptions.map((opt) => {
@@ -126,7 +126,7 @@ export function SortHeader<T extends string>({
                     onSortChange(opt.id);
                     setMenuOpen(false);
                   }}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-semibold transition-all ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-semibold transition-colors ${
                     isSelected
                       ? 'bg-white/15 text-white font-bold'
                       : 'text-white/70 hover:bg-white/10 hover:text-white'

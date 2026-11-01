@@ -115,7 +115,7 @@ export const PlaylistView: React.FC<PlaylistViewProps> = ({
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between px-3 py-2 text-xs font-extrabold uppercase tracking-widest text-white/40">
+            <div className="flex items-center justify-between px-3 py-2 text-xs font-extrabold tracking-normal text-white/40">
               <span># Title</span>
               <span>Duration</span>
             </div>

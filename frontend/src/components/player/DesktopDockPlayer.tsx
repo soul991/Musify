@@ -110,7 +110,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
 
             {/* Thin 2px progress line at top of dock */}
             <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
-              <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+              <div className="h-full bg-[var(--accent)] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
             </div>
 
             {/* Left Section: Track Info & Room Status */}
@@ -128,9 +128,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                   }}
-                  className={`w-full h-full object-cover rounded-full ${
-                    isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
-                  }`}
+                  className="w-full h-full object-cover rounded-full"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
                   <Maximize2 size={14} className="text-white" />
@@ -171,7 +169,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             <button
               onClick={toggleShuffle}
               className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
-                isShuffled ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
+                isShuffled ? 'text-[var(--accent)]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
               aria-label="Toggle shuffle"
@@ -194,7 +192,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               isPlaying={isPlaying}
               onClick={togglePlay}
               size={44}
-              color="#E5303D"
+              color="var(--accent)"
               iconColor="#FFFFFF"
               iconSize={18}
             />
@@ -213,7 +211,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             <button
               onClick={toggleRepeat}
               className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
-                repeatMode !== 'off' ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
+                repeatMode !== 'off' ? 'text-[var(--accent)]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
               aria-label={`Repeat mode: ${repeatMode}`}
@@ -233,7 +231,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                 value={currentTime}
                 max={duration || 100}
                 isPlaying={isPlaying}
-                accentColor="#E5303D"
+                accentColor="var(--accent)"
                 onSeek={seek}
               />
             </div>
@@ -249,10 +247,10 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {/* Live Equalizer Animation Bars */}
           {isPlaying && (
             <div className="flex items-end gap-1 h-5 px-2">
-              <span className="w-1 bg-[#E5303D] rounded-full h-3 animate-[bounce_0.6s_ease-in-out_infinite]" />
-              <span className="w-1 bg-[#E5303D] rounded-full h-5 animate-[bounce_0.8s_ease-in-out_0.2s_infinite]" />
-              <span className="w-1 bg-[#E5303D] rounded-full h-2 animate-[bounce_0.5s_ease-in-out_0.4s_infinite]" />
-              <span className="w-1 bg-[#E5303D] rounded-full h-4 animate-[bounce_0.7s_ease-in-out_0.1s_infinite]" />
+              <span className="w-1 bg-[var(--accent)] rounded-full h-3 animate-[bounce_0.6s_ease-in-out_infinite]" />
+              <span className="w-1 bg-[var(--accent)] rounded-full h-5 animate-[bounce_0.8s_ease-in-out_0.2s_infinite]" />
+              <span className="w-1 bg-[var(--accent)] rounded-full h-2 animate-[bounce_0.5s_ease-in-out_0.4s_infinite]" />
+              <span className="w-1 bg-[var(--accent)] rounded-full h-4 animate-[bounce_0.7s_ease-in-out_0.1s_infinite]" />
             </div>
           )}
 
@@ -276,7 +274,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               step="0.01"
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-16 lg:w-20 h-1 accent-[#E5303D] bg-white/10 rounded-full cursor-pointer"
+              className="w-16 lg:w-20 h-1 accent-[var(--accent)] bg-white/10 rounded-full cursor-pointer"
             />
           </div>
 
@@ -284,7 +282,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {onToggleCompanion && (
             <button
               onClick={onToggleCompanion}
-              className={`p-2 rounded-xl transition-all ${
+              className={`p-2 rounded-xl transition-colors ${
                 isCompanionOpen
                   ? 'bg-white/15 text-white shadow-sm'
                   : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -300,11 +298,11 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {onOpenListenTogether && (
             <button
               onClick={onOpenListenTogether}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white text-[11px] font-bold transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white text-[11px] font-bold transition-colors"
               title="Listen Together Room"
               aria-label="Listen Together Room"
             >
-              <Users size={13} className="text-[#E5303D]" />
+              <Users size={13} className="text-[var(--accent)]" />
               <span className="hidden lg:inline">Room</span>
             </button>
           )}

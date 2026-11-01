@@ -124,7 +124,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
           {/* Follow / Subscribe ToggleButton */}
           <button
             onClick={() => setIsFollowing(!isFollowing)}
-            className={`w-full h-11 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 ${
+            className={`w-full h-11 rounded-full font-bold text-xs  tracking-normal flex items-center justify-center gap-2 transition-colors shadow-md active:scale-98 ${
               isFollowing
                 ? 'bg-white/20 text-white border border-white/30'
                 : 'bg-white text-black hover:bg-white/90'
@@ -187,7 +187,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
         {/* About Artist Biography (Expandable) */}
         {artist.description && (
           <div className="p-5 rounded-3xl bg-white/[0.05] border border-white/10">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white/60 mb-2">
+            <h3 className="text-sm font-black tracking-normal text-white/60 mb-2">
               About
             </h3>
             <p
@@ -211,7 +211,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
         <div className="flex gap-2 border-b border-white/10 pb-3">
           <button
             onClick={() => setActiveTab('top')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+            className={`px-4 py-1.5 rounded-full text-xs font-bold  tracking-normal transition-colors ${
               activeTab === 'top'
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
@@ -223,7 +223,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
           {artist.albums.length > 0 && (
             <button
               onClick={() => setActiveTab('albums')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold  tracking-normal transition-colors ${
                 activeTab === 'albums'
                   ? 'bg-white text-black shadow-md'
                   : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
@@ -236,7 +236,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
           {artist.singles?.length > 0 && (
             <button
               onClick={() => setActiveTab('singles')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold  tracking-normal transition-colors ${
                 activeTab === 'singles'
                   ? 'bg-white text-black shadow-md'
                   : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
@@ -250,7 +250,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
         {/* Popular Songs Section */}
         {activeTab === 'top' && (
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-white/40">
+            <div className="flex items-center justify-between px-3 py-1 text-xs font-extrabold tracking-normal text-white/40">
               <span># Title</span>
               <span>Time</span>
             </div>
@@ -287,7 +287,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                 <div
                   key={album.id}
                   onClick={() => onSelectAlbum?.(album.id)}
-                  className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-all"
+                  className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-colors"
                 >
                   <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-md">
                     <img
@@ -297,7 +297,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                       }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300"
                     />
                   </div>
                   <div>
@@ -332,7 +332,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                 <div
                   key={single.id}
                   onClick={() => onSelectAlbum?.(single.id)}
-                  className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-all"
+                  className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-colors"
                 >
                   <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-md">
                     <img
@@ -342,7 +342,7 @@ export const ArtistView: React.FC<ArtistViewProps> = ({
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                       }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300"
                     />
                   </div>
                   <div>

@@ -175,7 +175,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                 <button
                   type="button"
                   onClick={handlePaste}
-                  className="absolute right-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-white/80 hover:text-white transition-colors uppercase tracking-wider"
+                  className="absolute right-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-white/80 hover:text-white transition-colors tracking-normal"
                 >
                   Paste
                 </button>
@@ -223,7 +223,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                 <button
                   type="submit"
                   disabled={!url.trim() || status === 'resolving' || status === 'matching'}
-                  className="px-5 py-2.5 rounded-xl bg-white hover:bg-white/90 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-white hover:bg-white/90 disabled:opacity-50 text-black font-black text-xs tracking-normal flex items-center gap-2 shadow-lg transition-transform active:scale-95"
                 >
                   <Sparkles size={14} />
                   <span>Start Import</span>
@@ -277,7 +277,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                 <button
                   type="button"
                   onClick={handlePlayImported}
-                  className="px-5 py-2.5 rounded-xl bg-[var(--accent-color)] hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-[var(--accent-color)] hover:brightness-110 text-white font-black text-xs tracking-normal flex items-center gap-2 shadow-lg transition-transform active:scale-95"
                 >
                   <Play size={14} className="fill-current" />
                   <span>Play Playlist</span>

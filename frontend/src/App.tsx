@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { MotionConfig, motion, AnimatePresence } from 'framer-motion';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -35,7 +36,7 @@ const ListenTogetherView = lazy(() =>
 
 const ViewLoader: React.FC = () => (
   <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-[#E5303D] animate-spin" />
+    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-[var(--accent)] animate-spin" />
   </div>
 );
 
@@ -295,36 +296,8 @@ const MusifyMain: React.FC = () => {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
-      {/* Ambient Blurred Crossfade Orbs that breathe with the music */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
-        <motion.div
-          animate={{
-            scale: isPlaying ? [1, 1.14, 1.03, 1.1, 1] : 1,
-            opacity: isPlaying ? [0.18, 0.28, 0.2, 0.25, 0.18] : 0.12
-          }}
-          transition={{
-            duration: 4.5,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="pointer-events-none absolute -top-32 -left-32 w-[540px] h-[540px] rounded-full blur-[140px] transition-colors duration-700"
-          style={{ backgroundColor: colors.primary }}
-        />
-        <motion.div
-          animate={{
-            scale: isPlaying ? [1, 1.12, 1.05, 1.15, 1] : 1,
-            opacity: isPlaying ? [0.14, 0.22, 0.16, 0.2, 0.14] : 0.1
-          }}
-          transition={{
-            duration: 5.5,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: 0.8
-          }}
-          className="pointer-events-none absolute -bottom-32 -right-32 w-[640px] h-[640px] rounded-full blur-[160px] transition-colors duration-700"
-          style={{ backgroundColor: colors.secondary || '#B8222E' }}
-        />
-      </div>
+      /* Background Ambient Base */
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 bg-[var(--bg-base)]" />
 
       {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar
@@ -412,7 +385,7 @@ const MusifyMain: React.FC = () => {
           exit={{ y: 30, opacity: 0 }}
           className="fixed bottom-28 left-6 md:bottom-8 md:left-8 z-[110] bg-[#141416]/95 border border-white/15 rounded-2xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-2xl"
         >
-          <div className="w-8 h-8 rounded-xl bg-[#E5303D] flex items-center justify-center font-black text-white text-xs shadow-md">
+          <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center font-black text-white text-xs shadow-md">
             M
           </div>
           <div className="text-xs">
@@ -429,7 +402,7 @@ const MusifyMain: React.FC = () => {
                   setShowInstallPrompt(false);
                 }
               }}
-              className="px-2.5 py-1 rounded-lg bg-[#CC2229] hover:bg-[#B8222E] active:scale-95 text-white font-bold text-xs transition-all shadow-sm"
+              className="px-2.5 py-1 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-95 text-white font-bold text-xs transition-colors shadow-sm"
             >
               Install
             </button>
@@ -443,11 +416,12 @@ const MusifyMain: React.FC = () => {
               className="p-1 text-white/40 hover:text-white transition-colors"
               aria-label="Dismiss install prompt"
             >
-              ✕
+              <X size={14} />
             </button>
           </div>
         </motion.div>
       )}
+
       {/* Keyboard Shortcuts Help Sheet ('?') */}
       {showShortcutsSheet && (
         <div
@@ -459,18 +433,19 @@ const MusifyMain: React.FC = () => {
             className="w-full max-w-sm rounded-[24px] bg-[#141416] border border-white/15 p-6 shadow-2xl flex flex-col gap-4 text-white"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="font-bold text-base">Keyboard Shortcuts</h3>
+              <h3 className="font-medium text-base">Keyboard shortcuts</h3>
               <button
                 onClick={() => setShowShortcutsSheet(false)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs cursor-pointer"
+                aria-label="Close shortcuts modal"
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs cursor-pointer transition-colors"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
             <div className="flex flex-col gap-2.5 text-xs">
               <div className="flex justify-between items-center"><span className="text-white/60">Play / Pause</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">Space</kbd></div>
-              <div className="flex justify-between items-center"><span className="text-white/60">Seek -5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">←</kbd></div>
-              <div className="flex justify-between items-center"><span className="text-white/60">Seek +5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">→</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Seek -5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">Left</kbd></div>
+              <div className="flex justify-between items-center"><span className="text-white/60">Seek +5s</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">Right</kbd></div>
               <div className="flex justify-between items-center"><span className="text-white/60">Previous track</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">J</kbd></div>
               <div className="flex justify-between items-center"><span className="text-white/60">Next track</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">L</kbd></div>
               <div className="flex justify-between items-center"><span className="text-white/60">Mute / Unmute</span><kbd className="px-2 py-1 rounded bg-white/10 font-mono">M</kbd></div>

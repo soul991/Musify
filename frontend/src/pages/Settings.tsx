@@ -179,7 +179,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         {onClose && (
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10 shrink-0 shadow-md"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10 shrink-0 shadow-md"
             title="Go back"
             aria-label="Go back"
           >
@@ -235,7 +235,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 description: 'Custom seed hue for ripples, playback controls, and sliders',
                 trailingContent: (
                   <div
-                    className="w-7 h-7 rounded-full shadow-md border-2 border-white/30 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                    className="w-7 h-7 rounded-full shadow-md border-2 border-white/30 cursor-pointer  active:scale-95 transition-transform"
                     style={{ backgroundColor: accentColor }}
                   />
                 ),
@@ -278,7 +278,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         setPlayerStyle('apple');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         playerStyle === 'apple'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -291,7 +291,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         setPlayerStyle('material');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         playerStyle === 'material'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -303,8 +303,8 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 )
               },
               {
-                icon: <Sliders size={20} className="text-cyan-400" />,
-                title: 'Liquid Glass Blur Effect',
+                icon: <Sliders size={20} className="text-[var(--text-2)]" />,
+                title: 'Glass blur effect',
                 description: 'Translucent refraction and specular highlight on floating navigation bars',
                 trailingContent: (
                   <div className="text-xs font-bold text-emerald-400">
@@ -336,7 +336,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         handleToggleSeekbarStyle('calm');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         seekbarStyle === 'calm'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -349,7 +349,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         handleToggleSeekbarStyle('squiggly');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         seekbarStyle === 'squiggly'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -419,7 +419,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             title="Playback & Audio Processing"
             items={[
               {
-                icon: <Volume2 size={20} className="text-purple-400" />,
+                icon: <Volume2 size={20} className="text-[var(--text-2)]" />,
                 title: 'Volume leveler',
                 description: 'Off by default. Balances track volume, but may affect lock-screen playback on iPhone',
                 trailingContent: (
@@ -514,7 +514,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 )
               },
               {
-                icon: <Radio size={20} className="text-cyan-400" />,
+                icon: <Radio size={20} className="text-[var(--text-2)]" />,
                 title: 'Skip Silence',
                 description: skipSilence
                   ? 'Active • Automatically jumps over silent sections'
@@ -557,7 +557,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       e.stopPropagation();
                       handleClearCache();
                     }}
-                    className="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-all"
+                    className="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-colors"
                   >
                     Clear
                   </button>
@@ -587,7 +587,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       e.stopPropagation();
                       handleExportLibrary();
                     }}
-                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 active:scale-95"
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors flex items-center gap-1.5 active:scale-95"
                   >
                     <Download size={14} />
                     <span>Export</span>
@@ -602,7 +602,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 trailingContent: (
                   <label
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
                   >
                     <Upload size={14} />
                     <span>Import</span>
@@ -625,7 +625,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             title="About & Engine"
             items={[
               {
-                icon: <Info size={20} className="text-cyan-400" />,
+                icon: <Info size={20} className="text-[var(--text-2)]" />,
                 title: 'Musify Web Engine',
                 description: 'Echo Music Jetpack Compose architecture replicated in React & Tailwind',
                 trailingContent: (
@@ -667,10 +667,10 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         setAccentColor(color.hex);
                         setShowColorPickerModal(false);
                       }}
-                      className="flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-all"
+                      className="flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors"
                     >
                       <div
-                        className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105"
+                        className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-transform "
                         style={{ backgroundColor: color.hex }}
                       >
                         {isSelected && <Check size={18} className="text-white" strokeWidth={3} />}
@@ -725,7 +725,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                           ? handleWifiQualityChange(level)
                           : handleCellularQualityChange(level)
                       }
-                      className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all ${
+                      className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-white/15 border border-white/20 text-white shadow-md'
                           : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/70'

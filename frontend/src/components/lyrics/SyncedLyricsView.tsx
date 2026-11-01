@@ -165,7 +165,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             <Sparkles size={15} className="text-[var(--accent-color)]" />
           </div>
           <div>
-            <span className="text-xs font-black tracking-widest uppercase text-white/90">
+            <span className="text-xs font-black tracking-normal text-white/90">
               Live Lyrics
             </span>
             <p className="text-[10px] text-white/40 font-medium">
@@ -178,14 +178,14 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
           <button
             onClick={toggleFullscreen}
             aria-label={isFullscreen ? 'Exit Fullscreen Lyrics' : 'Fullscreen Lyrics'}
-            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 shadow-md text-white"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 shadow-md text-white"
           >
             {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
           </button>
           <button
             onClick={onClose}
             aria-label="Close Lyrics"
-            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 shadow-md"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 shadow-md"
           >
             <ChevronDown size={22} />
           </button>
@@ -203,7 +203,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
         {loadingLyrics ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/40 my-auto">
             <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            <p className="text-xs font-semibold tracking-wider uppercase">Loading Synced Lyrics...</p>
+            <p className="text-xs font-semibold tracking-normal">Loading synced lyrics...</p>
           </div>
         ) : !lyricsData?.lines || lyricsData.lines.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8 text-white/40 gap-2 my-auto">
@@ -255,7 +255,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
                   opacity: targetOpacity
                 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                className={`cursor-pointer transition-all duration-300 origin-left py-2 px-3 rounded-2xl hover:opacity-80 ${
+                className={`cursor-pointer transition-colors duration-300 origin-left py-2 px-3 rounded-2xl hover:opacity-80 ${
                   isActive ? 'bg-white/5' : ''
                 }`}
               >
@@ -301,7 +301,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
           >
             <button
               onClick={reEnableAutoScroll}
-              className="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/25 text-white text-xs font-bold tracking-wider flex items-center gap-2 shadow-2xl transition-all active:scale-95"
+              className="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/25 text-white text-xs font-bold tracking-normal flex items-center gap-2 shadow-2xl transition-colors active:scale-95"
             >
               <RefreshCw size={13} className="animate-spin text-[var(--accent-color)]" />
               <span>SYNC WITH PLAYBACK</span>
@@ -352,10 +352,10 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
               const percent = Math.max(0, Math.min(1, clickX / rect.width));
               seek(percent * duration);
             }}
-            className="w-full h-1.5 rounded-full bg-white/20 hover:h-2 transition-all cursor-pointer overflow-hidden"
+            className="w-full h-1.5 rounded-full bg-white/20 hover:h-2 transition-colors cursor-pointer overflow-hidden"
           >
             <div
-              className="h-full bg-white rounded-full transition-all duration-100"
+              className="h-full bg-white rounded-full transition-colors duration-100"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -365,7 +365,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             <button
               onClick={prevTrack}
               aria-label="Previous track"
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center text-white"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-colors flex items-center justify-center text-white"
             >
               <SkipBack size={18} className="fill-current" />
             </button>
@@ -381,7 +381,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             <button
               onClick={nextTrack}
               aria-label="Next track"
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center text-white"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-colors flex items-center justify-center text-white"
             >
               <SkipForward size={18} className="fill-current" />
             </button>

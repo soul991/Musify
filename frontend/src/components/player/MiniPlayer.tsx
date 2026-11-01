@@ -103,7 +103,7 @@ export const MiniPlayer: React.FC = () => {
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                className="transition-all duration-150"
+                className="transition-colors duration-150"
               />
             </svg>
 
@@ -147,7 +147,7 @@ export const MiniPlayer: React.FC = () => {
           {/* Previous Track: 32px button, 20px icon */}
           <button
             onClick={prevTrack}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-90"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"
           >
             <SkipBack size={18} className="fill-current" />
           </button>
@@ -164,7 +164,7 @@ export const MiniPlayer: React.FC = () => {
           {/* Next Track: 32px button, 20px icon */}
           <button
             onClick={nextTrack}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-90"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"
           >
             <SkipForward size={18} className="fill-current" />
           </button>

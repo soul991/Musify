@@ -25,7 +25,7 @@ export const AutoPlaylistButton: React.FC<AutoPlaylistButtonProps> = ({
       className={`min-h-[72px] rounded-2xl bg-white/[0.07] hover:bg-white/[0.11] active:bg-white/[0.14] border border-white/10 p-3.5 flex items-center gap-3.5 text-left transition-colors duration-200 shadow-sm group select-none ${className}`}
     >
       <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/5 transition-transform group-hover:scale-105"
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/5 transition-transform "
         style={{
           backgroundColor: iconColor ? `${iconColor}22` : 'rgba(255, 255, 255, 0.1)',
           color: iconColor || '#ffffff'

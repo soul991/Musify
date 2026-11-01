@@ -12,6 +12,17 @@ export const springSoft: Transition = {
   mass: 1
 };
 
+/**
+ * Spatial moves only (player sheet open/close, page push/pop) per Design Brief Section 7
+ * stiffness 380, damping 40, mass 1 (damping ratio ~ 1.0, critically damped, no wobble)
+ */
+export const springSpatial: Transition = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 40,
+  mass: 1
+};
+
 export const springSnappy: Transition = {
   type: 'spring',
   stiffness: 420,

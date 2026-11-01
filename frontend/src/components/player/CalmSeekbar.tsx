@@ -105,7 +105,7 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
 
         {/* Scrubber Knob (grows on hover / drag) */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-150 ${
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-transform duration-150 ${
             isHovered || isDragging
               ? 'w-3 h-3 scale-100 opacity-100'
               : 'w-2 h-2 scale-75 opacity-0 group-hover:opacity-100 group-hover:scale-100'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Disc, ListMusic, Mic2, X, Play, Sparkles } from 'lucide-react';
+import { Disc, ListMusic, Mic2, X, Play, Loader2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
@@ -89,10 +89,8 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
         <div className="w-20 h-20 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mb-4 text-white/30">
           <Disc size={36} />
         </div>
-        <h4 className="text-sm font-bold text-white/70">No Audio Playing</h4>
-        <p className="text-xs text-white/40 mt-1 max-w-[200px]">
-          Choose a song from your feed or search to start the audio stage.
-        </p>
+        <h4 className="text-sm font-medium text-[var(--text-2)]">No audio playing</h4>
+        <p className="text-xs text-[var(--text-3)] mt-1 max-w-[200px]">Search for a song</p>
       </aside>
     );
   }
@@ -106,7 +104,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.06] border border-white/10">
           <button
             onClick={() => setActiveTab('lyrics')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'lyrics'
                 ? 'bg-white/15 text-white shadow-sm'
                 : 'text-white/50 hover:text-white'
@@ -117,7 +115,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('queue')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'queue'
                 ? 'bg-white/15 text-white shadow-sm'
                 : 'text-white/50 hover:text-white'
@@ -144,18 +142,12 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col p-5">
         {/* 1. 3D Spinning Vinyl Turntable Centerpiece */}
         <div className="relative flex flex-col items-center my-2">
-          {/* Ambient Glow */}
-          <div
-            className="absolute -inset-4 rounded-full opacity-35 blur-2xl pointer-events-none transition-all duration-700"
-            style={{ backgroundColor: colors.primary }}
-          />
+          {/* Ambient Glow removed per Section 6 */}
 
           {/* Vinyl Record */}
           <div className="relative w-48 h-48 lg:w-52 lg:h-52 rounded-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-2 border-white/10 p-1 bg-[#09090b]">
             <div
-              className={`relative w-full h-full rounded-full overflow-hidden flex items-center justify-center ${
-                isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
-              }`}
+              className="relative w-full h-full rounded-full overflow-hidden flex items-center justify-center"
               style={{
                 backgroundImage:
                   'radial-gradient(circle at center, #111 0%, #1c1c1f 35%, #0f0f12 50%, #202025 65%, #0d0d10 80%, #050507 100%)'
@@ -202,7 +194,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
           {activeTab === 'lyrics' ? (
             <div className="flex-1 flex flex-col relative overflow-hidden">
               <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                <span className="text-[10px] font-bold tracking-normal text-white/40">
                   {lyricsData?.synced ? 'Live Synced Lyrics' : 'Lyrics'}
                 </span>
                 {lyricsData?.source && lyricsData.source !== 'none' && (
@@ -219,7 +211,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
               >
                 {loadingLyrics ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-2 text-white/40">
-                    <Sparkles size={20} className="animate-spin text-[#E5303D]" />
+                    <Loader2 size={20} className="animate-spin text-[var(--text-3)]" />
                     <span className="text-xs font-medium">Aligning lyrics...</span>
                   </div>
                 ) : lyricsData?.synced && lyricsData.lines.length > 0 ? (
@@ -231,13 +223,13 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
                         key={`${line.time}-${idx}`}
                         ref={isCurrent ? activeLineRef : null}
                         onClick={() => seek(line.time)}
-                        className={`transition-all duration-300 px-3 cursor-pointer select-none ${
+                        className={`transition-colors duration-300 px-3 cursor-pointer select-none ${
                           isCurrent
-                            ? 'text-white font-black text-lg lg:text-xl scale-105 drop-shadow-[0_0_18px_rgba(255,255,255,0.5)]'
+                            ? 'text-white font-black text-lg lg:text-xl scale-105 '
                             : 'text-white/30 hover:text-white/70 font-semibold text-xs lg:text-sm'
                         }`}
                       >
-                        {line.text || '♪'}
+                        {line.text || '...'}
                       </div>
                     );
                   })
@@ -256,9 +248,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
             /* Queue List */
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                  Up Next ({queue.length})
-                </span>
+                <span className="text-xs font-medium text-[var(--text-3)]">Up next ({queue.length})</span>
               </div>
 
               <div className="flex-1 overflow-y-auto no-scrollbar space-y-1.5 pr-1">
@@ -271,7 +261,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
                     <div
                       key={`${track.id}-${idx}`}
                       onClick={() => playTrack(track, queue)}
-                      className="group flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 cursor-pointer transition-all"
+                      className="group flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 cursor-pointer transition-colors"
                     >
                       <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/10 shrink-0 relative">
                         <img

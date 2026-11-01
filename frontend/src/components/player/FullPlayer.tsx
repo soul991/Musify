@@ -176,59 +176,25 @@ export const FullPlayer: React.FC = () => {
               <div className="absolute inset-0 bg-black/40" />
             </div>
           ) : bgStyle === 'mesh' ? (
-            /* Live Mesh background: 3 rotating saturated artwork discs */
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-                className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] blur-[100px] opacity-60"
-                style={{
-                  backgroundImage: `url(${currentTrack.thumbnail})`,
-                  backgroundSize: 'cover',
-                  filter: 'saturate(1.8)'
-                }}
-              />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
-                className="absolute -top-[10%] left-[10%] w-[100%] h-[100%] blur-[120px] opacity-40"
-                style={{
-                  backgroundImage: `url(${currentTrack.thumbnail})`,
-                  backgroundSize: 'cover',
-                  filter: 'saturate(1.8)'
-                }}
-              />
-              <div className="absolute inset-0 bg-black/35" />
-            </div>
-          ) : (
-            /* Glow Animated / Dynamic Gradient background */
+            /* Live Mesh background: steady artwork */
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <div
-                className="absolute inset-0 opacity-40"
+                className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] blur-[100px] opacity-40"
+                style={{
+                  backgroundImage: `url(${currentTrack.thumbnail})`,
+                  backgroundSize: 'cover'
+                }}
+              />
+              <div className="absolute inset-0 bg-black/50" />
+            </div>
+          ) : (
+            /* Static gradient background */
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-30"
                 style={{ background: colors.gradientBackground }}
               />
-              {/* 2 Animated Ambient Glowing Orbs */}
-              <motion.div
-                animate={{
-                  x: [0, 40, -30, 0],
-                  y: [0, -30, 20, 0],
-                  scale: [1, 1.15, 0.95, 1]
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[500px] rounded-full blur-[120px] opacity-70"
-                style={{ backgroundColor: `${colors.primary}66` }}
-              />
-              <motion.div
-                animate={{
-                  x: [0, -40, 30, 0],
-                  y: [0, 30, -20, 0],
-                  scale: [1, 0.9, 1.1, 1]
-                }}
-                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute top-[35%] -left-[15%] w-[420px] h-[420px] rounded-full blur-[100px] opacity-45"
-                style={{ backgroundColor: `${colors.secondary}66` }}
-              />
-              <div className="absolute inset-0 bg-black/30" />
+              <div className="absolute inset-0 bg-black/40" />
             </div>
           )}
 
@@ -238,7 +204,7 @@ export const FullPlayer: React.FC = () => {
           <div className="relative z-20 flex items-center justify-between px-6 pt-5 pb-2">
             <button
               onClick={() => setIsPlayerOpen(false)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
               aria-label="Collapse player"
             >
               <ChevronDown size={22} className="text-white" />
@@ -248,7 +214,7 @@ export const FullPlayer: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPlayerStyle(isMaterial ? 'apple' : 'material')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wider text-white/90 shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-normal text-white/90 shadow-md transition-colors active:scale-95"
               >
                 <Sparkles size={12} className="text-[var(--accent-color)]" />
                 <span>{isMaterial ? 'MATERIAL YOU' : 'APPLE INSPIRED'}</span>
@@ -261,7 +227,7 @@ export const FullPlayer: React.FC = () => {
                 onClick={() => setIsRotatingThumbnail(!isRotatingThumbnail)}
                 title={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
                 aria-label={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
-                className={`w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   isRotatingThumbnail
                     ? 'bg-[var(--accent-color)] text-black border-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
@@ -274,7 +240,7 @@ export const FullPlayer: React.FC = () => {
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
                 title={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
                 aria-label={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
-                className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`relative w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent-color)]/25 border-[var(--accent-color)] text-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
@@ -282,7 +248,7 @@ export const FullPlayer: React.FC = () => {
               >
                 <Moon size={18} />
                 {remainingSleepSeconds ? (
-                  <span className="absolute -bottom-1 -right-1 text-[9px] font-black px-1 rounded-full bg-[#E5303D] text-white leading-tight shadow-md">
+                  <span className="absolute -bottom-1 -right-1 text-[9px] font-black px-1 rounded-full bg-[var(--accent)] text-white leading-tight shadow-md">
                     {Math.ceil(remainingSleepSeconds / 60)}m
                   </span>
                 ) : null}
@@ -291,7 +257,7 @@ export const FullPlayer: React.FC = () => {
               {/* Sleep Menu Popup */}
               {showSleepMenu && (
                 <div className="absolute right-0 top-12 w-48 rounded-2xl bg-[#18181D]/95 backdrop-blur-3xl border border-white/20 p-2 shadow-2xl flex flex-col gap-1 z-30">
-                  <div className="px-3 py-1.5 text-xs font-bold text-white/50 uppercase tracking-wider">
+                  <div className="px-3 py-1.5 text-xs font-bold text-white/50 tracking-normal">
                     Sleep Timer
                   </div>
                   {[
@@ -330,9 +296,7 @@ export const FullPlayer: React.FC = () => {
                 /* Realistic Vinyl Turntable Mode */
                 <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] flex items-center justify-center select-none">
                   {/* Vinyl Record Disc */}
-                  <motion.div
-                    animate={{ rotate: isPlaying ? 360 : 0 }}
-                    transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                  <div
                     onClick={() => setIsRotatingThumbnail(false)}
                     className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] lg:w-[390px] lg:h-[390px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
                     style={{
@@ -363,7 +327,7 @@ export const FullPlayer: React.FC = () => {
                       {/* Center Spindle Hole */}
                       <div className="absolute w-4 h-4 rounded-full bg-[#0B0C10] border border-white/60 shadow-lg" />
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* Metallic Tonearm with Stylus */}
                   <motion.div
@@ -406,7 +370,7 @@ export const FullPlayer: React.FC = () => {
                   style={{
                     transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                     transition: 'transform 0.15s ease-out',
-                    boxShadow: `0 32px 80px -12px ${colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
+                    boxShadow: `0 32px 80px -12px ${colors.primary || "var(--accent)"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
                   }}
                 >
                   <img
@@ -420,7 +384,7 @@ export const FullPlayer: React.FC = () => {
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                     }}
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                    className="w-full h-full object-cover transition-transform duration-500"
                   />
                   {/* Subtle Vinyl Mode Hint overlay */}
                   <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-bold text-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shadow-lg">
@@ -460,14 +424,14 @@ export const FullPlayer: React.FC = () => {
                   {/* Share / Download Capsule */}
                   <button
                     onClick={() => {}}
-                    className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Download song"
                   >
                     <Download size={18} />
                   </button>
 
                   {/* Heart Burst Favorite Capsule */}
-                  <div className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
+                  <div className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md">
                     <HeartBurstIcon
                       isLiked={liked}
                       onToggle={() => toggleLike(currentTrack)}
@@ -478,7 +442,7 @@ export const FullPlayer: React.FC = () => {
               ) : (
                 /* Apple Inspired separate 40px rounded circles */
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all">
+                  <div className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors">
                     <HeartBurstIcon
                       isLiked={liked}
                       onToggle={() => toggleLike(currentTrack)}
@@ -495,7 +459,7 @@ export const FullPlayer: React.FC = () => {
                 value={currentTime}
                 max={duration}
                 isPlaying={isPlaying}
-                accentColor="#E5303D"
+                accentColor="var(--accent)"
                 onSeek={seek}
               />
             </div>
@@ -518,7 +482,7 @@ export const FullPlayer: React.FC = () => {
                   isPlaying={isPlaying}
                   onClick={togglePlay}
                   size={84}
-                  color="#E5303D"
+                  color="var(--accent)"
                   iconColor="#FFFFFF"
                   styleType="wavy"
                 />
@@ -539,7 +503,7 @@ export const FullPlayer: React.FC = () => {
                 <div className="flex items-center justify-between px-4">
                   <button
                     onClick={prevTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
                     aria-label="Previous track"
                   >
                     <SkipBack size={36} className="fill-current" />
@@ -549,7 +513,7 @@ export const FullPlayer: React.FC = () => {
                     isPlaying={isPlaying}
                     onClick={togglePlay}
                     size={96}
-                    color="#E5303D"
+                    color="var(--accent)"
                     iconColor="#FFFFFF"
                     styleType="apple_squircle"
                     layoutId="player-play-button"
@@ -557,7 +521,7 @@ export const FullPlayer: React.FC = () => {
 
                   <button
                     onClick={nextTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
                     aria-label="Next track"
                   >
                     <SkipForward size={36} className="fill-current" />
@@ -578,7 +542,7 @@ export const FullPlayer: React.FC = () => {
                       const newVol = Math.max(0, Math.min(1, x / rect.width));
                       if (setVolume) setVolume(newVol);
                     }}
-                    className={`flex-1 rounded-full bg-white/20 cursor-pointer overflow-hidden transition-all duration-200 ${
+                    className={`flex-1 rounded-full bg-white/20 cursor-pointer overflow-hidden transition-colors duration-200 ${
                       volumeSliderHover ? 'h-3.5' : 'h-2'
                     }`}
                   >
@@ -602,7 +566,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Queue button: topStart 50px, bottomStart 50px, 3px right */}
                   <button
                     onClick={() => setActiveSheet('queue')}
-                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Queue"
                   >
                     <ListMusic size={20} />
@@ -612,7 +576,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={() => setShowSleepMenu(!showSleepMenu)}
                     aria-label="Sleep timer"
-                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-all shadow-md ${
+                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-colors shadow-md ${
                       remainingSleepSeconds
                         ? 'bg-[var(--accent-color)] text-black font-bold'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -627,7 +591,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Lyrics Toggle */}
                   <button
                     onClick={() => setActiveSheet('lyrics')}
-                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Synced lyrics"
                   >
                     <Mic2 size={19} />
@@ -637,7 +601,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={toggleShuffle}
                     aria-label="Shuffle"
-                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
                       isShuffled
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -650,7 +614,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={toggleRepeat}
                     aria-label={`Repeat mode: ${repeatMode}`}
-                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
                       repeatMode !== 'off'
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -662,7 +626,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Playback Speed Toggle */}
                   <button
                     onClick={handleCycleSpeed}
-                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all shadow-md"
+                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors shadow-md"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
@@ -673,7 +637,7 @@ export const FullPlayer: React.FC = () => {
                 {/* More vertical button: 42px circle */}
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                   aria-label="More options"
                 >
                   <MoreVertical size={20} />
@@ -684,7 +648,7 @@ export const FullPlayer: React.FC = () => {
               <div className="flex items-center justify-between px-2 pt-2">
                 <button
                   onClick={() => setActiveSheet('queue')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
                   aria-label="Queue"
                 >
                   <ListMusic size={26} />
@@ -694,17 +658,17 @@ export const FullPlayer: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowOutputModal(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-colors shadow-sm"
                     title="Change Audio Output Device"
                     aria-label="Change Audio Output Device"
                   >
-                    <Headphones size={15} className="text-[#ED5564]" />
+                    <Headphones size={15} className="text-[var(--accent-ink)]" />
                     <span>{audioOutputDeviceId !== 'default' ? 'Connected Audio' : 'Audio Output'}</span>
                   </button>
 
                   <button
                     onClick={handleCycleSpeed}
-                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-all"
+                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-colors"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
@@ -714,7 +678,7 @@ export const FullPlayer: React.FC = () => {
 
                 <button
                   onClick={() => setActiveSheet('lyrics')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
                   aria-label="Synced lyrics"
                 >
                   <Mic2 size={26} />
