@@ -95,49 +95,37 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
     assert.match(css, /\.cta-secondary\s*\{[^}]*backdrop-filter:\s*blur\(12px\)/);
   });
 
-  it('verifies Landing.tsx implements all 6 core architectural sections', () => {
+  it('verifies Landing.tsx implements Section 6 landing architecture and CRO trust signals', () => {
     assert.ok(fs.existsSync(landingTsxPath), 'Landing.tsx must exist');
     const landing = fs.readFileSync(landingTsxPath, 'utf8');
 
-    // Section 1: Glass Navigation Bar with /app CTA
-    assert.match(landing, /SECTION 1: GLASS NAVIGATION BAR/);
+    // Section 1: Navigation bar with /app CTA
     assert.match(landing, /href=["']\/app["']/);
     assert.match(landing, /Open App/);
 
-    // Section 2: Hero Section with kinetic typing & 3D floating preview
-    assert.match(landing, /SECTION 2: HERO SECTION/);
-    assert.match(landing, /headlineText\s*=\s*["']Music, Liquid\.["']/);
-    assert.match(landing, /rotateX\(-1\.5deg\)\s+rotateY\(1\.5deg\)/);
+    // Section 2: Hero section with Instrument Serif headline, single sentence, and real screenshot of /app
+    assert.match(landing, /font-display/);
+    assert.match(landing, /Ad-free music with synced lyrics/);
+    assert.match(landing, /\/screenshots\/app-main\.png/);
+    assert.doesNotMatch(landing, /rotateX\(-1\.5deg\)/, 'Must not use fake 3D perspective window');
+    assert.doesNotMatch(landing, /FF5F56|FFBD2E|27C93F/, 'Must not use fake traffic-light window dots');
 
-    // Section 3: Bento Grid (6 feature cards)
-    assert.match(landing, /SECTION 3: FEATURES BENTO GRID/);
-    assert.match(landing, /Liquid Glass Design/);
-    assert.match(landing, /Synchronized Karaoke/);
-    assert.match(landing, /Music Flow Feed/);
-    assert.match(landing, /Listen Together/);
-    assert.match(landing, /Kinetic Wavy Seekbar/);
-    assert.match(landing, /Instant PWA Install/);
+    // Section 3: Three feature sections with real screenshots
+    assert.match(landing, /Synced lyrics/);
+    assert.match(landing, /\/screenshots\/app-stage\.png/);
+    assert.match(landing, /Curated flows/);
+    assert.match(landing, /Every device/);
+    assert.match(landing, /\/screenshots\/app-mobile\.png/);
 
-    // Section 4: Immersive Player Showcase (Vinyl & Equalizer)
-    assert.match(landing, /SECTION 4: IMMERSIVE PLAYER SHOWCASE/);
-    assert.match(landing, /Every detail, considered\./);
-    assert.match(landing, /10-Band Studio Equalizer/);
-    assert.match(landing, /animate-spin-vinyl/);
-
-    // Section 5: Experience Strip
-    assert.match(landing, /SECTION 5: EXPERIENCE STRIP/);
-    assert.match(landing, /Instant Search/);
-    assert.match(landing, /Explore Moods/);
-    assert.match(landing, /Audio DSP/);
-    assert.match(landing, /Social Sync/);
-
-    // Section 6: Final CTA & CRO Trust Signals
-    assert.match(landing, /SECTION 6: FINAL CTA & TRUST FOOTER/);
-    assert.match(landing, /Your music\. Your way\./);
+    // Section 4: Authoritative conversion & CRO trust signals
     assert.match(landing, /100% Free/);
     assert.match(landing, /No Sign-Up Required/);
     assert.match(landing, /Zero Audio Ads/);
     assert.match(landing, /Open Source/);
+
+    // Banned anti-patterns per design brief
+    assert.doesNotMatch(landing, /Liquid/, 'Landing must not contain the word Liquid in UI copy');
+    assert.doesNotMatch(landing, /animate-(?:ping|pulse|bounce|spin-vinyl|ring-pulse)/, 'Landing must not use infinite loop animations at rest');
   });
 
   it('verifies main-landing.tsx correctly mounts Landing into #landing-root', () => {
