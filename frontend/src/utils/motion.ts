@@ -78,6 +78,84 @@ export const pressFeedback = {
 };
 
 /**
+ * R5 Button Press Motion Tokens & Constants
+ */
+export const BUTTON_PRESS_SCALE = 0.97 as const;
+export const BUTTON_PRESS_DURATION_SECONDS = 0.08 as const; // 80ms (<100ms per R5)
+export const BUTTON_PRESS_DURATION_MS = 80 as const;
+export const BUTTON_REDUCED_MOTION_DURATION_SECONDS = 0.1 as const; // 100ms per R6
+export const BUTTON_REDUCED_MOTION_DURATION_MS = 100 as const;
+
+/**
+ * Tap scale token: scale(0.97) on pointer down
+ */
+export const buttonPressTap = {
+  scale: BUTTON_PRESS_SCALE
+} as const;
+
+/**
+ * Transition timing token: 80ms duration with easeOut curve
+ */
+export const buttonPressTransition: Transition = {
+  duration: BUTTON_PRESS_DURATION_SECONDS,
+  ease: easeOutQuad
+};
+
+/**
+ * Complete button press feedback object for Framer Motion whileTap
+ */
+export const buttonPressFeedback = {
+  whileTap: {
+    scale: BUTTON_PRESS_SCALE,
+    transition: buttonPressTransition
+  },
+  transition: buttonPressTransition
+};
+
+/**
+ * Reduced motion fallback: scale 1.0 (no tactile scale) with 100ms linear duration
+ */
+export const buttonReducedPressTap = {
+  scale: 1.0
+} as const;
+
+export const buttonReducedPressTransition: Transition = {
+  duration: BUTTON_REDUCED_MOTION_DURATION_SECONDS,
+  ease: 'linear'
+};
+
+export const buttonReducedPressFeedback = {
+  whileTap: {
+    scale: 1.0,
+    transition: buttonReducedPressTransition
+  },
+  transition: buttonReducedPressTransition
+};
+
+/**
+ * Standard button press variants for Framer Motion components
+ */
+export const buttonPressVariants: Variants = {
+  initial: { scale: 1 },
+  tap: { scale: BUTTON_PRESS_SCALE, transition: buttonPressTransition }
+};
+
+export const buttonReducedPressVariants: Variants = {
+  initial: { scale: 1 },
+  tap: { scale: 1.0, transition: buttonReducedPressTransition }
+};
+
+/**
+ * Dynamic button press feedback resolver respecting prefers-reduced-motion
+ */
+export function getButtonPressFeedback(shouldReduceMotion?: boolean | null) {
+  if (shouldReduceMotion) {
+    return buttonReducedPressFeedback;
+  }
+  return buttonPressFeedback;
+}
+
+/**
  * Page / Route transition: 200ms fade + 8px upward slide
  */
 export const pageTransitionVariants: Variants = {

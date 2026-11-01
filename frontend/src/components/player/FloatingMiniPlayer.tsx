@@ -5,7 +5,7 @@ import { Track } from '../../types';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { useLibrary } from '../../context/LibraryContext';
 import { useTheme } from '../../context/ThemeContext';
-import { springPlayerExpand } from '../../utils/motion';
+import { springPlayerExpand, getButtonPressFeedback } from '../../utils/motion';
 
 export const MINI_PLAYER_SHARED_LAYOUT_IDS = {
   ARTWORK: 'player-artwork',
@@ -52,6 +52,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
   const sharedTransition = shouldReduceMotion
     ? { duration: 0.1, ease: 'linear' as const }
     : springPlayerExpand;
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
 
   const [isPressed, setIsPressed] = useState(false);
   const dragX = useMotionValue(0);
@@ -105,7 +106,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
       onDragEnd={handleDragEnd}
       style={{ x: smoothX }}
       onClick={onClick}
-      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99] ${className}`}
+      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 ${className}`}
     >
       {/* Thin 2px progress line at top of mini player — GPU transform: scaleX without layout reflow */}
       <div className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
@@ -200,29 +201,37 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
         className="flex items-center gap-0.5 sm:gap-1 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={() => toggleLike(track)}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title={liked ? 'Unlike' : 'Like'}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
           <HeartBurstIcon isLiked={liked} size={18} />
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={onPrev}
-          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title="Previous"
           aria-label="Previous track"
         >
           <SkipBack size={18} className="fill-current" />
-        </button>
+        </motion.button>
 
         <motion.button
+          type="button"
           layoutId="player-play-button"
           transition={sharedTransition}
+          whileTap={buttonFeedback.whileTap}
           onClick={onTogglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5303D] text-white hover:scale-105 active:scale-95 transition-colors shadow-[0_4px_16px_rgba(229,48,61,0.4)] ml-0.5"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5303D] hover:bg-[#F0424E] text-white transition-colors duration-150 shadow-[0_4px_16px_rgba(229,48,61,0.4)] ml-0.5"
           title={isPlaying ? 'Pause' : 'Play'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
@@ -233,14 +242,17 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           )}
         </motion.button>
 
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={onNext}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title="Next"
           aria-label="Next track"
         >
           <SkipForward size={18} className="fill-current" />
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

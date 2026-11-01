@@ -31,7 +31,7 @@ import { QueueSheet } from './QueueSheet';
 import { AudioOutputModal } from './AudioOutputModal';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
-import { springPlayerExpand } from '../../utils/motion';
+import { springPlayerExpand, getButtonPressFeedback } from '../../utils/motion';
 import { ArtworkCrossfade } from './ArtworkCrossfade';
 import { useAccentColor } from '../../utils/accentColor';
 
@@ -155,6 +155,7 @@ export const FullPlayer: React.FC = () => {
   const activeInteriorVariants = shouldReduceMotion
     ? interiorContentReducedVariants
     : interiorContentFadeVariants;
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
 
   const [showOutputModal, setShowOutputModal] = useState(false);
 
@@ -349,45 +350,57 @@ export const FullPlayer: React.FC = () => {
             data-testid="player-interior-header"
             className="relative z-20 flex items-center justify-between px-6 pt-5 pb-2"
           >
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={() => setIsPlayerOpen(false)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-150 flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
               aria-label="Collapse player"
             >
               <ChevronDown size={22} className="text-white" />
-            </button>
+            </motion.button>
 
             {/* Design Branch Switcher: Apple Inspired vs Material You */}
             <div className="flex items-center gap-1.5">
-              <button
+              <motion.button
+                type="button"
+                whileTap={buttonFeedback.whileTap}
+                transition={buttonFeedback.transition}
                 onClick={() => setPlayerStyle(isMaterial ? 'apple' : 'material')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wider text-white/90 shadow-md transition-colors active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wider text-white/90 shadow-md transition-colors duration-150"
               >
                 <Sparkles size={12} className="text-[var(--accent-color)]" />
                 <span>{isMaterial ? 'MATERIAL YOU' : 'APPLE INSPIRED'}</span>
-              </button>
+              </motion.button>
             </div>
 
             {/* Vinyl Record Mode & Sleep Timer */}
             <div className="relative flex items-center gap-2">
-              <button
+              <motion.button
+                type="button"
+                whileTap={buttonFeedback.whileTap}
+                transition={buttonFeedback.transition}
                 onClick={() => setIsRotatingThumbnail(!isRotatingThumbnail)}
                 title={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
                 aria-label={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
-                className={`w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`w-10 h-10 rounded-full transition-colors duration-150 flex items-center justify-center border backdrop-blur-md shadow-md ${
                   isRotatingThumbnail
                     ? 'bg-[var(--accent-color)] text-black border-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
                 }`}
               >
                 <Disc size={18} className={isRotatingThumbnail && isPlaying ? 'animate-spin' : ''} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                type="button"
+                whileTap={buttonFeedback.whileTap}
+                transition={buttonFeedback.transition}
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
                 title={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
                 aria-label={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
-                className={`relative w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`relative w-10 h-10 rounded-full transition-colors duration-150 flex items-center justify-center border backdrop-blur-md shadow-md ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent-color)]/25 border-[var(--accent-color)] text-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
@@ -399,7 +412,7 @@ export const FullPlayer: React.FC = () => {
                     {Math.ceil(remainingSleepSeconds / 60)}m
                   </span>
                 ) : null}
-              </button>
+              </motion.button>
 
               {/* Sleep Menu Popup */}
               {showSleepMenu && (
@@ -414,19 +427,22 @@ export const FullPlayer: React.FC = () => {
                     { label: '45 Minutes', val: 45 },
                     { label: '60 Minutes', val: 60 }
                   ].map((item, idx) => (
-                    <button
+                    <motion.button
                       key={idx}
+                      type="button"
+                      whileTap={buttonFeedback.whileTap}
+                      transition={buttonFeedback.transition}
                       onClick={() => {
                         setSleepTimer(item.val);
                         setShowSleepMenu(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-white/10 text-white flex items-center justify-between"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-white/10 text-white flex items-center justify-between transition-colors duration-150"
                     >
                       <span>{item.label}</span>
                       {sleepTimerMinutes === item.val && (
                         <CheckCircle2 size={13} className="text-[var(--accent-color)]" />
                       )}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
@@ -586,22 +602,32 @@ export const FullPlayer: React.FC = () => {
                   className="flex items-center gap-1.5 shrink-0"
                 >
                   {/* Share / Download Capsule */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={() => {}}
-                    className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
+                    className="w-11 h-11 bg-white/15 hover:bg-white/25 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-colors duration-150 shadow-md"
                     aria-label="Download song"
                   >
                     <Download size={18} />
-                  </button>
+                  </motion.button>
 
                   {/* Heart Burst Favorite Capsule */}
-                  <div className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md">
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
+                    onClick={() => toggleLike(currentTrack)}
+                    title={liked ? 'Unlike' : 'Like'}
+                    aria-label={liked ? 'Unlike' : 'Like'}
+                    className="w-11 h-11 bg-white/15 hover:bg-white/25 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-colors duration-150 shadow-md"
+                  >
                     <HeartBurstIcon
                       isLiked={liked}
-                      onToggle={() => toggleLike(currentTrack)}
                       size={20}
                     />
-                  </div>
+                  </motion.button>
                 </motion.div>
               ) : (
                 /* Apple Inspired separate 40px rounded circles */
@@ -612,13 +638,20 @@ export const FullPlayer: React.FC = () => {
                   exit="exit"
                   className="flex items-center gap-2 shrink-0"
                 >
-                  <div className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors">
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
+                    onClick={() => toggleLike(currentTrack)}
+                    title={liked ? 'Unlike' : 'Like'}
+                    aria-label={liked ? 'Unlike' : 'Like'}
+                    className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors duration-150"
+                  >
                     <HeartBurstIcon
                       isLiked={liked}
-                      onToggle={() => toggleLike(currentTrack)}
                       size={20}
                     />
-                  </div>
+                  </motion.button>
                 </motion.div>
               )}
             </div>
@@ -646,14 +679,15 @@ export const FullPlayer: React.FC = () => {
               /* Material You 3-Circle Controls: 68px Prev, 84px Flower Play, 68px Next */
               <div className="flex items-center justify-center gap-6 py-2" data-testid="player-interior-controls">
                 <motion.button
+                  type="button"
                   variants={activeInteriorVariants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  whileTap={{ scale: 0.90 }}
-                  transition={{ type: 'spring', damping: 15, stiffness: 500 }}
+                  whileTap={buttonFeedback.whileTap}
+                  transition={buttonFeedback.transition}
                   onClick={prevTrack}
-                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors"
+                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors duration-150"
                   aria-label="Previous track"
                 >
                   <SkipBack size={28} className="fill-current" />
@@ -670,14 +704,15 @@ export const FullPlayer: React.FC = () => {
                 />
 
                 <motion.button
+                  type="button"
                   variants={activeInteriorVariants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  whileTap={{ scale: 0.90 }}
-                  transition={{ type: 'spring', damping: 15, stiffness: 500 }}
+                  whileTap={buttonFeedback.whileTap}
+                  transition={buttonFeedback.transition}
                   onClick={nextTrack}
-                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors"
+                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors duration-150"
                   aria-label="Next track"
                 >
                   <SkipForward size={28} className="fill-current" />
@@ -688,12 +723,15 @@ export const FullPlayer: React.FC = () => {
               <div className="flex flex-col gap-3 py-1" data-testid="player-interior-controls">
                 <div className="flex items-center justify-between px-4">
                   <motion.button
+                    type="button"
                     variants={activeInteriorVariants}
                     initial="initial"
                     animate="animate"
                     exit="exit"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={prevTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-150"
                     aria-label="Previous track"
                   >
                     <SkipBack size={36} className="fill-current" />
@@ -710,12 +748,15 @@ export const FullPlayer: React.FC = () => {
                   />
 
                   <motion.button
+                    type="button"
                     variants={activeInteriorVariants}
                     initial="initial"
                     animate="animate"
                     exit="exit"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={nextTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-150"
                     aria-label="Next track"
                   >
                     <SkipForward size={36} className="fill-current" />
@@ -774,19 +815,25 @@ export const FullPlayer: React.FC = () => {
               >
                 <div className="flex items-center gap-1.5">
                   {/* Queue button: topStart 50px, bottomStart 50px, 3px right */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={() => setActiveSheet('queue')}
-                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
+                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors duration-150 shadow-md"
                     aria-label="Queue"
                   >
                     <ListMusic size={20} />
-                  </button>
+                  </motion.button>
 
                   {/* Sleep Timer */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={() => setShowSleepMenu(!showSleepMenu)}
                     aria-label="Sleep timer"
-                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-colors shadow-md ${
+                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-colors duration-150 shadow-md ${
                       remainingSleepSeconds
                         ? 'bg-[var(--accent-color)] text-black font-bold'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -796,62 +843,77 @@ export const FullPlayer: React.FC = () => {
                     {remainingSleepSeconds ? (
                       <span>{formatSleepTime(remainingSleepSeconds)}</span>
                     ) : null}
-                  </button>
+                  </motion.button>
 
                   {/* Lyrics Toggle */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={() => setActiveSheet('lyrics')}
-                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
+                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors duration-150 shadow-md"
                     aria-label="Synced lyrics"
                   >
                     <Mic2 size={19} />
-                  </button>
+                  </motion.button>
 
                   {/* Shuffle Toggle */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={toggleShuffle}
                     aria-label="Shuffle"
-                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-colors duration-150 shadow-md ${
                       isShuffled
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
                     }`}
                   >
                     <Shuffle size={18} />
-                  </button>
+                  </motion.button>
 
                   {/* Repeat Toggle: 3px left, 50px right */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={toggleRepeat}
                     aria-label={`Repeat mode: ${repeatMode}`}
-                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-colors duration-150 shadow-md ${
                       repeatMode !== 'off'
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
                     }`}
                   >
                     {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-                  </button>
+                  </motion.button>
 
                   {/* Playback Speed Toggle */}
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={handleCycleSpeed}
-                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors shadow-md"
+                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors duration-150 shadow-md"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
                     {playbackSpeed || 1}x
-                  </button>
+                  </motion.button>
                 </div>
 
                 {/* More vertical button: 42px circle */}
-                <button
+                <motion.button
+                  type="button"
+                  whileTap={buttonFeedback.whileTap}
+                  transition={buttonFeedback.transition}
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
+                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors duration-150 shadow-md"
                   aria-label="More options"
                 >
                   <MoreVertical size={20} />
-                </button>
+                </motion.button>
               </motion.div>
             ) : (
               /* Apple Inspired Mode Bottom Bar: Apple Queue, connected audio picker, speed, Apple Lyrics */
@@ -863,43 +925,55 @@ export const FullPlayer: React.FC = () => {
                 data-testid="player-interior-triggers"
                 className="flex items-center justify-between px-2 pt-2"
               >
-                <button
+                <motion.button
+                  type="button"
+                  whileTap={buttonFeedback.whileTap}
+                  transition={buttonFeedback.transition}
                   onClick={() => setActiveSheet('queue')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-150"
                   aria-label="Queue"
                 >
                   <ListMusic size={26} />
-                </button>
+                </motion.button>
 
                 {/* Connected Audio Output / Speed */}
                 <div className="flex items-center gap-2">
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={() => setShowOutputModal(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-colors duration-150 shadow-sm"
                     title="Change Audio Output Device"
                     aria-label="Change Audio Output Device"
                   >
                     <Headphones size={15} className="text-[#ED5564]" />
                     <span>{audioOutputDeviceId !== 'default' ? 'Connected Audio' : 'Audio Output'}</span>
-                  </button>
+                  </motion.button>
 
-                  <button
+                  <motion.button
+                    type="button"
+                    whileTap={buttonFeedback.whileTap}
+                    transition={buttonFeedback.transition}
                     onClick={handleCycleSpeed}
-                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-colors"
+                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-colors duration-150"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
                     {playbackSpeed || 1}x
-                  </button>
+                  </motion.button>
                 </div>
 
-                <button
+                <motion.button
+                  type="button"
+                  whileTap={buttonFeedback.whileTap}
+                  transition={buttonFeedback.transition}
                   onClick={() => setActiveSheet('lyrics')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-150"
                   aria-label="Synced lyrics"
                 >
                   <Mic2 size={26} />
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Shuffle,
   Repeat,
@@ -23,6 +23,7 @@ import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { FlowerPlayButton } from './FlowerPlayButton';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { AudioOutputModal } from './AudioOutputModal';
+import { getButtonPressFeedback } from '../../utils/motion';
 
 interface DesktopDockPlayerProps {
   onOpenListenTogether?: () => void;
@@ -59,6 +60,8 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
   } = usePlayer();
 
   const [showOutputModal, setShowOutputModal] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
   const { colors } = useTheme();
   const { isLiked, toggleLike } = useLibrary();
 
@@ -153,14 +156,17 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           </div>
 
           {/* Like Heart Burst Button */}
-          <button
+          <motion.button
+            type="button"
+            whileTap={buttonFeedback.whileTap}
+            transition={buttonFeedback.transition}
             onClick={() => toggleLike(currentTrack)}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0 mx-1 p-2"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors duration-150 shrink-0 mx-1 p-2"
             title={liked ? 'Remove from favorites' : 'Add to favorites'}
             aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
           >
             <HeartBurstIcon isLiked={liked} size={18} />
-          </button>
+          </motion.button>
         </div>
 
         {/* Center Section: Playback Controls & Waveform Scrubber */}
@@ -168,26 +174,32 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           {/* Buttons Row */}
           <div className="flex items-center justify-center gap-3">
             {/* Shuffle */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={toggleShuffle}
-              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] hover:bg-white/10 transition-colors duration-150 ${
                 isShuffled ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title="Shuffle"
               aria-label="Toggle shuffle"
             >
               <Shuffle size={16} />
-            </button>
+            </motion.button>
 
             {/* Previous */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={prevTrack}
-              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-150"
               title="Previous Track"
               aria-label="Previous track"
             >
               <SkipBack size={18} />
-            </button>
+            </motion.button>
 
             {/* Scalloped Flower Play/Pause Button - Restrained Musify Red */}
             <FlowerPlayButton
@@ -200,26 +212,32 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
             />
 
             {/* Next */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={nextTrack}
-              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white transition-colors"
+              className="p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-150"
               title="Next Track"
               aria-label="Next track"
             >
               <SkipForward size={18} />
-            </button>
+            </motion.button>
 
             {/* Repeat */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={toggleRepeat}
-              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] transition-colors ${
+              className={`p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px] hover:bg-white/10 transition-colors duration-150 ${
                 repeatMode !== 'off' ? 'text-[#E5303D]' : 'text-white/40 hover:text-white'
               }`}
               title={`Repeat: ${repeatMode}`}
               aria-label={`Repeat mode: ${repeatMode}`}
             >
               {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
-            </button>
+            </motion.button>
           </div>
 
           {/* Scrubber & Timers */}
@@ -258,14 +276,17 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
 
           {/* Volume Control */}
           <div className="flex items-center gap-2 group">
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={handleMuteToggle}
-              className="text-white/50 hover:text-white transition-colors"
+              className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors duration-150"
               title="Mute / Unmute"
               aria-label={volume === 0 ? 'Unmute' : 'Mute'}
             >
               {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            </button>
+            </motion.button>
             <input
               id="desktop-volume-slider"
               name="volume"
@@ -282,9 +303,12 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
 
           {/* Toggle Right Companion Panel (Lyrics / Vinyl) */}
           {onToggleCompanion && (
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={onToggleCompanion}
-              className={`p-2 rounded-xl transition-all ${
+              className={`p-2 rounded-xl transition-colors duration-150 ${
                 isCompanionOpen
                   ? 'bg-white/15 text-white shadow-sm'
                   : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -293,41 +317,50 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               aria-label={isCompanionOpen ? 'Hide companion panel' : 'Show lyrics & queue companion'}
             >
               <Mic2 size={16} style={{ color: isCompanionOpen ? colors.primary : undefined }} />
-            </button>
+            </motion.button>
           )}
 
           {/* Listen Together Room Pill */}
           {onOpenListenTogether && (
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={onOpenListenTogether}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white text-[11px] font-bold transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white text-[11px] font-bold transition-colors duration-150"
               title="Listen Together Room"
               aria-label="Listen Together Room"
             >
               <Users size={13} className="text-[#E5303D]" />
               <span className="hidden lg:inline">Room</span>
-            </button>
+            </motion.button>
           )}
 
           {/* Audio Output Selector Trigger */}
-          <button
+          <motion.button
+            type="button"
+            whileTap={buttonFeedback.whileTap}
+            transition={buttonFeedback.transition}
             onClick={() => setShowOutputModal(true)}
-            className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1"
+            className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-150 flex items-center gap-1"
             title="Audio Output & AirPlay"
             aria-label="Audio Output & AirPlay"
           >
             <Headphones size={16} />
-          </button>
+          </motion.button>
 
           {/* Full Player Expand */}
-          <button
+          <motion.button
+            type="button"
+            whileTap={buttonFeedback.whileTap}
+            transition={buttonFeedback.transition}
             onClick={() => setIsPlayerOpen(true)}
-            className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors duration-150"
             title="Expand Full Player"
             aria-label="Expand Full Player"
           >
             <Maximize2 size={16} />
-          </button>
+          </motion.button>
         </div>
       </motion.div>
 
