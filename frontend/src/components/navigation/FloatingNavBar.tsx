@@ -130,8 +130,8 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
 
         {/* Bottom Tab Bar Pill & Standalone Search FAB */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Main Tab Group Pill Container (Calm Liquid Glass) */}
-          <div className="relative h-[56px] rounded-full p-1.5 flex items-center bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] select-none transition-all duration-300">
+          {/* Main Tab Group Pill Container (Floating navigation) */}
+          <div className="relative h-[56px] rounded-full p-1.5 flex items-center bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] select-none transition-colors duration-300">
             {TABS.map((tab) => {
               const isActive = !isSearchActive && activeTab === tab.id;
               const Icon = tab.icon;
@@ -181,7 +181,7 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
                           damping: 24,
                           stiffness: 400
                         }}
-                        className="relative z-10 text-xs font-bold tracking-tight whitespace-nowrap overflow-hidden leading-none drop-shadow-sm"
+                        className="relative z-10 text-xs font-bold tracking-tight whitespace-nowrap overflow-hidden leading-none "
                       >
                         {tab.label}
                       </motion.span>
@@ -207,7 +207,7 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
                     }
                   : undefined
               }
-              className={`w-[56px] h-[56px] rounded-full flex items-center justify-center border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-200 group ${
+              className={`w-[56px] h-[56px] rounded-full flex items-center justify-center border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-colors duration-200 group ${
                 isSearchActive
                   ? 'text-white'
                   : 'bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.6] text-white/80 hover:text-white'
@@ -218,7 +218,7 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
                 className={
                   isSearchActive
                     ? 'text-white drop-shadow'
-                    : 'text-white/80 group-hover:text-white group-hover:scale-105 transition-transform'
+                    : 'text-white/80 group-hover:text-white  transition-transform'
                 }
               />
             </motion.button>

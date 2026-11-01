@@ -1,46 +1,107 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
-  font-weight: 300 900;
+  font-family: 'Instrument Sans';
+  src: url('/fonts/InstrumentSans-Variable.woff2') format('woff2-variations'),
+       url('/fonts/InstrumentSans-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Regular.woff2') format('woff2');
+  font-weight: 400;
   font-display: swap;
   font-style: normal;
 }
 
 @theme {
-  --color-bg: #0A0A0A;
-  --color-surface: rgba(18, 18, 18, 0.72);
-  --color-surface-raised: #1A1A1A;
-  --color-stroke: rgba(255, 255, 255, 0.08);
-  --color-text: #FFFFFF;
-  --color-muted: #A7A7A7;
-  --color-accent: var(--accent-color, #E5303D);
-  --color-accent-2: #B8222E;
-  --radius-panel: 28px;
-  --radius-art: 24px;
-  --radius-card: 20px;
-  --radius-tile: 16px;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg-stage: #0B0B0C;
+  --color-bg-base: #141415;
+  --color-bg-card: #19191B;
+  --color-bg-raised: #232325;
+  --color-hairline: rgba(237, 237, 237, 0.08);
+
+  --color-text-1: #EDEDED;
+  --color-text-2: #A1A1A6;
+  --color-text-3: #85858B;
+
+  --color-accent: #D92B38;
+  --color-accent-ink: #FF5A64;
+  --color-accent-hover: #C42632;
+  --color-positive: #4CC38A;
+  --color-negative: #E5484D;
+
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-art: 16px;
+  --radius-tile: 12px;
+
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Backward compatibility aliases */
+  --color-bg: #141415;
+  --color-surface: #19191B;
+  --color-surface-raised: #232325;
+  --color-stroke: rgba(237, 237, 237, 0.08);
+  --color-text: #EDEDED;
+  --color-muted: #85858B;
+  --color-accent-2: #C42632;
 }
 
 :root {
-  --bg-primary: #0A0A0A;
-  --bg-surface: rgba(18, 18, 18, 0.72);
-  --bg-surface-raised: #1A1A1A;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-stroke: rgba(255, 255, 255, 0.08);
-  --text-primary: #FFFFFF;
-  --text-muted: #A7A7A7;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --accent-color: #E5303D;
-  --accent-rgb: 229, 48, 61;
-  --accent-2: #B8222E;
-  --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Surfaces (graphite ramp, dark only) */
+  --bg-stage: #0B0B0C;
+  --bg-base: #141415;
+  --bg-card: #19191B;
+  --bg-raised: #232325;
+  --hairline: rgba(237, 237, 237, 0.08);
+
+  /* Text Roles */
+  --text-1: #EDEDED;
+  --text-2: #A1A1A6;
+  --text-3: #85858B;
+
+  /* Accent Ramp */
+  --accent: #D92B38;
+  --accent-ink: #FF5A64;
+  --accent-hover: #C42632;
+  --positive: #4CC38A;
+  --negative: #E5484D;
+
+  /* Nested Radii */
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-art: 16px;
+  --radius-tile: 12px;
+
+  /* Typography */
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Backward Compatibility Aliases */
+  --bg-primary: #141415;
+  --bg-surface: #19191B;
+  --bg-surface-raised: #232325;
+  --border-glass: rgba(237, 237, 237, 0.08);
+  --border-stroke: rgba(237, 237, 237, 0.08);
+  --text-primary: #EDEDED;
+  --text-muted: #85858B;
+  --text-secondary: #A1A1A6;
+  --accent-color: #D92B38;
+  --accent-rgb: 217, 43, 56;
+  --accent-2: #C42632;
 }
 
 * {
@@ -50,7 +111,7 @@
 
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--accent-color, #E5303D);
+  box-shadow: 0 0 0 2px var(--accent, #D92B38);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -70,9 +131,9 @@ html, body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-1);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -84,14 +145,14 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #0A0A0A;
+  background-color: var(--bg-base);
 }
 
-/* CTA Primary per musify-design-plan.md lines 308-339 */
+/* CTA Primary per Section 2 & 9 of design brief */
 .cta-primary {
-  background: #E5303D;
-  color: #FFFFFF;
-  font-weight: 700;
+  background: var(--accent);
+  color: #EDEDED;
+  font-weight: 500;
   font-size: 16px;
   padding: 14px 32px;
   border-radius: 14px;
@@ -104,36 +165,27 @@ html, body {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.3),
-    0 4px 16px -4px rgba(229, 48, 61, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.2s ease,
-              background-color 0.15s ease;
+              background-color 0.15s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .cta-primary:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.4),
-    0 8px 24px -4px rgba(229, 48, 61, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  background-color: var(--accent-hover);
 }
 
 .cta-primary:active {
   transform: scale(0.97);
 }
 
-/* Secondary ghost CTA per musify-design-plan.md lines 340-351 */
+/* Secondary ghost CTA per Section 2 & 9 */
 .cta-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 600;
+  background: var(--bg-raised);
+  color: var(--text-1);
+  font-weight: 500;
   font-size: 15px;
   padding: 13px 28px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: inline-flex;
@@ -143,67 +195,43 @@ html, body {
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.15s ease,
-              border-color 0.15s ease,
-              color 0.15s ease;
+              background-color 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.15s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-  transform: translateY(-1px);
+  background: rgba(237, 237, 237, 0.12);
+  border-color: rgba(237, 237, 237, 0.16);
 }
 
 .cta-secondary:active {
   transform: scale(0.97);
 }
 
-/* Liquid Glass System */
-.glass-panel {
-  background: rgba(18, 18, 18, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  box-shadow: 
-    0 20px 40px -15px rgba(0, 0, 0, 0.7),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12),
-    inset 1px 0 1px 0 rgba(255, 255, 255, 0.08);
-  position: relative;
+/* Panels and Cards */
+.landing-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
 }
 
-.glass-card {
-  background: rgba(26, 26, 26, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+.landing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  transition: background-color 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.15s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
+.landing-card:hover {
+  background: var(--bg-raised);
 }
 
-.glass-card:active {
-  transform: scale(0.97);
+.landing-card:active {
+  transform: scale(0.98);
 }
 
-.glass-pill {
-  background: rgba(22, 22, 26, 0.75);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  box-shadow: 
-    0 10px 25px -5px rgba(0, 0, 0, 0.5),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-/* Typography Scale */
+/* Typography Helpers */
 .font-display {
   font-family: var(--font-display);
 }
@@ -214,60 +242,4 @@ html, body {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
-}
-
-/* Animations */
-@keyframes spinVinyl {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin-vinyl {
-  animation: spinVinyl 16s linear infinite;
-}
-
-@keyframes floatPlayer {
-  0%, 100% {
-    transform: rotateX(-2deg) rotateY(3deg) translateY(0px);
-  }
-  50% {
-    transform: rotateX(-2deg) rotateY(3deg) translateY(-8px);
-  }
-}
-
-.animate-float-player {
-  animation: floatPlayer 6s ease-in-out infinite;
-}
-
-@keyframes waveOscillate {
-  0%, 100% {
-    d: path("M 0 15 Q 25 5, 50 15 T 100 15 T 150 15 T 200 15 T 250 15 T 300 15");
-  }
-  50% {
-    d: path("M 0 15 Q 25 25, 50 15 T 100 15 T 150 15 T 200 15 T 250 15 T 300 15");
-  }
-}
-
-/* Sound rings pulse animation */
-@keyframes ringPulse {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.2;
-  }
-  100% {
-    transform: scale(0.9);
-    opacity: 0.8;
-  }
-}
-
-.animate-ring-pulse {
-  animation: ringPulse 2.4s ease-in-out infinite;
 }

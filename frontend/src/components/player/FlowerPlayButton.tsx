@@ -165,7 +165,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', damping: 20, stiffness: 450 }}
         onClick={onClick}
-        className={`relative flex items-center justify-center cursor-pointer select-none transition-all ${className}`}
+        className={`relative flex items-center justify-center cursor-pointer select-none transition-colors ${className}`}
         style={{
           width: size,
           height: size,
@@ -212,19 +212,19 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
       aria-label={isPlaying ? 'Pause' : 'Play'}
       title={isPlaying ? 'Pause' : 'Play'}
       layoutId={layoutId}
-      whileTap={{ scale: 0.90 }}
-      transition={{ type: 'spring', damping: 15, stiffness: 500 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.1 }}
       onClick={onClick}
       className={`relative flex items-center justify-center cursor-pointer select-none ${className}`}
       style={{ width: size, height: size }}
     >
 {isLoading && (
-        <span className="absolute inset-[-5px] rounded-full border-2 border-transparent border-t-[#E5303D] border-r-[#E5303D]/40 animate-spin pointer-events-none" />
+        <span className="absolute inset-[-5px] rounded-full border-2 border-transparent border-t-[var(--accent-color,#D92B38)] border-r-[var(--accent-color,#D92B38)]/40 animate-spin pointer-events-none" />
       )}
       {/* Dynamic Scalloped Wavy Vector Path */}
       <svg
         viewBox={`0 0 ${size} ${size}`}
-        className="w-full h-full drop-shadow-md"
+        className="w-full h-full "
         style={{ overflow: 'visible' }}
       >
         <path d={pathData} fill={color} />
