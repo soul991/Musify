@@ -48,21 +48,33 @@ export const springEffects: Transition = {
   damping: 80
 };
 
+/**
+ * Shared-element Player Expand & Collapse spring transition (R3)
+ * Stiffness: 380, Damping: 40, Mass: 1 (zeta ~= 1.026 critically damped)
+ */
+export const springPlayerExpand: Transition = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 40,
+  mass: 1
+};
+
 export const easeOutQuad = [0.22, 1, 0.36, 1] as const;
 
 export const durations = {
-  tap: 0.12, // 120ms
+  tap: 0.12, // 120ms legacy
+  playerTap: 0.08, // 80ms (<100ms)
   fast: 0.2, // 200ms
   medium: 0.32, // 320ms
   slow: 0.5 // 500ms
 } as const;
 
 /**
- * Standard press feedback: scale down to 0.97 in 120ms
+ * Standard tactile press feedback: scale down to 0.97 in 80ms (< 100ms per R5)
  */
 export const pressFeedback = {
   whileTap: { scale: 0.97 },
-  transition: { duration: durations.tap, ease: easeOutQuad }
+  transition: { duration: 0.08, ease: easeOutQuad }
 };
 
 /**
