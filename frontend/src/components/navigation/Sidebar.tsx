@@ -13,7 +13,6 @@ import {
   BarChart2
 } from 'lucide-react';
 import { NavTab } from './FloatingNavBar';
-import { useTheme } from '../../context/ThemeContext';
 import { useLibrary } from '../../context/LibraryContext';
 
 interface SidebarProps {
@@ -35,7 +34,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenEqualizer,
   onOpenStats
 }) => {
-  const { colors } = useTheme();
   const { likedSongs, playlists, createPlaylist } = useLibrary();
 
   const handleCreatePlaylist = () => {
@@ -45,24 +43,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const navItems = [
-    { id: 'home' as NavTab, label: 'Home', icon: <Home size={19} /> },
-    { id: 'explore' as NavTab, label: 'Explore', icon: <Compass size={19} /> },
-    { id: 'musicflow' as NavTab, label: 'Music Flow', icon: <Flame size={19} /> },
-    { id: 'library' as NavTab, label: 'Library', icon: <Library size={19} /> }
+  // First group per Section 6: Home, Explore, Music flow, Library, Listen together
+  const primaryNavItems = [
+    { id: 'home' as NavTab, label: 'Home', icon: <Home size={18} strokeWidth={1.5} />, action: () => onTabChange('home') },
+    { id: 'explore' as NavTab, label: 'Explore', icon: <Compass size={18} strokeWidth={1.5} />, action: () => onTabChange('explore') },
+    { id: 'musicflow' as NavTab, label: 'Music flow', icon: <Flame size={18} strokeWidth={1.5} />, action: () => onTabChange('musicflow') },
+    { id: 'library' as NavTab, label: 'Library', icon: <Library size={18} strokeWidth={1.5} />, action: () => onTabChange('library') },
+    ...(onOpenListenTogether ? [{ id: 'listen_together' as const, label: 'Listen together', icon: <Users size={18} strokeWidth={1.5} />, action: onOpenListenTogether }] : [])
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-[240px] h-full shrink-0 rounded-[28px] glass-panel p-4 text-white select-none z-20 overflow-hidden min-h-0">
-      {/* Brand Logo & Identity */}
-      <div className="flex items-center gap-3 px-2 py-2 mb-4">
-        <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 bg-[var(--accent)]"
-        >
-          <img src="/icons/musify-icon.svg" alt="Musify" className="w-6 h-6 invert" />
+    <aside className="hidden md:flex flex-col w-[240px] h-full shrink-0 rounded-2xl bg-[var(--bg-card)] border border-[var(--hairline)] p-3 text-[var(--text-1)] select-none z-20 overflow-hidden min-h-0">
+      {/* Brand Identity */}
+      <div className="flex items-center gap-2.5 px-2 py-2 mb-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[var(--accent)]">
+          <img src="/icons/musify-icon.svg" alt="Musify" className="w-5 h-5 invert" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg font-black tracking-tight leading-none">Musify</h2>
+          <h2 className="text-base font-medium tracking-tight leading-none text-[var(--text-1)]">Musify</h2>
           <span className="text-xs text-[var(--text-3)] block mt-0.5">Music player</span>
         </div>
       </div>
@@ -70,110 +68,81 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Quick Search Action */}
       <button
         onClick={onOpenSearch}
-        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-white/60 hover:text-white transition-colors mb-4 active:scale-[0.98]"
+        className="w-full h-[36px] flex items-center gap-2.5 px-3 rounded-lg bg-[var(--bg-raised)] hover:bg-[#2c2c2f] border border-[var(--hairline)] text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors mb-3 active:scale-[0.98]"
       >
-        <Search size={16} />
-        <span className="text-xs font-semibold">Search</span>
+        <Search size={16} strokeWidth={1.5} />
+        <span className="text-xs font-medium">Search</span>
       </button>
 
-      {/* Core Navigation Links */}
-      <div className="flex flex-col gap-1 mb-4">
-        {navItems.map((item) => {
+      {/* First group: rows 36px high, gap 2 (gap-[2px]) per Section 6 */}
+      <nav className="flex flex-col gap-[2px]">
+        {primaryNavItems.map((item) => {
           const isActive = activeTab === item.id;
 
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`relative flex items-center gap-3 px-3.5 py-2 rounded-2xl transition-colors duration-200 text-sm font-semibold group ${
+              onClick={item.action}
+              className={`h-[36px] flex items-center gap-2.5 px-3 rounded-lg transition-colors text-sm font-medium ${
                 isActive
-                  ? 'bg-[var(--bg-raised)] text-[var(--text-1)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] border border-[var(--hairline)] font-medium'
+                  ? 'bg-[var(--bg-raised)] text-[var(--text-1)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] border border-[var(--hairline)]'
                   : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-raised)]'
               }`}
             >
-              <span
-                className="transition-colors duration-200"
-                style={{ color: isActive ? 'var(--accent)' : undefined }}
-              >
+              <span className="text-[var(--text-2)] shrink-0">
                 {item.icon}
               </span>
-              <span>{item.label}</span>
-
-              
+              <span className="truncate">{item.label}</span>
             </button>
           );
         })}
+      </nav>
 
-        {/* Listen Together Shortcut */}
-        {onOpenListenTogether && (
-          <button
-            onClick={onOpenListenTogether}
-            className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-white/60 hover:text-white hover:bg-[var(--bg-raised)] transition-colors duration-200 text-sm font-medium group"
-            title="Listen Together - Cross-device sync"
-          >
-            <span className="text-white/60 group-hover:text-white shrink-0">
-              <Users size={18} />
-            </span>
-            <div className="flex flex-col text-left leading-tight">
-              <span>Listen Together</span>
-              <span className="text-[10px] text-[var(--text-3)] font-normal">Live room</span>
-            </div>
-            <span className="ml-auto w-2 h-2 rounded-full bg-[var(--accent)] shrink-0" />
-          </button>
-        )}
+      {/* Section label: 24 above and 8 below per Section 6 (mt-6 mb-2) */}
+      <div className="mt-6 mb-2 flex items-center justify-between px-3">
+        <span className="text-xs font-medium text-[var(--text-3)]">Playlists</span>
+        <button
+          onClick={handleCreatePlaylist}
+          className="text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors p-1"
+          title="Create playlist"
+          aria-label="Create playlist"
+        >
+          <PlusCircle size={15} strokeWidth={1.5} />
+        </button>
       </div>
 
-      {/* Playlists & Collections */}
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 pt-3 border-t border-white/10">
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-xs font-medium text-[var(--text-3)]">My music</span>
-          <button
-            onClick={handleCreatePlaylist}
-            className="text-white/50 hover:text-white transition-colors p-1"
-            title="Create Playlist"
-            aria-label="Create Playlist"
-          >
-            <PlusCircle size={15} />
-          </button>
-        </div>
-
-        {/* Liked songs Shortcut */}
+      {/* Playlists List */}
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-[2px]">
+        {/* Liked songs row: 36px high */}
         <button
           onClick={() => onTabChange('library')}
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+          className="h-[36px] flex items-center gap-2.5 px-3 rounded-lg text-left text-sm font-medium text-[var(--text-2)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-1)] transition-colors"
         >
-          <div className="w-7 h-7 rounded-lg bg-[var(--bg-raised)] border border-[var(--hairline)] flex items-center justify-center shrink-0">
-            <Heart size={13} className="fill-[var(--accent)] text-[var(--accent)]" />
-          </div>
-          <div className="truncate">
-            <p className="truncate text-xs font-bold">Liked songs</p>
-            <p className="text-[10px] text-[var(--text-3)]">{likedSongs.length} tracks</p>
-          </div>
+          <Heart size={16} strokeWidth={1.5} className="fill-[var(--accent)] text-[var(--accent)] shrink-0" />
+          <span className="truncate text-xs">Liked songs</span>
+          <span className="ml-auto text-xs text-[var(--text-3)] tabular-nums">{likedSongs.length}</span>
         </button>
 
-        {/* Custom Playlists */}
+        {/* Custom Playlists: 36px high */}
         {playlists.map((pl) => (
           <button
             key={pl.id}
             onClick={() => onTabChange('library')}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors truncate"
+            className="h-[36px] flex items-center gap-2.5 px-3 rounded-lg text-left text-sm font-medium text-[var(--text-2)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-1)] transition-colors truncate"
           >
-            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-white/60">{pl.name.charAt(0).toUpperCase()}</span>
-            </div>
             <span className="truncate text-xs">{pl.name}</span>
           </button>
         ))}
       </div>
 
-      {/* Audio Tools & Settings Bottom Links */}
-      <div className="pt-3 border-t border-white/10 flex flex-col gap-1">
+      {/* Bottom links: rows 36px high, gap 2 */}
+      <div className="pt-3 mt-auto border-t border-[var(--hairline)] flex flex-col gap-[2px]">
         {onOpenEqualizer && (
           <button
             onClick={onOpenEqualizer}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
+            className="h-[36px] flex items-center gap-2.5 px-3 rounded-lg text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-raised)] transition-colors text-xs font-medium"
           >
-            <Sliders size={16} />
+            <Sliders size={16} strokeWidth={1.5} />
             <span>Equalizer</span>
           </button>
         )}
@@ -181,18 +150,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenStats && (
           <button
             onClick={onOpenStats}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
+            className="h-[36px] flex items-center gap-2.5 px-3 rounded-lg text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-raised)] transition-colors text-xs font-medium"
           >
-            <BarChart2 size={16} />
+            <BarChart2 size={16} strokeWidth={1.5} />
             <span>Listening stats</span>
           </button>
         )}
 
         <button
           onClick={onOpenSettings}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
+          className="h-[36px] flex items-center gap-2.5 px-3 rounded-lg text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-raised)] transition-colors text-xs font-medium"
         >
-          <Settings size={16} />
+          <Settings size={16} strokeWidth={1.5} />
           <span>Settings</span>
         </button>
       </div>
