@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, Variants, Transition } from 'framer-motion';
 import {
   ChevronDown,
   Shuffle,
@@ -31,6 +31,94 @@ import { QueueSheet } from './QueueSheet';
 import { AudioOutputModal } from './AudioOutputModal';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
+import { springPlayerExpand } from '../../utils/motion';
+
+/**
+ * Shared-element Player Expand & Collapse Physics (R3)
+ * Calibrated: stiffness: 380, damping: 40, mass: 1 (zeta ~= 1.026 critically damped)
+ */
+export const PLAYER_EXPAND_PHYSICS = {
+  stiffness: 380,
+  damping: 40,
+  mass: 1,
+  zeta: 40 / (2 * Math.sqrt(380 * 1))
+} as const;
+
+export const CONTENT_FADE_DELAY_SECONDS = 0.08; // 80ms delay
+export const CONTENT_FADE_DELAY_MS = 80;
+export const REDUCED_MOTION_DURATION_SECONDS = 0.1; // 100ms
+export const REDUCED_MOTION_DURATION_MS = 100;
+
+export const SHARED_LAYOUT_IDS = {
+  ARTWORK: 'player-artwork',
+  TITLE: 'player-title',
+  PLAY_BUTTON: 'player-play-button'
+} as const;
+
+export const ALLOWED_ANIMATED_PROPERTIES = [
+  'transform',
+  'opacity',
+  'y',
+  'scale',
+  'scaleX',
+  'scaleY',
+  'rotate'
+] as const;
+
+export const PROHIBITED_ANIMATED_PROPERTIES = [
+  'top',
+  'bottom',
+  'left',
+  'right',
+  'width',
+  'height',
+  'margin',
+  'padding'
+] as const;
+
+export const playerContainerSpring: Transition = springPlayerExpand;
+
+export const playerReducedMotionTransition: Transition = {
+  duration: REDUCED_MOTION_DURATION_SECONDS,
+  ease: 'linear'
+};
+
+export const interiorContentFadeVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      delay: CONTENT_FADE_DELAY_SECONDS,
+      duration: 0.24,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  }
+};
+
+export const interiorContentReducedVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  }
+};
 
 export const FullPlayer: React.FC = () => {
   const {
@@ -57,6 +145,14 @@ export const FullPlayer: React.FC = () => {
     setPlaybackSpeed,
     audioOutputDeviceId
   } = usePlayer();
+
+  const shouldReduceMotion = useReducedMotion();
+  const activeSharedTransition = shouldReduceMotion
+    ? playerReducedMotionTransition
+    : playerContainerSpring;
+  const activeInteriorVariants = shouldReduceMotion
+    ? interiorContentReducedVariants
+    : interiorContentFadeVariants;
 
   const [showOutputModal, setShowOutputModal] = useState(false);
 
@@ -133,10 +229,10 @@ export const FullPlayer: React.FC = () => {
     <AnimatePresence>
       {isPlayerOpen && (
         <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+          transition={shouldReduceMotion ? playerReducedMotionTransition : playerContainerSpring}
           drag="y"
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={{ top: 0.05, bottom: 0.7 }}
@@ -145,10 +241,17 @@ export const FullPlayer: React.FC = () => {
               setIsPlayerOpen(false);
             }
           }}
+          data-testid="full-player-container"
           className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#0A0A0A] text-white select-none"
         >
           {/* Mobile Sheet Drag Handle */}
-          <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mt-2.5 mb-0.5 shrink-0 cursor-grab active:cursor-grabbing sm:hidden" />
+          <motion.div
+            variants={activeInteriorVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mt-2.5 mb-0.5 shrink-0 cursor-grab active:cursor-grabbing sm:hidden"
+          />
           {/* ========================================================= */}
           {/* BACKGROUND RENDERING ENGINES (Echo Music PlayerBackgroundStyle) */}
           {/* ========================================================= */}
@@ -180,7 +283,7 @@ export const FullPlayer: React.FC = () => {
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <motion.div
                 animate={{ rotate: -360 }}
-                transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 80, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'linear' }}
                 className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] blur-[100px] opacity-60"
                 style={{
                   backgroundImage: `url(${currentTrack.thumbnail})`,
@@ -190,7 +293,7 @@ export const FullPlayer: React.FC = () => {
               />
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 40, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'linear' }}
                 className="absolute -top-[10%] left-[10%] w-[100%] h-[100%] blur-[120px] opacity-40"
                 style={{
                   backgroundImage: `url(${currentTrack.thumbnail})`,
@@ -214,7 +317,7 @@ export const FullPlayer: React.FC = () => {
                   y: [0, -30, 20, 0],
                   scale: [1, 1.15, 0.95, 1]
                 }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 20, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' }}
                 className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[500px] rounded-full blur-[120px] opacity-70"
                 style={{ backgroundColor: `${colors.primary}66` }}
               />
@@ -224,7 +327,7 @@ export const FullPlayer: React.FC = () => {
                   y: [0, 30, -20, 0],
                   scale: [1, 0.9, 1.1, 1]
                 }}
-                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 18, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' }}
                 className="absolute top-[35%] -left-[15%] w-[420px] h-[420px] rounded-full blur-[100px] opacity-45"
                 style={{ backgroundColor: `${colors.secondary}66` }}
               />
@@ -233,12 +336,19 @@ export const FullPlayer: React.FC = () => {
           )}
 
           {/* ========================================================= */}
-          {/* TOP BAR NAVIGATION */}
+          {/* TOP BAR NAVIGATION (Interior Header with 80ms delayed fade) */}
           {/* ========================================================= */}
-          <div className="relative z-20 flex items-center justify-between px-6 pt-5 pb-2">
+          <motion.div
+            variants={activeInteriorVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            data-testid="player-interior-header"
+            className="relative z-20 flex items-center justify-between px-6 pt-5 pb-2"
+          >
             <button
               onClick={() => setIsPlayerOpen(false)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 backdrop-blur-md shadow-md"
               aria-label="Collapse player"
             >
               <ChevronDown size={22} className="text-white" />
@@ -248,7 +358,7 @@ export const FullPlayer: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPlayerStyle(isMaterial ? 'apple' : 'material')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wider text-white/90 shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wider text-white/90 shadow-md transition-colors active:scale-95"
               >
                 <Sparkles size={12} className="text-[var(--accent-color)]" />
                 <span>{isMaterial ? 'MATERIAL YOU' : 'APPLE INSPIRED'}</span>
@@ -261,7 +371,7 @@ export const FullPlayer: React.FC = () => {
                 onClick={() => setIsRotatingThumbnail(!isRotatingThumbnail)}
                 title={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
                 aria-label={isRotatingThumbnail ? 'Switch to Album Art' : 'Switch to Vinyl Turntable'}
-                className={`w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   isRotatingThumbnail
                     ? 'bg-[var(--accent-color)] text-black border-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
@@ -274,7 +384,7 @@ export const FullPlayer: React.FC = () => {
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
                 title={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
                 aria-label={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
-                className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
+                className={`relative w-10 h-10 rounded-full transition-colors flex items-center justify-center border backdrop-blur-md shadow-md active:scale-95 ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent-color)]/25 border-[var(--accent-color)] text-[var(--accent-color)]'
                     : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
@@ -318,7 +428,7 @@ export const FullPlayer: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* ========================================================= */}
           {/* MAIN PLAYER BODY */}
@@ -332,7 +442,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Vinyl Record Disc */}
                   <motion.div
                     animate={{ rotate: isPlaying ? 360 : 0 }}
-                    transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: 12, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'linear' }}
                     onClick={() => setIsRotatingThumbnail(false)}
                     className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] lg:w-[390px] lg:h-[390px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
                     style={{
@@ -397,8 +507,8 @@ export const FullPlayer: React.FC = () => {
                 /* Standard Modern Rounded Artwork with Interactive 3D Tilt */
                 <motion.div
                   layoutId="player-artwork"
+                  transition={activeSharedTransition}
                   animate={{ scale: isPlaying ? 1.03 : 1.0 }}
-                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setIsRotatingThumbnail(true)}
                   onMouseMove={handleArtMouseMove}
                   onMouseLeave={handleArtMouseLeave}
@@ -431,13 +541,21 @@ export const FullPlayer: React.FC = () => {
               )}
             </div>
 
-            {/* COMPACT LIVE SYNCED LYRICS BANNER */}
+            {/* COMPACT LIVE SYNCED LYRICS BANNER (80ms delayed fade) */}
             {lyricsData?.synced && lyricsData.lines.length > 0 && (
-              <PlayerSyncedLyricsView
-                lines={lyricsData.lines}
-                currentTime={currentTime}
-                onOpenLyrics={() => setActiveSheet('lyrics')}
-              />
+              <motion.div
+                variants={activeInteriorVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                data-testid="player-interior-lyrics-banner"
+              >
+                <PlayerSyncedLyricsView
+                  lines={lyricsData.lines}
+                  currentTime={currentTime}
+                  onOpenLyrics={() => setActiveSheet('lyrics')}
+                />
+              </motion.div>
             )}
 
             {/* TRACK METADATA + HEADER ACTION PILL BUTTONS */}
@@ -445,52 +563,78 @@ export const FullPlayer: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <motion.h1
                   layoutId="player-title"
+                  transition={activeSharedTransition}
                   className="text-xl sm:text-2xl font-black text-white truncate tracking-tight"
                 >
                   {currentTrack.title}
                 </motion.h1>
-                <p className="text-sm sm:text-base font-semibold text-white/65 truncate mt-0.5">
+                <motion.p
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="text-sm sm:text-base font-semibold text-white/65 truncate mt-0.5"
+                >
                   {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
-                </p>
+                </motion.p>
               </div>
 
               {/* Segmented Capsule Action Buttons (Material You: 50px-3px / 3px-50px) */}
               {isMaterial ? (
-                <div className="flex items-center gap-1.5 shrink-0">
+                <motion.div
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="flex items-center gap-1.5 shrink-0"
+                >
                   {/* Share / Download Capsule */}
                   <button
                     onClick={() => {}}
-                    className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[50px] rounded-r-[3px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Download song"
                   >
                     <Download size={18} />
                   </button>
 
                   {/* Heart Burst Favorite Capsule */}
-                  <div className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
+                  <div className="w-11 h-11 bg-white/15 hover:bg-white/25 active:scale-95 rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center text-white transition-colors shadow-md">
                     <HeartBurstIcon
                       isLiked={liked}
                       onToggle={() => toggleLike(currentTrack)}
                       size={20}
                     />
                   </div>
-                </div>
+                </motion.div>
               ) : (
                 /* Apple Inspired separate 40px rounded circles */
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all">
+                <motion.div
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="flex items-center gap-2 shrink-0"
+                >
+                  <div className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors">
                     <HeartBurstIcon
                       isLiked={liked}
                       onToggle={() => toggleLike(currentTrack)}
                       size={20}
                     />
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
 
-            {/* ADAPTIVE SEEKBAR (Straight Calm vs Waveform Squiggly) */}
-            <div className="pt-2">
+            {/* ADAPTIVE SEEKBAR (80ms delayed fade on opacity) */}
+            <motion.div
+              variants={activeInteriorVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              data-testid="player-interior-seekbar"
+              className="pt-2"
+            >
               <AdaptiveSeekbar
                 value={currentTime}
                 max={duration}
@@ -498,17 +642,21 @@ export const FullPlayer: React.FC = () => {
                 accentColor="#E5303D"
                 onSeek={seek}
               />
-            </div>
+            </motion.div>
 
             {/* CONTROLS ROW: BRANCHING APPLE VS MATERIAL YOU */}
             {isMaterial ? (
               /* Material You 3-Circle Controls: 68px Prev, 84px Flower Play, 68px Next */
-              <div className="flex items-center justify-center gap-6 py-2">
+              <div className="flex items-center justify-center gap-6 py-2" data-testid="player-interior-controls">
                 <motion.button
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
                   whileTap={{ scale: 0.90 }}
                   transition={{ type: 'spring', damping: 15, stiffness: 500 }}
                   onClick={prevTrack}
-                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg"
+                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors"
                   aria-label="Previous track"
                 >
                   <SkipBack size={28} className="fill-current" />
@@ -521,13 +669,18 @@ export const FullPlayer: React.FC = () => {
                   color="#E5303D"
                   iconColor="#FFFFFF"
                   styleType="wavy"
+                  layoutId="player-play-button"
                 />
 
                 <motion.button
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
                   whileTap={{ scale: 0.90 }}
                   transition={{ type: 'spring', damping: 15, stiffness: 500 }}
                   onClick={nextTrack}
-                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg"
+                  className="w-[68px] h-[68px] rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center border border-white/20 shadow-lg transition-colors"
                   aria-label="Next track"
                 >
                   <SkipForward size={28} className="fill-current" />
@@ -535,15 +688,19 @@ export const FullPlayer: React.FC = () => {
               </div>
             ) : (
               /* Apple Inspired Mode: 48px glyphs + 100px morphing squircle play button */
-              <div className="flex flex-col gap-3 py-1">
+              <div className="flex flex-col gap-3 py-1" data-testid="player-interior-controls">
                 <div className="flex items-center justify-between px-4">
-                  <button
+                  <motion.button
+                    variants={activeInteriorVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
                     onClick={prevTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
                     aria-label="Previous track"
                   >
                     <SkipBack size={36} className="fill-current" />
-                  </button>
+                  </motion.button>
 
                   <FlowerPlayButton
                     isPlaying={isPlaying}
@@ -555,17 +712,26 @@ export const FullPlayer: React.FC = () => {
                     layoutId="player-play-button"
                   />
 
-                  <button
+                  <motion.button
+                    variants={activeInteriorVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
                     onClick={nextTrack}
-                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-all"
+                    className="w-12 h-12 flex items-center justify-center text-white/90 hover:text-white active:scale-90 transition-colors"
                     aria-label="Next track"
                   >
                     <SkipForward size={36} className="fill-current" />
-                  </button>
+                  </motion.button>
                 </div>
 
-                {/* Apple-style Volume Slider Track (10px -> 16px spring expansion) */}
-                <div
+                {/* Apple-style Volume Slider Track */}
+                <motion.div
+                  variants={activeInteriorVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  data-testid="player-interior-volume"
                   onMouseEnter={() => setVolumeSliderHover(true)}
                   onMouseLeave={() => setVolumeSliderHover(false)}
                   className="flex items-center gap-3 px-2 pt-1"
@@ -578,17 +744,21 @@ export const FullPlayer: React.FC = () => {
                       const newVol = Math.max(0, Math.min(1, x / rect.width));
                       if (setVolume) setVolume(newVol);
                     }}
-                    className={`flex-1 rounded-full bg-white/20 cursor-pointer overflow-hidden transition-all duration-200 ${
+                    className={`flex-1 rounded-full bg-white/20 cursor-pointer overflow-hidden transition-colors ${
                       volumeSliderHover ? 'h-3.5' : 'h-2'
                     }`}
                   >
                     <div
-                      className="h-full bg-white/80 rounded-full"
-                      style={{ width: `${(volume || 1) * 100}%` }}
+                      className="h-full bg-white/80 rounded-full origin-left"
+                      style={{
+                        width: '100%',
+                        transform: `scaleX(${volume || 1})`,
+                        transformOrigin: 'left center'
+                      }}
                     />
                   </div>
                   <Volume2 size={16} className="text-white/50" />
-                </div>
+                </motion.div>
               </div>
             )}
 
@@ -597,12 +767,19 @@ export const FullPlayer: React.FC = () => {
             {/* ========================================================= */}
             {isMaterial ? (
               /* Material You: 42px Segmented Pill Group (Queue, Sleep, Lyrics, Shuffle, Repeat, More) */
-              <div className="flex items-center justify-between gap-1.5 pt-3">
+              <motion.div
+                variants={activeInteriorVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                data-testid="player-interior-triggers"
+                className="flex items-center justify-between gap-1.5 pt-3"
+              >
                 <div className="flex items-center gap-1.5">
                   {/* Queue button: topStart 50px, bottomStart 50px, 3px right */}
                   <button
                     onClick={() => setActiveSheet('queue')}
-                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-[42px] h-[42px] rounded-l-[50px] rounded-r-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Queue"
                   >
                     <ListMusic size={20} />
@@ -612,7 +789,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={() => setShowSleepMenu(!showSleepMenu)}
                     aria-label="Sleep timer"
-                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-all shadow-md ${
+                    className={`h-[42px] px-3 rounded-[3px] border border-white/20 flex items-center justify-center gap-1 text-xs font-semibold transition-colors shadow-md ${
                       remainingSleepSeconds
                         ? 'bg-[var(--accent-color)] text-black font-bold'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -627,7 +804,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Lyrics Toggle */}
                   <button
                     onClick={() => setActiveSheet('lyrics')}
-                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    className="w-[42px] h-[42px] rounded-[3px] bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                     aria-label="Synced lyrics"
                   >
                     <Mic2 size={19} />
@@ -637,7 +814,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={toggleShuffle}
                     aria-label="Shuffle"
-                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-[3px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
                       isShuffled
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -650,7 +827,7 @@ export const FullPlayer: React.FC = () => {
                   <button
                     onClick={toggleRepeat}
                     aria-label={`Repeat mode: ${repeatMode}`}
-                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-all shadow-md ${
+                    className={`w-[42px] h-[42px] rounded-l-[3px] rounded-r-[50px] border border-white/20 flex items-center justify-center transition-colors shadow-md ${
                       repeatMode !== 'off'
                         ? 'bg-[var(--accent-color)] text-black'
                         : 'bg-white/15 hover:bg-white/25 text-white'
@@ -662,7 +839,7 @@ export const FullPlayer: React.FC = () => {
                   {/* Playback Speed Toggle */}
                   <button
                     onClick={handleCycleSpeed}
-                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all shadow-md"
+                    className="h-[42px] px-2.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors shadow-md"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
@@ -673,18 +850,25 @@ export const FullPlayer: React.FC = () => {
                 {/* More vertical button: 42px circle */}
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                  className="w-[42px] h-[42px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 flex items-center justify-center text-white transition-colors shadow-md"
                   aria-label="More options"
                 >
                   <MoreVertical size={20} />
                 </button>
-              </div>
+              </motion.div>
             ) : (
               /* Apple Inspired Mode Bottom Bar: Apple Queue, connected audio picker, speed, Apple Lyrics */
-              <div className="flex items-center justify-between px-2 pt-2">
+              <motion.div
+                variants={activeInteriorVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                data-testid="player-interior-triggers"
+                className="flex items-center justify-between px-2 pt-2"
+              >
                 <button
                   onClick={() => setActiveSheet('queue')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
                   aria-label="Queue"
                 >
                   <ListMusic size={26} />
@@ -694,7 +878,7 @@ export const FullPlayer: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowOutputModal(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded-full border border-white/20 text-xs font-semibold text-white/90 transition-colors shadow-sm"
                     title="Change Audio Output Device"
                     aria-label="Change Audio Output Device"
                   >
@@ -704,7 +888,7 @@ export const FullPlayer: React.FC = () => {
 
                   <button
                     onClick={handleCycleSpeed}
-                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-all"
+                    className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-colors"
                     title={`Playback Speed: ${playbackSpeed || 1}x`}
                     aria-label={`Playback Speed: ${playbackSpeed || 1}x`}
                   >
@@ -714,12 +898,12 @@ export const FullPlayer: React.FC = () => {
 
                 <button
                   onClick={() => setActiveSheet('lyrics')}
-                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-all"
+                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white active:scale-90 transition-colors"
                   aria-label="Synced lyrics"
                 >
                   <Mic2 size={26} />
                 </button>
-              </div>
+              </motion.div>
             )}
           </div>
 
