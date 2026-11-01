@@ -25,20 +25,20 @@ interface ExploreProps {
 
 interface MoodItem {
   title: string;
-  color: string;
+  color?: string;
   icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
   query: string;
 }
 
 const moodsAndGenres: MoodItem[] = [
-  { title: 'Chill & Relax', color: 'from-sky-500/90 via-blue-600/80 to-indigo-950', icon: Coffee, query: 'Chill music acoustic' },
-  { title: 'Workout Energy', color: 'from-rose-500/90 via-red-600/80 to-amber-950', icon: Zap, query: 'Workout motivation music' },
-  { title: 'Deep Focus', color: 'from-emerald-500/90 via-teal-600/80 to-slate-950', icon: Sparkles, query: 'Deep focus study ambient' },
-  { title: 'Party & Dance', color: 'from-fuchsia-500/90 via-purple-600/80 to-pink-950', icon: PartyPopper, query: 'Party dance chartbusters' },
-  { title: 'Acoustic & Indie', color: 'from-amber-500/90 via-orange-600/80 to-amber-950', icon: Guitar, query: 'Acoustic indie folk' },
-  { title: 'Romance & Love', color: 'from-pink-500/90 via-rose-600/80 to-purple-950', icon: Heart, query: 'Romantic songs hindi english' },
-  { title: 'Late Night Melodies', color: 'from-indigo-600/90 via-slate-800/80 to-blue-950', icon: Moon, query: 'Late night chill melodies' },
-  { title: 'Nostalgia 2000s', color: 'from-violet-600/90 via-purple-900/80 to-slate-950', icon: Disc, query: '2000s nostalgia super hits' }
+  { title: 'Chill & Relax', icon: Coffee, query: 'Chill music acoustic' },
+  { title: 'Workout Energy', icon: Zap, query: 'Workout motivation music' },
+  { title: 'Deep Focus', icon: Sparkles, query: 'Deep focus study ambient' },
+  { title: 'Party & Dance', icon: PartyPopper, query: 'Party dance chartbusters' },
+  { title: 'Acoustic & Indie', icon: Guitar, query: 'Acoustic indie folk' },
+  { title: 'Romance & Love', icon: Heart, query: 'Romantic songs hindi english' },
+  { title: 'Late Night Melodies', icon: Moon, query: 'Late night chill melodies' },
+  { title: 'Nostalgia 2000s', icon: Disc, query: '2000s nostalgia super hits' }
 ];
 
 // Section scroll choreography animation variants
@@ -119,12 +119,12 @@ export const Explore: React.FC<ExploreProps> = () => {
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 pt-safe pb-56 text-white no-scrollbar select-none max-w-6xl mx-auto w-full">
-      {/* 1. FEATURED MOOD HERO CARD (musify-design-plan.md §4) */}
+      {/* 1. Featured mood HERO CARD (musify-design-plan.md §4) */}
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-        className="relative mb-10 rounded-[28px] overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-emerald-600/90 via-teal-800/80 to-slate-950 border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.6)] cursor-pointer group select-none"
+        className="relative mb-10 rounded-[28px] overflow-hidden p-6 sm:p-8 bg-[var(--bg-card)] border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.6)] cursor-pointer group select-none"
         onClick={() => {
           const deepFocus = moodsAndGenres.find((m) => m.title === 'Deep Focus') || moodsAndGenres[2];
           handleMoodClick(deepFocus);
@@ -134,19 +134,19 @@ export const Explore: React.FC<ExploreProps> = () => {
         <Sparkles
           size={200}
           strokeWidth={1}
-          className="absolute -right-8 -bottom-8 text-white/[0.08] group-hover:text-white/[0.14] group-hover:rotate-12 group-hover:scale-105 transition-all duration-700 pointer-events-none"
+          className="absolute -right-8 -bottom-8 text-white/[0.08] group-hover:text-white/[0.14] transition-opacity duration-200 pointer-events-none"
         />
 
         {/* Top Glass highlight shine */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+        
 
         <div className="relative z-10 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest mb-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-raised)] border border-[var(--hairline)] text-[var(--text-3)] text-xs font-medium mb-3">
             <Sparkles size={11} className="text-amber-300" />
-            <span>FEATURED MOOD</span>
+            <span>Featured mood</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white font-display leading-tight mb-2 drop-shadow-md">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white font-display leading-tight mb-2">
             Deep Focus
           </h1>
 
@@ -156,14 +156,14 @@ export const Explore: React.FC<ExploreProps> = () => {
 
           <div className="flex items-center gap-3">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{}}
               whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
                 const deepFocus = moodsAndGenres.find((m) => m.title === 'Deep Focus') || moodsAndGenres[2];
                 handleMoodClick(deepFocus, true);
               }}
-              className="px-6 py-3 rounded-full bg-white text-black font-extrabold text-sm flex items-center gap-2 shadow-xl shadow-black/40 hover:bg-white/95 transition-all cursor-pointer"
+              className="px-6 py-3 rounded-full bg-white text-black font-extrabold text-sm flex items-center gap-2 shadow-xl shadow-black/40 hover:bg-white/95 transition-colors cursor-pointer"
             >
               <Play size={16} className="fill-current ml-0.5" />
               <span>Play This Mood</span>
@@ -175,9 +175,7 @@ export const Explore: React.FC<ExploreProps> = () => {
       {/* 2. MOODS & GENRES OR MORPHED RESULTS VIEW */}
       {!activeMood ? (
         <section className="mb-10">
-          <h2 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3 font-display">
-            MOODS & GENRES
-          </h2>
+          <h2 className="text-xs font-medium text-[var(--text-3)] mb-3">Moods and genres</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
             {moodsAndGenres.map((mood) => {
               const Icon = mood.icon;
@@ -185,22 +183,22 @@ export const Explore: React.FC<ExploreProps> = () => {
                 <motion.div
                   key={mood.title}
                   layoutId={`mood-${mood.title}`}
-                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => handleMoodClick(mood)}
-                  className={`relative h-[100px] rounded-2xl p-4 bg-gradient-to-br ${mood.color} cursor-pointer shadow-[0_8px_20px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col justify-between group border border-white/15 hover:border-white/30`}
+                  className="relative h-[100px] rounded-2xl p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-raised)] cursor-pointer overflow-hidden flex flex-col justify-between group border border-[var(--hairline)] transition-colors duration-200"
                 >
                   {/* Top Glass Highlight Reflection */}
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+                  
 
                   {/* Ambient Watermark Icon */}
                   <Icon
                     size={56}
                     strokeWidth={1.5}
-                    className="absolute -right-2 -bottom-2 text-white/[0.12] group-hover:text-white/[0.22] group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 pointer-events-none"
+                    className="absolute -right-2 -bottom-2 text-white/[0.12] group-hover:text-white/[0.22] transition-opacity duration-200 pointer-events-none"
                   />
 
-                  <span className="font-display font-black text-sm sm:text-base leading-snug drop-shadow-md text-white z-10">
+                  <span className="font-sans font-medium text-sm sm:text-base leading-snug text-[var(--text-1)] z-10">
                     {mood.title}
                   </span>
 
@@ -218,7 +216,7 @@ export const Explore: React.FC<ExploreProps> = () => {
         <section className="mb-10">
           <motion.div
             layoutId={`mood-${activeMood.title}`}
-            className={`rounded-2xl bg-gradient-to-br ${activeMood.color} p-5 mb-6 border border-white/20 shadow-xl`}
+            className="rounded-2xl bg-[var(--bg-card)] p-5 mb-6 border border-[var(--hairline)]"
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           >
             <div className="flex items-center justify-between">
@@ -235,7 +233,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                   <ArrowLeft size={18} />
                 </button>
                 <div>
-                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest block">
+                  <span className="text-[10px] font-bold text-white/70 tracking-normal block">
                     ACTIVE MOOD
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black font-display text-white">
@@ -267,10 +265,10 @@ export const Explore: React.FC<ExploreProps> = () => {
                     <motion.div
                       key={track.id}
                       variants={cardVariants}
-                      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                      whileHover={{}}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => playTrack(track, moodTracks)}
-                      className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-all duration-200 border ${
+                      className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-colors duration-200 border ${
                         isCurrent
                           ? 'bg-white/[0.14] border-white/30 shadow-md'
                           : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5'
@@ -290,7 +288,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                         />
                       </div>
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className={`text-sm font-bold truncate leading-tight ${isCurrent ? 'text-[#E5303D]' : 'text-white'}`}>
+                        <p className={`text-sm font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent)]' : 'text-white'}`}>
                           {track.title}
                         </p>
                         <p className="text-xs text-white/60 truncate font-medium mt-0.5">
@@ -316,11 +314,11 @@ export const Explore: React.FC<ExploreProps> = () => {
       >
         <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
           <div>
-            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
+            <span className="text-xs font-medium text-[var(--text-3)]">
               OFFICIAL BILLBOARD CHARTS
             </span>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 font-display">
-              <TrendingUp size={22} className="text-[#E5303D]" />
+              <TrendingUp size={22} className="text-[var(--accent)]" />
               <span>Trending Charts</span>
             </h2>
           </div>
@@ -344,10 +342,10 @@ export const Explore: React.FC<ExploreProps> = () => {
                 <motion.div
                   key={track.id}
                   variants={cardVariants}
-                  whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => playTrack(track, trendingTracks)}
-                  className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-all duration-200 border ${
+                  className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-colors duration-200 border ${
                     isCurrent
                       ? 'bg-white/[0.14] border-white/30 shadow-md'
                       : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5'
@@ -356,7 +354,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                   {/* Rank Number */}
                   <span
                     className={`w-6 text-center text-xs font-black ${
-                      idx < 3 ? 'text-[#E5303D]' : 'text-white/40'
+                      idx < 3 ? 'text-[var(--accent)]' : 'text-white/40'
                     }`}
                   >
                     #{idx + 1}
@@ -382,7 +380,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                   <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={`text-sm font-bold truncate leading-tight ${
-                        isCurrent ? 'text-[#E5303D]' : 'text-white'
+                        isCurrent ? 'text-[var(--accent)]' : 'text-white'
                       }`}
                     >
                       {track.title}
@@ -409,9 +407,7 @@ export const Explore: React.FC<ExploreProps> = () => {
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
-                FRESH OFF THE PRESS
-              </span>
+              <span className="text-xs font-medium text-[var(--text-3)]">Fresh off the press</span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 New Releases
               </h2>
@@ -424,18 +420,18 @@ export const Explore: React.FC<ExploreProps> = () => {
                 <motion.div
                   key={release.id}
                   variants={cardVariants}
-                  whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => playTrack(release, newReleases)}
                   className="w-[140px] sm:w-[160px] flex flex-col gap-2 cursor-pointer group select-none"
                 >
-                  <div className="w-full aspect-square rounded-[22px] overflow-hidden bg-white/10 border border-white/10 relative shadow-md group-hover:border-white/30 transition-all">
+                  <div className="w-full aspect-square rounded-[22px] overflow-hidden bg-white/10 border border-white/10 relative shadow-md group-hover:border-white/30 transition-colors">
                     <img
                       src={release.thumbnail}
                       alt=""
                       referrerPolicy="no-referrer"
                       onError={handleImageError}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg">

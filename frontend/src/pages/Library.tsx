@@ -179,13 +179,13 @@ export const Library: React.FC<LibraryProps> = ({
         </div>
       )}
 
-      {/* Pinned Playlists Row (Echo Music Pinned Feature) */}
+      {/* Pinned playlists Row (Echo Music Pinned Feature) */}
       {(activeTab === 'all' || activeTab === 'playlists') && pinnedPlaylists.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3 px-1">
             <Pin size={15} className="text-[var(--accent-color)] fill-[var(--accent-color)]" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-white/80">
-              Pinned Playlists
+            <h2 className="text-sm font-bold text-white/80">
+              Pinned playlists
             </h2>
           </div>
 
@@ -194,13 +194,13 @@ export const Library: React.FC<LibraryProps> = ({
               <div
                 key={pl.id}
                 onClick={() => onSelectPlaylistDetails?.(pl)}
-                className="p-4 rounded-3xl bg-white/[0.08] hover:bg-white/[0.13] border border-white/15 cursor-pointer flex flex-col gap-3 group transition-all shadow-lg relative"
+                className="p-4 rounded-3xl bg-white/[0.08] hover:bg-white/[0.13] border border-white/15 cursor-pointer flex flex-col gap-3 group transition-colors shadow-lg relative"
               >
                 <div className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/40 backdrop-blur-md text-[var(--accent-color)]">
                   <Pin size={12} className="fill-current" />
                 </div>
 
-                <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
+                <div className="aspect-square rounded-2xl bg-[var(--bg-card)] border border-white/10 flex items-center justify-center shadow-md overflow-hidden transition-transform">
                   {Boolean(pl.tracks[0]?.thumbnail) ? (
                     <img
                       src={pl.tracks[0].thumbnail}
@@ -242,7 +242,7 @@ export const Library: React.FC<LibraryProps> = ({
                 className="text-xs font-bold text-[var(--accent-color)] hover:underline flex items-center gap-1.5"
               >
                 <Play size={12} className="fill-current" />
-                <span>Play All</span>
+                <span>Play all</span>
               </button>
             )}
           </div>
@@ -288,7 +288,7 @@ export const Library: React.FC<LibraryProps> = ({
                   onClick={() => setActiveTab('songs')}
                   className="py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white/60 hover:text-white text-center transition-colors"
                 >
-                  View all {likedSongs.length} favorites →
+                  View all {likedSongs.length} favorites
                 </button>
               )}
             </div>
@@ -329,7 +329,7 @@ export const Library: React.FC<LibraryProps> = ({
                 <div
                   key={pl.id}
                   onClick={() => onSelectPlaylistDetails?.(pl)}
-                  className="p-4 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-all shadow-md relative"
+                  className="p-4 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-colors shadow-md relative"
                 >
                   <button
                     onClick={(e) => {
@@ -342,7 +342,7 @@ export const Library: React.FC<LibraryProps> = ({
                     <Pin size={12} />
                   </button>
 
-                  <div className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-md overflow-hidden group-hover:scale-102 transition-transform">
+                  <div className="aspect-square rounded-2xl bg-[var(--bg-card)] border border-white/10 flex items-center justify-center shadow-md overflow-hidden transition-transform">
                     {Boolean(pl.tracks[0]?.thumbnail) ? (
                       <img
                         src={pl.tracks[0].thumbnail}
@@ -371,7 +371,7 @@ export const Library: React.FC<LibraryProps> = ({
                 <div
                   key={pl.id}
                   onClick={() => onSelectPlaylistDetails?.(pl)}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/5 cursor-pointer transition-all group"
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/5 cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -462,15 +462,15 @@ export const Library: React.FC<LibraryProps> = ({
 
       {/* Floating Action Button (FAB) matching Compose BottomSheet trigger */}
       <div
-        className={`fixed right-6 sm:right-10 z-30 transition-all duration-300 ${
+        className={`fixed right-6 sm:right-10 z-30 transition-colors duration-300 ${
           currentTrack ? 'bottom-44 sm:bottom-48' : 'bottom-24 sm:bottom-28'
         }`}
       >
         <motion.button
-          whileHover={{ scale: 1.08 }}
+          whileHover={{}}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowFabModal(true)}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#ED5564] text-white shadow-[0_10px_30px_rgba(237,85,100,0.45)] hover:shadow-[0_14px_40px_rgba(237,85,100,0.65)] flex items-center justify-center border border-white/25 transition-all"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[var(--accent)] text-white flex items-center justify-center border border-white/25 transition-colors"
           title="New playlist or import"
           aria-label="New playlist or import"
         >
@@ -488,7 +488,7 @@ export const Library: React.FC<LibraryProps> = ({
               exit={{ y: 100, opacity: 0 }}
               className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-[#1C1D24] border border-white/15 p-6 shadow-2xl flex flex-col gap-2"
             >
-              <h3 className="text-base font-extrabold uppercase tracking-wider text-white/50 mb-2">
+              <h3 className="text-base font-extrabold text-white/50 mb-2">
                 Library Actions
               </h3>
 
@@ -515,7 +515,7 @@ export const Library: React.FC<LibraryProps> = ({
                 }}
                 className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-left text-sm font-bold text-white transition-colors"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[var(--bg-raised)] text-[var(--text-2)] border border-[var(--hairline)] flex items-center justify-center">
                   <Sparkles size={20} />
                 </div>
                 <div>
