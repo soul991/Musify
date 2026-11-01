@@ -9,6 +9,7 @@ router.get('/debug/:videoId', handleDebugStream);
 // Prefetch stream URL (resolve and cache without streaming body)
 router.get('/prefetch/:videoId', handlePrefetchStream);
 router.post('/prefetch', handlePrefetchStream);
+router.get('/resolve/:videoId', handlePrefetchStream);
 
 // GET /api/stream/:videoId
 router.get('/:videoId', handleStreamProxy);

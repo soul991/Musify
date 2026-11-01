@@ -235,6 +235,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Performance & prefetch refs
   const hasPrefetchedNextHalfwayRef = useRef<boolean>(false);
+  const preloadedTrackIdRef = useRef<string | null>(null);
   const isFetchingRadioRef = useRef<boolean>(false);
   const radioFetchedTrackIdsRef = useRef<Set<string>>(new Set());
   const playedHistoryIdsRef = useRef<string[]>([]);
@@ -292,6 +293,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (videoId) {
       api.prefetchStream(videoId);
     }
+  };
+
+  const cancelPreload = () => {
+    if (secondaryAudioRef.current && !isCrossfadingRef.current) {
+      try {
+        secondaryAudioRef.current.pause();
+        secondaryAudioRef.current.removeAttribute('src');
+        secondaryAudioRef.current.load();
+      } catch {}
+    }
+    preloadedTrackIdRef.current = null;
+    hasPrefetchedNextHalfwayRef.current = false;
   };
 
   // Determine current network audio quality
@@ -444,8 +457,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     audioEqualizer.attachElement(audio);
 
     const secAudio = new Audio();
-    const isCrossfadeInitial = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
-    secAudio.preload = isCrossfadeInitial ? 'auto' : 'metadata';
+    secAudio.preload = 'auto';
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
 
@@ -493,21 +505,21 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // 50% Track Playback: Preload and ranged-fetch next track's first 256 KB
+      // 50% Track Playback: Preload next track via resolve/prefetch endpoint and warm second audio element
       if (!hasPrefetchedNextHalfwayRef.current && activeEl.duration && activeEl.currentTime >= activeEl.duration * 0.5) {
         hasPrefetchedNextHalfwayRef.current = true;
         const nextIdx = queueIndexRef.current + 1;
         const currentQ = queueRef.current;
         const nextItem = currentQ[nextIdx] || (repeatModeRef.current === 'all' ? currentQ[0] : null);
-        if (nextItem) {
+        if (nextItem && nextItem.id) {
           const q = getEffectiveAudioQuality();
-          const nextUrl = api.getStreamUrl(nextItem.id, q);
-          // Ranged prefetch of first 256 KB
-          fetch(nextUrl, { method: 'GET', headers: { Range: 'bytes=0-262143' } }).catch(() => {});
-          // Preload into secondary audio element for seamless gapless transition
+          // Call the existing resolve/prefetch endpoint for the next queue item
+          api.prefetchStream(nextItem.id, q);
+          // Warm the audio on a second <audio preload="auto"> element, not shared with playing one
           if (secondaryAudioRef.current) {
-            const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
-            secondaryAudioRef.current.preload = isCrossfade ? 'auto' : 'metadata';
+            preloadedTrackIdRef.current = nextItem.id;
+            const nextUrl = api.getStreamUrl(nextItem.id, q);
+            secondaryAudioRef.current.preload = 'auto';
             secondaryAudioRef.current.src = nextUrl;
             secondaryAudioRef.current.load();
           }
@@ -856,6 +868,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     playStartTimeRef.current = performance.now();
     hasPrefetchedNextHalfwayRef.current = false;
+    cancelPreload();
 
     // Reset stalled and movement check timers
     if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
@@ -1111,6 +1124,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const toggleShuffle = () => {
+    cancelPreload();
     if (!isShuffled) {
       const current = currentTrack;
       const rest = queue.filter((t) => t.id !== current?.id);
@@ -1134,17 +1148,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const addToQueue = (track: Track) => {
-    setQueue((prev) => [...prev, track]);
+    setQueue((prev) => {
+      const updated = [...prev, track];
+      const nextIdx = queueIndexRef.current + 1;
+      const nextItem = updated[nextIdx];
+      if (preloadedTrackIdRef.current && (!nextItem || nextItem.id !== preloadedTrackIdRef.current)) {
+        cancelPreload();
+      }
+      queueRef.current = updated;
+      return updated;
+    });
     originalQueueRef.current = [...originalQueueRef.current, track];
     // Warm intent
     api.prefetchStream(track.id);
   };
 
   const playNextInQueue = (track: Track) => {
+    cancelPreload();
     setQueue((prev) => {
       const nextIdx = queueIndex + 1;
       const newQ = [...prev];
       newQ.splice(nextIdx, 0, track);
+      queueRef.current = newQ;
       return newQ;
     });
     // Warm intent
@@ -1152,11 +1177,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const clearQueue = () => {
+    cancelPreload();
     if (currentTrack) {
+      queueRef.current = [currentTrack];
       setQueue([currentTrack]);
       originalQueueRef.current = [currentTrack];
       setQueueIndex(0);
     } else {
+      queueRef.current = [];
       setQueue([]);
       originalQueueRef.current = [];
       setQueueIndex(-1);
@@ -1164,6 +1192,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const reorderQueue = (newQueue: Track[]) => {
+    const nextIdx = queueIndexRef.current + 1;
+    const nextItem = newQueue[nextIdx];
+    if (preloadedTrackIdRef.current && (!nextItem || nextItem.id !== preloadedTrackIdRef.current)) {
+      cancelPreload();
+    }
+    queueRef.current = newQueue;
     setQueue(newQueue);
     const idx = newQueue.findIndex((t) => t.id === currentTrack?.id);
     setQueueIndex(idx !== -1 ? idx : 0);
