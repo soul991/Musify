@@ -300,9 +300,7 @@ export const Search: React.FC<SearchProps> = ({
               title={isListening ? 'Listening...' : 'Voice Search'}
               aria-label={isListening ? 'Listening...' : 'Voice Search'}
               className={`p-2 rounded-full transition-colors cursor-pointer ${
-                isListening
-                  ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]'
-                  : 'text-white/50 hover:text-white hover:bg-white/10'
+                isListening ? 'bg-[var(--accent)] text-white' : 'text-white/50 hover:text-white hover:bg-white/10'
               }`}
             >
               <Mic size={16} />

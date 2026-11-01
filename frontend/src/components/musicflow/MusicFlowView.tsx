@@ -98,13 +98,13 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
 
         <div className="relative flex items-center justify-center">
           <div
-            className="w-24 h-24 rounded-full border flex items-center justify-center animate-pulse"
+            className="w-24 h-24 rounded-full border flex items-center justify-center"
             style={{
               backgroundColor: `${colors.primary}20`,
               borderColor: `${colors.primary}40`
             }}
           >
-            <Radio size={44} style={{ color: colors.primary }} className="animate-spin [animation-duration:8s]" />
+            <Radio size={44} style={{ color: colors.primary }} />
           </div>
         </div>
 

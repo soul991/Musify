@@ -128,9 +128,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                   }}
-                  className={`w-full h-full object-cover rounded-full ${
-                    isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
-                  }`}
+                  className="w-full h-full object-cover rounded-full"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
                   <Maximize2 size={14} className="text-white" />

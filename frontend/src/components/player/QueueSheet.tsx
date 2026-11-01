@@ -230,7 +230,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
                       />
                       {isCurrent && isPlaying && (
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-                          <Volume2 size={16} className="text-white animate-pulse" />
+                          <Volume2 size={16} className="text-white" />
                         </div>
                       )}
                     </div>

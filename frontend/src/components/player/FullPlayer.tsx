@@ -176,59 +176,25 @@ export const FullPlayer: React.FC = () => {
               <div className="absolute inset-0 bg-black/40" />
             </div>
           ) : bgStyle === 'mesh' ? (
-            /* Live Mesh background: 3 rotating saturated artwork discs */
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-                className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] blur-[100px] opacity-60"
-                style={{
-                  backgroundImage: `url(${currentTrack.thumbnail})`,
-                  backgroundSize: 'cover',
-                  filter: 'saturate(1.8)'
-                }}
-              />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
-                className="absolute -top-[10%] left-[10%] w-[100%] h-[100%] blur-[120px] opacity-40"
-                style={{
-                  backgroundImage: `url(${currentTrack.thumbnail})`,
-                  backgroundSize: 'cover',
-                  filter: 'saturate(1.8)'
-                }}
-              />
-              <div className="absolute inset-0 bg-black/35" />
-            </div>
-          ) : (
-            /* Glow Animated / Dynamic Gradient background */
+            /* Live Mesh background: steady artwork */
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <div
-                className="absolute inset-0 opacity-40"
+                className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] blur-[100px] opacity-40"
+                style={{
+                  backgroundImage: `url(${currentTrack.thumbnail})`,
+                  backgroundSize: 'cover'
+                }}
+              />
+              <div className="absolute inset-0 bg-black/50" />
+            </div>
+          ) : (
+            /* Static gradient background */
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-30"
                 style={{ background: colors.gradientBackground }}
               />
-              {/* 2 Animated Ambient Glowing Orbs */}
-              <motion.div
-                animate={{
-                  x: [0, 40, -30, 0],
-                  y: [0, -30, 20, 0],
-                  scale: [1, 1.15, 0.95, 1]
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[500px] rounded-full blur-[120px] opacity-70"
-                style={{ backgroundColor: `${colors.primary}66` }}
-              />
-              <motion.div
-                animate={{
-                  x: [0, -40, 30, 0],
-                  y: [0, 30, -20, 0],
-                  scale: [1, 0.9, 1.1, 1]
-                }}
-                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute top-[35%] -left-[15%] w-[420px] h-[420px] rounded-full blur-[100px] opacity-45"
-                style={{ backgroundColor: `${colors.secondary}66` }}
-              />
-              <div className="absolute inset-0 bg-black/30" />
+              <div className="absolute inset-0 bg-black/40" />
             </div>
           )}
 
@@ -330,9 +296,7 @@ export const FullPlayer: React.FC = () => {
                 /* Realistic Vinyl Turntable Mode */
                 <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] flex items-center justify-center select-none">
                   {/* Vinyl Record Disc */}
-                  <motion.div
-                    animate={{ rotate: isPlaying ? 360 : 0 }}
-                    transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                  <div
                     onClick={() => setIsRotatingThumbnail(false)}
                     className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] lg:w-[390px] lg:h-[390px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
                     style={{
@@ -363,7 +327,7 @@ export const FullPlayer: React.FC = () => {
                       {/* Center Spindle Hole */}
                       <div className="absolute w-4 h-4 rounded-full bg-[#0B0C10] border border-white/60 shadow-lg" />
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* Metallic Tonearm with Stylus */}
                   <motion.div

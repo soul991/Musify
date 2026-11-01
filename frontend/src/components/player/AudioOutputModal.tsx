@@ -280,7 +280,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
                 onClick={handleCastClick}
                 className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:scale-98 border border-white/10 text-white text-xs font-bold transition-colors shadow-md group"
               >
-                <Cast size={16} className={`transition-colors ${castActive ? 'text-[var(--accent-ink)] animate-pulse' : 'text-white/80 group-hover:text-white'}`} />
+                <Cast size={16} className={`transition-colors ${castActive ? 'text-[var(--accent-ink)]' : 'text-white/80 group-hover:text-white'}`} />
                 <span>{castActive ? 'Connecting Cast...' : 'AirPlay & Chromecast'}</span>
               </button>
             </div>

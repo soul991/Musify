@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Disc, ListMusic, Mic2, X, Play, Sparkles } from 'lucide-react';
+import { Disc, ListMusic, Mic2, X, Play, Loader2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
@@ -142,18 +142,12 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col p-5">
         {/* 1. 3D Spinning Vinyl Turntable Centerpiece */}
         <div className="relative flex flex-col items-center my-2">
-          {/* Ambient Glow */}
-          <div
-            className="absolute -inset-4 rounded-full opacity-35 blur-2xl pointer-events-none transition-colors duration-700"
-            style={{ backgroundColor: colors.primary }}
-          />
+          {/* Ambient Glow removed per Section 6 */}
 
           {/* Vinyl Record */}
           <div className="relative w-48 h-48 lg:w-52 lg:h-52 rounded-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-2 border-white/10 p-1 bg-[#09090b]">
             <div
-              className={`relative w-full h-full rounded-full overflow-hidden flex items-center justify-center ${
-                isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
-              }`}
+              className="relative w-full h-full rounded-full overflow-hidden flex items-center justify-center"
               style={{
                 backgroundImage:
                   'radial-gradient(circle at center, #111 0%, #1c1c1f 35%, #0f0f12 50%, #202025 65%, #0d0d10 80%, #050507 100%)'
@@ -217,7 +211,7 @@ export const NowPlayingCompanion: React.FC<NowPlayingCompanionProps> = ({
               >
                 {loadingLyrics ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-2 text-white/40">
-                    <Sparkles size={20} className="animate-spin text-[#E5303D]" />
+                    <Loader2 size={20} className="animate-spin text-[var(--text-3)]" />
                     <span className="text-xs font-medium">Aligning lyrics...</span>
                   </div>
                 ) : lyricsData?.synced && lyricsData.lines.length > 0 ? (

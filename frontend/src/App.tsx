@@ -296,36 +296,8 @@ const MusifyMain: React.FC = () => {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
-      {/* Ambient Blurred Crossfade Orbs that breathe with the music */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
-        <motion.div
-          animate={{
-            scale: isPlaying ? [1, 1.14, 1.03, 1.1, 1] : 1,
-            opacity: isPlaying ? [0.18, 0.28, 0.2, 0.25, 0.18] : 0.12
-          }}
-          transition={{
-            duration: 4.5,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="pointer-events-none absolute -top-32 -left-32 w-[540px] h-[540px] rounded-full blur-[140px] transition-colors duration-700"
-          style={{ backgroundColor: colors.primary }}
-        />
-        <motion.div
-          animate={{
-            scale: isPlaying ? [1, 1.12, 1.05, 1.15, 1] : 1,
-            opacity: isPlaying ? [0.14, 0.22, 0.16, 0.2, 0.14] : 0.1
-          }}
-          transition={{
-            duration: 5.5,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: 0.8
-          }}
-          className="pointer-events-none absolute -bottom-32 -right-32 w-[640px] h-[640px] rounded-full blur-[160px] transition-colors duration-700"
-          style={{ backgroundColor: colors.secondary || '#B8222E' }}
-        />
-      </div>
+      /* Background Ambient Base */
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 bg-[var(--bg-base)]" />
 
       {/* 1. Left Desktop Navigation Sidebar */}
       <Sidebar

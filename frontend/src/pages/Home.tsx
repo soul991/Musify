@@ -452,12 +452,10 @@ export const Home: React.FC<HomeProps> = ({
               className="relative h-[280px] md:h-[330px] rounded-[24px] overflow-hidden group cursor-pointer border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.65)] select-none"
             >
               {/* Background Art with Ken Burns subtle zoom */}
-              <motion.img
+              <img
                 src={activeHero.image}
                 alt={activeHero.title}
                 className="absolute inset-0 w-full h-full object-cover"
-                animate={{ scale: [1, 1.06] }}
-                transition={{ duration: 12, ease: 'linear', repeat: Infinity, repeatType: 'reverse' }}
                 onError={handleImageError}
               />
 

@@ -442,7 +442,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
           <div className="p-6 rounded-[28px] bg-white/[0.05] backdrop-blur-3xl border border-white/20 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 ROOM ACTIVE {isHost ? '(HOST)' : '(LISTENER)'}
               </span>
               <p className="text-2xl font-black text-white tracking-normal mt-1">

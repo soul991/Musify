@@ -141,10 +141,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         {showIndex && (
           <div className="w-6 text-center shrink-0">
             {isCurrent && isPlaying ? (
-              <div className="flex items-end justify-center gap-0.5 h-4 w-4 mx-auto">
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-3" />
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-4 [animation-delay:0.15s]" />
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-2 [animation-delay:0.3s]" />
+              <div className="flex items-center justify-center h-4 w-4 mx-auto">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               </div>
             ) : (
               <span
@@ -179,12 +177,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               }}
             />
             {isCurrent && isPlaying && !showIndex && (
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
-                <div className="flex items-end gap-0.5 h-3.5">
-                  <span className="w-1 bg-white rounded-full animate-pulse h-2.5" />
-                  <span className="w-1 bg-white rounded-full animate-pulse h-3.5 [animation-delay:0.2s]" />
-                  <span className="w-1 bg-white rounded-full animate-pulse h-2 [animation-delay:0.4s]" />
-                </div>
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="w-2 h-2 rounded-full bg-white" />
               </div>
             )}
           </div>
