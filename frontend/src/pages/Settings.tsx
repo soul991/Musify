@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Palette,
   Moon,
@@ -9,6 +9,7 @@ import {
   Radio,
   Clock,
   Trash2,
+  HardDrive,
   Info,
   Check,
   ChevronRight,
@@ -24,6 +25,7 @@ import { usePlayer, isAudioVolumeWritable } from '../context/PlayerContext';
 import { useLibrary } from '../context/LibraryContext';
 import { useToast } from '../context/ToastContext';
 import { audioEqualizer } from '../services/audioEqualizer';
+import { offlineStorage, StorageUsage } from '../services/offlineStorage';
 import { Material3SettingsGroup } from '../components/views/Material3SettingsGroup';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -160,10 +162,31 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     localStorage.setItem('musify_crossfade_secs', String(val));
   };
 
-  const handleClearCache = () => {
-    if (confirm('Clear local audio cache and temporary images?')) {
-      alert('Audio cache cleared successfully!');
-    }
+  const [storageUsage, setStorageUsage] = useState<StorageUsage>({
+    usedBytes: 0,
+    sizeCapBytes: 500 * 1024 * 1024,
+    trackCount: 0,
+    formattedUsed: '0.0 MB',
+    formattedCap: '500 MB'
+  });
+  const [sizeCapMB, setSizeCapMB] = useState<number>(() => offlineStorage.getSizeCapMB());
+
+  useEffect(() => {
+    offlineStorage.getStorageUsage().then(setStorageUsage);
+  }, []);
+
+  const handleSizeCapChange = (capMB: number) => {
+    setSizeCapMB(capMB);
+    offlineStorage.setSizeCapMB(capMB);
+    offlineStorage.getStorageUsage().then(setStorageUsage);
+    showToast(`Offline audio cache limit set to ${capMB >= 1000 ? (capMB / 1000) + ' GB' : capMB + ' MB'}`, 'info');
+  };
+
+  const handleClearCache = async () => {
+    await offlineStorage.clearOfflineCache();
+    const usage = await offlineStorage.getStorageUsage();
+    setStorageUsage(usage);
+    showToast('Offline audio cache cleared successfully', 'success');
   };
 
   const qualityLabels: Record<AudioQualityLevel, { title: string; desc: string }> = {
@@ -551,14 +574,14 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         )}
 
         {/* Group 4: Storage & Offline Cache */}
-        {(matchesSearch('storage') || matchesSearch('cache') || matchesSearch('clear')) && (
+        {(matchesSearch('storage') || matchesSearch('cache') || matchesSearch('clear') || matchesSearch('offline')) && (
           <Material3SettingsGroup
             title="Storage & Offline Cache"
             items={[
               {
                 icon: <Trash2 size={20} className="text-rose-400" />,
-                title: 'Clear Audio Cache',
-                description: 'Remove cached audio streams to free device storage (~142 MB)',
+                title: 'Offline Audio Cache',
+                description: `${storageUsage.formattedUsed} used of ${storageUsage.formattedCap} • ${storageUsage.trackCount} track${storageUsage.trackCount === 1 ? '' : 's'} cached for offline playback`,
                 trailingContent: (
                   <button
                     onClick={(e) => {
@@ -571,6 +594,27 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                   </button>
                 ),
                 onClick: handleClearCache
+              },
+              {
+                icon: <HardDrive size={20} className="text-emerald-400" />,
+                title: 'Cache Size Limit',
+                description: 'Maximum local device storage allocated for liked & recent songs before LRU eviction',
+                trailingContent: (
+                  <select
+                    value={sizeCapMB}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleSizeCapChange(Number(e.target.value));
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-white/10 text-white rounded-xl text-xs font-bold px-2.5 py-1.5 border border-white/10 focus:outline-none"
+                  >
+                    <option value="250" className="bg-[#1C1D24]">250 MB</option>
+                    <option value="500" className="bg-[#1C1D24]">500 MB (Default)</option>
+                    <option value="1000" className="bg-[#1C1D24]">1 GB</option>
+                    <option value="2000" className="bg-[#1C1D24]">2 GB</option>
+                  </select>
+                )
               }
             ]}
           />

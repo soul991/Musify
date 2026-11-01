@@ -5,6 +5,7 @@ import { useTheme } from './ThemeContext';
 import { useLibrary } from './LibraryContext';
 import { audioEqualizer } from '../services/audioEqualizer';
 import { fisherYatesShuffle } from '../utils/shuffle';
+import { offlineStorage } from '../services/offlineStorage';
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -536,7 +537,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // Warm the audio on a second <audio preload="auto"> element, not shared with playing one
           if (secondaryAudioRef.current) {
             preloadedTrackIdRef.current = nextItem.id;
-            const nextUrl = api.getStreamUrl(nextItem.id, q);
+            const cachedUrl = offlineStorage.getCachedBlobUrlSync(nextItem.id);
+            const nextUrl = cachedUrl || api.getStreamUrl(nextItem.id, q);
             secondaryAudioRef.current.preload = 'auto';
             secondaryAudioRef.current.src = nextUrl;
             secondaryAudioRef.current.load();
@@ -605,7 +607,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isCrossfadingRef.current = true;
             const q = getEffectiveAudioQuality();
             const sec = secondaryAudioRef.current;
-            const targetUrl = api.getStreamUrl(nextItem.id, q);
+            const cachedUrl = offlineStorage.getCachedBlobUrlSync(nextItem.id);
+            const targetUrl = cachedUrl || api.getStreamUrl(nextItem.id, q);
 
             // If secondary element is not already preloaded with this track, load it
             if (preloadedTrackIdRef.current !== nextItem.id || !sec.src) {
@@ -649,6 +652,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   addToHistoryRef.current(nextItem);
                   hasPrefetchedNextHalfwayRef.current = false;
                   preloadedTrackIdRef.current = null;
+                  offlineStorage.onTrackPlayed(nextItem);
                   if (audioRef.current) {
                     audioRef.current.volume = targetVol;
                   }
@@ -945,6 +949,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       extractColorsRef.current(nextItem.thumbnail);
       addToHistoryRef.current(nextItem);
+      offlineStorage.onTrackPlayed(nextItem);
       return;
     }
 
@@ -1020,8 +1025,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // 3. Start audio stream resolution and playback in the immediate tick
     const quality = getEffectiveAudioQuality();
-    const streamUrl = api.getStreamUrl(track.id, quality);
+    const cachedUrl = offlineStorage.getCachedBlobUrlSync(track.id);
+    const streamUrl = cachedUrl || api.getStreamUrl(track.id, quality);
     audioRef.current.src = streamUrl;
+
+    if (!cachedUrl) {
+      // Warm memory cache asynchronously for subsequent plays without resetting active playback
+      offlineStorage.getTrackAudioBlobUrl(track.id).catch(() => {});
+    }
 
     const isCrossfade = typeof window !== 'undefined' &&
       localStorage.getItem('musify_crossfade_enabled') === 'true' &&
@@ -1046,6 +1057,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsPlaying(true);
       setPlaybackError(null);
       consecutiveFailuresRef.current = 0;
+      offlineStorage.onTrackPlayed(track);
 
       // If play() resolves but currentTime hasn't moved after 3s, treat it as stalled too
       if (movementCheckTimerRef.current) clearTimeout(movementCheckTimerRef.current);
