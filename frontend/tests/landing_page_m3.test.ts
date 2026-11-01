@@ -86,7 +86,7 @@ describe('Milestone 3: Landing Page & Multi-Page Architecture Verification', () 
     assert.match(css, /html,\s*body\s*\{[^}]*min-height:\s*100vh/);
 
     // CTA primary styling
-    assert.match(css, /\.cta-primary\s*\{[^}]*background:\s*#E5303D/i);
+    assert.match(css, /\.cta-primary\s*\{[^}]*background:\s*(?:var\(--accent\)|#D92B38)/i);
     assert.match(css, /\.cta-primary\s*\{[^}]*border-radius:\s*14px/);
     assert.match(css, /\.cta-primary:active\s*\{[^}]*transform:\s*scale\(0\.97\)/);
 

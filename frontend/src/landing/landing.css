@@ -145,12 +145,12 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #0A0A0A;
+  background-color: var(--bg-base);
 }
 
-/* CTA Primary per musify-design-plan.md lines 308-339 */
+/* CTA Primary per Section 2 & 9 of design brief */
 .cta-primary {
-  background: #E5303D;
+  background: var(--accent);
   color: #FFFFFF;
   font-weight: 700;
   font-size: 16px;
@@ -165,28 +165,20 @@ html, body {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.3),
-    0 4px 16px -4px rgba(229, 48, 61, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.2s ease,
               background-color 0.15s ease;
 }
 
 .cta-primary:hover {
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.4),
-    0 8px 24px -4px rgba(229, 48, 61, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .cta-primary:active {
   transform: scale(0.97);
 }
 
-/* Secondary ghost CTA per musify-design-plan.md lines 340-351 */
+/* Secondary ghost CTA per Section 2 & 9 */
 .cta-secondary {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
@@ -212,7 +204,7 @@ html, body {
 .cta-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  color: var(--text-1);
   transform: translateY(-1px);
 }
 

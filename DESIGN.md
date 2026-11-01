@@ -175,3 +175,10 @@ Hero fits one screen at 1280x800: headline (Instrument Serif 56–72), one sente
 4. **Now Playing, desktop and mobile**, per section 6.
 5. **App shell and Home/Explore/Search**, per section 6.
 6. **Landing**, per section 6.
+
+---
+
+## 10. Not in this brief
+
+Mood-based atmospheres (hip-hop, sad, romantic and so on). They need glows, blurs or particles, which three of the five skills ban. If we want them later, it is a separate decision with a written waiver, and it starts from the artwork's own colour, not from genre guessing.
+

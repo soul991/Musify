@@ -34,15 +34,22 @@
   --color-positive: #4CC38A;
   --color-negative: #E5484D;
 
-  --radius-panel: 28px;
-  --radius-art: 24px;
-  --radius-card: 20px;
-  --radius-tile: 16px;
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-button: 8px;
+  --radius-tile: 8px;
+  --radius-card: 12px;
+  --radius-art: 16px;
+  --radius-panel: 20px;
 
   --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Depth */
+  --shadow-neutral: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --active-row-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
   /* Backward compatibility aliases for Phase 1 */
   --color-bg: #141415;
@@ -75,10 +82,13 @@
   --negative: #E5484D;
 
   /* Nested Radii */
-  --radius-panel: 28px;
-  --radius-art: 24px;
-  --radius-card: 20px;
-  --radius-tile: 16px;
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-button: 8px;
+  --radius-tile: 8px;
+  --radius-card: 12px;
+  --radius-art: 16px;
+  --radius-panel: 20px;
 
   /* Typography */
   --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -113,7 +123,7 @@
 
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--accent-color, #E5303D);
+  box-shadow: 0 0 0 2px var(--accent-color, #D92B38);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -137,7 +137,7 @@ describe('Tier 2: Typographic Scale Ladder & Letter Tracking Hierarchy', () => {
     assert.match(cssContent, /\.text-section\s*\{[^}]*letter-spacing:\s*-0\.01em/s);
   });
 
-  it('defines Body and Caption classes with neutral tracking and Inter body font', () => {
+  it('defines Body and Caption classes with neutral tracking and Instrument Sans body font', () => {
     assert.match(cssContent, /\.text-body\s*\{[^}]*font-size:\s*14px/s);
     assert.match(cssContent, /\.text-body\s*\{[^}]*font-weight:\s*500/s);
     assert.match(cssContent, /\.text-caption\s*\{[^}]*font-size:\s*12px/s);
