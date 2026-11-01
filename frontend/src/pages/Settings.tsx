@@ -20,7 +20,7 @@ import {
   Upload
 } from 'lucide-react';
 import { useTheme, CALM_ACCENT_PRESETS } from '../context/ThemeContext';
-import { usePlayer } from '../context/PlayerContext';
+import { usePlayer, isAudioVolumeWritable } from '../context/PlayerContext';
 import { useLibrary } from '../context/LibraryContext';
 import { useToast } from '../context/ToastContext';
 import { audioEqualizer } from '../services/audioEqualizer';
@@ -142,7 +142,13 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     audioEqualizer.setNormalization(next);
   };
 
+  const volumeWritable = isAudioVolumeWritable();
+
   const handleToggleCrossfade = () => {
+    if (!volumeWritable) {
+      showToast('Crossfade is not supported on iOS Safari (volume is read-only). Using gapless playback.', 'info');
+      return;
+    }
     const next = !crossfadeEnabled;
     setCrossfadeEnabled(next);
     localStorage.setItem('musify_crossfade_enabled', String(next));
@@ -444,9 +450,11 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               {
                 icon: <Sliders size={20} className="text-pink-400" />,
                 title: 'Crossfade Songs',
-                description: crossfadeEnabled
-                  ? `Enabled • ${crossfadeSeconds}s smooth transition between tracks`
-                  : 'Disabled • Gapless track playback',
+                description: !volumeWritable
+                  ? 'Not available on iOS Safari (volume is read-only) • Gapless playback active'
+                  : crossfadeEnabled
+                    ? `Enabled • ${crossfadeSeconds}s smooth transition between tracks`
+                    : 'Disabled • Gapless track playback',
                 trailingContent: (
                   <div
                     onClick={(e) => {
@@ -454,19 +462,19 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       handleToggleCrossfade();
                     }}
                     className={`w-12 h-6 rounded-full p-0.5 cursor-pointer transition-colors duration-200 ${
-                      crossfadeEnabled ? 'bg-[var(--accent-color)]' : 'bg-white/20'
+                      crossfadeEnabled && volumeWritable ? 'bg-[var(--accent-color)]' : 'bg-white/20'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                        crossfadeEnabled ? 'translate-x-6' : 'translate-x-0'
+                        crossfadeEnabled && volumeWritable ? 'translate-x-6' : 'translate-x-0'
                       }`}
                     />
                   </div>
                 ),
                 onClick: handleToggleCrossfade
               },
-              ...(crossfadeEnabled
+              ...(crossfadeEnabled && volumeWritable
                 ? [
                     {
                       title: 'Crossfade Duration',

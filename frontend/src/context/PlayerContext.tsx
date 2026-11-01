@@ -53,6 +53,23 @@ interface PlayerContextType {
   castAvailable: boolean;
 }
 
+export function isAudioVolumeWritable(): boolean {
+  if (typeof window === 'undefined') return false;
+  // iOS / iPadOS check (Safari, Chrome on iOS, etc. use WebKit where audio.volume is strictly read-only)
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) return false;
+
+  try {
+    const a = new Audio();
+    a.volume = 0.5;
+    return Math.abs(a.volume - 0.5) < 0.05;
+  } catch {
+    return false;
+  }
+}
+
 const getInitialPersistedPlayer = () => {
   if (typeof window === 'undefined') return null;
   try {
@@ -460,6 +477,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     secAudio.preload = 'auto';
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
+    audioEqualizer.attachElement(secAudio);
 
     const savedSink = typeof window !== 'undefined' ? localStorage.getItem('musify_audio_output_sink') : null;
     if (savedSink && typeof (audio as any).setSinkId === 'function') {
@@ -572,8 +590,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
       }
 
-      // Crossfade Transition
-      const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+      // Crossfade Transition: ONLY where audio.volume is writable (desktop and Android)
+      const isCrossfade = typeof window !== 'undefined' &&
+        localStorage.getItem('musify_crossfade_enabled') === 'true' &&
+        isAudioVolumeWritable();
       const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
       if (isCrossfade && crossfadeSecs > 0 && activeEl.duration && activeEl.duration > crossfadeSecs * 2) {
         const timeLeft = activeEl.duration - activeEl.currentTime;
@@ -585,10 +605,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isCrossfadingRef.current = true;
             const q = getEffectiveAudioQuality();
             const sec = secondaryAudioRef.current;
-            sec.src = api.getStreamUrl(nextItem.id, q);
+            const targetUrl = api.getStreamUrl(nextItem.id, q);
+
+            // If secondary element is not already preloaded with this track, load it
+            if (preloadedTrackIdRef.current !== nextItem.id || !sec.src) {
+              sec.src = targetUrl;
+              sec.load();
+            }
             sec.volume = 0;
             sec.currentTime = 0;
-            sec.load();
             sec.play().then(() => {
               if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current);
               const startTime = Date.now();
@@ -623,6 +648,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   extractColorsRef.current(nextItem.thumbnail);
                   addToHistoryRef.current(nextItem);
                   hasPrefetchedNextHalfwayRef.current = false;
+                  preloadedTrackIdRef.current = null;
                   if (audioRef.current) {
                     audioRef.current.volume = targetVol;
                   }
@@ -997,7 +1023,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const streamUrl = api.getStreamUrl(track.id, quality);
     audioRef.current.src = streamUrl;
 
-    const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+    const isCrossfade = typeof window !== 'undefined' &&
+      localStorage.getItem('musify_crossfade_enabled') === 'true' &&
+      isAudioVolumeWritable();
     const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
 
     if (isCrossfade) {
