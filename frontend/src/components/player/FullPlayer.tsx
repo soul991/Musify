@@ -32,6 +32,8 @@ import { AudioOutputModal } from './AudioOutputModal';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
 import { springPlayerExpand } from '../../utils/motion';
+import { ArtworkCrossfade } from './ArtworkCrossfade';
+import { useAccentColor } from '../../utils/accentColor';
 
 /**
  * Shared-element Player Expand & Collapse Physics (R3)
@@ -157,6 +159,7 @@ export const FullPlayer: React.FC = () => {
   const [showOutputModal, setShowOutputModal] = useState(false);
 
   const { colors, playerStyle, setPlayerStyle } = useTheme();
+  const { accentColor } = useAccentColor(currentTrack?.id, currentTrack?.thumbnail);
   const { isLiked, toggleLike } = useLibrary();
 
   const [activeSheet, setActiveSheet] = useState<'none' | 'lyrics' | 'queue'>('none');
@@ -319,7 +322,7 @@ export const FullPlayer: React.FC = () => {
                 }}
                 transition={{ duration: 20, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' }}
                 className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[500px] rounded-full blur-[120px] opacity-70"
-                style={{ backgroundColor: `${colors.primary}66` }}
+                style={{ backgroundColor: `${accentColor || colors.primary}66` }}
               />
               <motion.div
                 animate={{
@@ -460,18 +463,17 @@ export const FullPlayer: React.FC = () => {
                     />
 
                     {/* Center Album Artwork Label */}
-                    <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border-2 border-white/30 shadow-inner flex items-center justify-center">
-                      <img
-                        src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
-                        alt={currentTrack.title}
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                        }}
-                        className="w-full h-full object-cover"
+                    <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border-2 border-white/30 shadow-inner flex items-center justify-center aspect-square">
+                      <ArtworkCrossfade
+                        trackId={currentTrack.id}
+                        artworkUrl={currentTrack.thumbnail}
+                        title={currentTrack.title}
+                        artist={currentTrack.artists?.map((a) => a.name).join(', ')}
+                        reducedMotion={shouldReduceMotion ?? false}
+                        className="w-full h-full aspect-square rounded-full"
                       />
                       {/* Center Spindle Hole */}
-                      <div className="absolute w-4 h-4 rounded-full bg-[#0B0C10] border border-white/60 shadow-lg" />
+                      <div className="absolute w-4 h-4 rounded-full bg-[#0B0C10] border border-white/60 shadow-lg pointer-events-none" />
                     </div>
                   </motion.div>
 
@@ -512,28 +514,23 @@ export const FullPlayer: React.FC = () => {
                   onClick={() => setIsRotatingThumbnail(true)}
                   onMouseMove={handleArtMouseMove}
                   onMouseLeave={handleArtMouseLeave}
-                  className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] cursor-pointer drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] rounded-[28px] overflow-hidden border border-white/20 group"
+                  className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] aspect-square cursor-pointer drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] rounded-[28px] overflow-hidden border border-white/20 group"
                   style={{
                     transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                     transition: 'transform 0.15s ease-out',
-                    boxShadow: `0 32px 80px -12px ${colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
+                    boxShadow: `0 32px 80px -12px ${accentColor || colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
                   }}
                 >
-                  <img
-                    src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
-                    alt={currentTrack.title}
-                    width={330}
-                    height={330}
-                    loading="eager"
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                    }}
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                  <ArtworkCrossfade
+                    trackId={currentTrack.id}
+                    artworkUrl={currentTrack.thumbnail}
+                    title={currentTrack.title}
+                    artist={currentTrack.artists?.map((a) => a.name).join(', ')}
+                    reducedMotion={shouldReduceMotion ?? false}
+                    className="w-full h-full aspect-square rounded-[28px]"
                   />
                   {/* Subtle Vinyl Mode Hint overlay */}
-                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-bold text-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shadow-lg">
+                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-bold text-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shadow-lg pointer-events-none">
                     <Disc size={12} />
                     <span>Turntable</span>
                   </div>
