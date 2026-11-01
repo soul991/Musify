@@ -196,7 +196,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             return (
               <div key={freq} className="flex flex-col items-center h-full justify-between">
                 {/* dB display */}
-                <span className="text-[11px] font-bold text-white/80">
+                <span className="text-xs font-bold text-white/80">
                   {gain > 0 ? `+${gain.toFixed(1)}` : gain.toFixed(1)}
                 </span>
 

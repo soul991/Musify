@@ -39,7 +39,7 @@ export const AutoPlaylistButton: React.FC<AutoPlaylistButtonProps> = ({
           {title}
         </span>
         {subtitle && (
-          <span className="text-[11px] font-medium text-white/50 mt-0.5 truncate">
+          <span className="text-xs font-medium text-white/50 mt-0.5 truncate">
             {subtitle}
           </span>
         )}

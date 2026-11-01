@@ -168,7 +168,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             <span className="text-xs font-black tracking-normal text-white/90">
               Live Lyrics
             </span>
-            <p className="text-[10px] text-white/40 font-medium">
+            <p className="text-xs text-white/40 font-medium">
               {lyricsData?.synced ? 'Synced LRCLIB' : 'Unsynced / Instrumental'}
             </p>
           </div>
@@ -333,13 +333,13 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-white truncate">{currentTrack.title}</p>
-                <p className="text-[11px] text-white/50 truncate">
+                <p className="text-xs text-white/50 truncate">
                   {currentTrack.artists?.map((a) => a.name).join(', ') || 'Artist'}
                 </p>
               </div>
             </div>
 
-            <span className="text-[11px] font-semibold text-white/50 shrink-0">
+            <span className="text-xs font-semibold text-white/50 shrink-0">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>

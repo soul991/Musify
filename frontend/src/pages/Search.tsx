@@ -370,7 +370,7 @@ export const Search: React.FC<SearchProps> = ({
             style={{ transformOrigin: 'top center' }}
             className="mb-6 rounded-3xl bg-white/[0.07] border border-white/12 p-2 shadow-2xl backdrop-blur-2xl flex flex-col gap-0.5"
           >
-            <div className="px-3.5 py-1.5 text-[11px] font-bold tracking-normal text-white/40">
+            <div className="px-3.5 py-1.5 text-xs font-bold tracking-normal text-white/40">
               Suggestions
             </div>
             {suggestions.map((sug, i) => (
@@ -598,7 +598,7 @@ export const Search: React.FC<SearchProps> = ({
                       layoutId={`search-art-${results.artists[0].id}`}
                     />
                     <div className="min-w-0">
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold text-white/60 tracking-normal">
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-extrabold text-white/60 tracking-normal">
                         Artist
                       </span>
                       <h3 className="text-lg font-black text-white truncate mt-1 font-display">
@@ -636,7 +636,7 @@ export const Search: React.FC<SearchProps> = ({
                       layoutId={`search-art-${results.songs[0].id}`}
                     />
                     <div className="min-w-0">
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold text-white/60 tracking-normal">
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs font-extrabold text-white/60 tracking-normal">
                         Song
                       </span>
                       <h3 className="text-lg font-black text-white truncate mt-1 font-display">

@@ -353,7 +353,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {primaryArtist && primaryArtist.id && (
               <button
                 onClick={() => onSelectArtist?.(primaryArtist.id!)}
-                className="shrink-0 text-[11px] font-bold text-white/80 hover:text-white border border-white/40 hover:border-white/70 rounded-full px-2.5 py-0.5 backdrop-blur-md transition-colors active:scale-95"
+                className="shrink-0 text-xs font-bold text-white/80 hover:text-white border border-white/40 hover:border-white/70 rounded-full px-2.5 py-0.5 backdrop-blur-md transition-colors active:scale-95"
               >
                 View artist
               </button>

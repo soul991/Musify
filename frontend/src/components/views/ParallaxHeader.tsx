@@ -112,7 +112,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
         </motion.div>
 
         {/* Type pill label */}
-        <span className="text-[11px] font-extrabold tracking-normal text-white/50 mb-1.5 select-none">
+        <span className="text-xs font-extrabold tracking-normal text-white/50 mb-1.5 select-none">
           {type}
         </span>
 

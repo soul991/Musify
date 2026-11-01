@@ -43,7 +43,7 @@ export function ChipsRow<T extends string | null>({
             <span>{chip.label}</span>
             {chip.count !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                className={`text-xs px-1.5 py-0.2 rounded-full font-bold ${
                   isActive ? 'bg-black/15 text-black' : 'bg-white/10 text-white/60'
                 }`}
               >

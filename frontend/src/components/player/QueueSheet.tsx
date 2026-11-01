@@ -69,7 +69,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           </div>
           <div>
             <h3 className="font-bold text-sm ">Up Next Queue</h3>
-            <p className="text-[11px] text-white/50">
+            <p className="text-xs text-white/50">
               {queue.length} songs • {formatTime(totalDuration)}
             </p>
           </div>
@@ -95,7 +95,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
             <button
               onClick={clearQueue}
               aria-label="Clear queue"
-              className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 border border-white/10 transition-colors active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/70 hover:text-white flex items-center gap-1 border border-white/10 transition-colors active:scale-95"
             >
               <Trash2 size={12} />
               <span>Clear</span>
@@ -278,7 +278,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           <Sparkles size={16} className={autoplaySimilar ? 'text-[var(--accent)]' : 'text-white/40'} />
           <div>
             <p className="text-xs font-bold text-white">Autoplay similar tracks</p>
-            <p className="text-[10px] text-white/50">Continuously adds music to your queue</p>
+            <p className="text-xs text-white/50">Continuously adds music to your queue</p>
           </div>
         </div>
         <button

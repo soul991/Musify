@@ -175,7 +175,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
                 </div>
                 <div>
                   <h3 className="text-lg font-black tracking-tight leading-none">Audio Output</h3>
-                  <span className="text-[11px] font-semibold text-white/50 block mt-1">
+                  <span className="text-xs font-semibold text-white/50 block mt-1">
                     AirPlay, Speakers & Bluetooth
                   </span>
                 </div>
@@ -203,12 +203,12 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-white truncate">{currentTrack.title}</p>
-                  <p className="text-[11px] text-white/50 truncate">
+                  <p className="text-xs text-white/50 truncate">
                     {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                   </p>
                 </div>
                 {/* Audio Quality Badge */}
-                <div className="px-2.5 py-1 rounded-full bg-[var(--accent-ink)]/15 border border-[var(--accent-ink)]/30 text-[10px] font-black tracking-normal text-[var(--accent-ink)] shrink-0">
+                <div className="px-2.5 py-1 rounded-full bg-[var(--accent-ink)]/15 border border-[var(--accent-ink)]/30 text-xs font-black tracking-normal text-[var(--accent-ink)] shrink-0">
                   {audioQuality === 'lossless' ? 'Lossless 24-bit' : audioQuality === 'high' ? '256k AAC' : 'Standard'}
                 </div>
               </div>
@@ -217,13 +217,13 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
             {/* Output Device List */}
             <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar py-1">
               <div className="flex items-center justify-between px-1 mb-1">
-                <span className="text-[11px] font-bold tracking-normal text-white/40">
+                <span className="text-xs font-bold tracking-normal text-white/40">
                   Select Output Device
                 </span>
                 {!hasPermission && (
                   <button
                     onClick={requestDeviceLabels}
-                    className="text-[11px] font-semibold text-[var(--accent-ink)] hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-[var(--accent-ink)] hover:underline flex items-center gap-1"
                   >
                     <RefreshCw size={11} />
                     <span>Detect Names</span>
@@ -258,7 +258,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
                         <p className={`text-sm truncate ${isSelected ? 'font-bold text-white' : 'font-medium'}`}>
                           {device.label}
                         </p>
-                        <p className="text-[11px] text-white/40 truncate">
+                        <p className="text-xs text-white/40 truncate">
                           {isSelected ? 'Active Audio Device' : 'Tap to route audio'}
                         </p>
                       </div>

@@ -390,7 +390,7 @@ const MusifyMain: React.FC = () => {
           </div>
           <div className="text-xs">
             <p className="font-bold text-white">Install Musify App</p>
-            <p className="text-white/50 text-[10px]">Faster loading & offline playback</p>
+            <p className="text-white/50 text-xs">Faster loading & offline playback</p>
           </div>
           <div className="flex items-center gap-1.5 ml-2">
             <button

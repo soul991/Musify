@@ -193,7 +193,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               {track.title}
             </p>
             {track.explicit && (
-              <span className="px-1 py-0.2 rounded bg-white/20 text-white/70 text-[9px] font-black tracking-normal shrink-0">
+              <span className="px-1 py-0.2 rounded bg-white/20 text-white/70 text-xs font-semibold tracking-normal shrink-0">
                 E
               </span>
             )}
@@ -306,13 +306,13 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   <Plus size={15} />
                   <span>Add to Playlist</span>
                 </div>
-                <span className="text-[10px] text-white/40">›</span>
+                <span className="text-xs text-white/40">›</span>
               </button>
 
               {playlistSubmenuOpen && (
                 <div className="mt-1 p-1 rounded-xl bg-white/10 flex flex-col gap-0.5 max-h-36 overflow-y-auto no-scrollbar">
                   {playlists.length === 0 ? (
-                    <span className="px-2 py-1 text-[11px] text-white/40 italic">
+                    <span className="px-2 py-1 text-xs text-white/40 italic">
                       No playlists created
                     </span>
                   ) : (
@@ -324,7 +324,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                           setMenuOpen(false);
                           setPlaylistSubmenuOpen(false);
                         }}
-                        className="px-2.5 py-1.5 rounded-lg text-left text-[11px] font-semibold text-white/90 hover:bg-white/15 truncate"
+                        className="px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold text-white/90 hover:bg-white/15 truncate"
                       >
                         {pl.name}
                       </button>

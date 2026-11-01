@@ -28,7 +28,7 @@ export const Material3SettingsGroup: React.FC<Material3SettingsGroupProps> = ({
   return (
     <div className={`flex flex-col w-full ${className}`}>
       {title && (
-        <span className="text-[11px] font-extrabold tracking-normal text-white/50 px-3.5 pb-2 pt-3 select-none">
+        <span className="text-xs font-extrabold tracking-normal text-white/50 px-3.5 pb-2 pt-3 select-none">
           {title}
         </span>
       )}
@@ -80,7 +80,7 @@ export const Material3SettingsGroup: React.FC<Material3SettingsGroupProps> = ({
                       {item.title}
                     </span>
                     {item.badge && (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--accent-color)] text-white text-[10px] font-black tracking-normal shadow-sm">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--accent-color)] text-white text-xs font-black tracking-normal shadow-sm">
                         {item.badge}
                       </span>
                     )}

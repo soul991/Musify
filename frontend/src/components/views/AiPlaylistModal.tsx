@@ -160,7 +160,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
             <form onSubmit={handleGenerate} className="flex flex-col gap-4">
               {/* Prompt Input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold tracking-normal text-white/50">
+                <label className="text-xs font-bold tracking-normal text-white/50">
                   Custom Prompt or Mood
                 </label>
                 <textarea
@@ -175,7 +175,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
 
               {/* Atmospheric Meteorological Presets */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-bold tracking-normal text-white/50">
+                <span className="text-xs font-bold tracking-normal text-white/50">
                   Quick Atmospheric Presets
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -195,7 +195,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
 
               {/* Number of Songs */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-bold tracking-normal text-white/50">
+                <span className="text-xs font-bold tracking-normal text-white/50">
                   Target Songs: {songCount}
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -274,7 +274,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-bold truncate">{track.title}</p>
-                      <p className="text-[10px] text-white/50 truncate">
+                      <p className="text-xs text-white/50 truncate">
                         {track.artists?.map((a) => a.name).join(', ')}
                       </p>
                     </div>

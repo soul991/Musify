@@ -322,7 +322,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 flex-wrap">
               <span>Listen Together</span>
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Cross-device sync
               </span>
             </h1>
@@ -367,7 +367,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
           ) : (
             <div>
               <p className="text-xs font-bold text-white">{userName}</p>
-              <p className="text-[10px] text-white/40">Your display nickname</p>
+              <p className="text-xs text-white/40">Your display nickname</p>
             </div>
           )}
         </div>
@@ -479,7 +479,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
                 className="w-16 h-16 rounded-2xl object-cover shadow-md"
               />
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-bold text-white/50 tracking-normal">
+                <span className="text-xs font-bold text-white/50 tracking-normal">
                   NOW PLAYING IN ROOM
                 </span>
                 <p className="text-base font-extrabold text-white truncate leading-tight mt-0.5">
@@ -519,13 +519,13 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
                     <div>
                       <span className="text-sm font-semibold text-white/90">{participant.name}</span>
                       {participant.isHost && (
-                        <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           Host
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     Online
                   </span>

@@ -176,7 +176,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const artistName = currentTrack.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
       document.title = (isPlaying ? '▶ ' : '⏸ ') + currentTrack.title + ' • ' + artistName + ' | Musify';
     } else {
-      document.title = 'Musify — Liquid Glass Music';
+      document.title = 'Musify';
     }
   }, [currentTrack, isPlaying]);
 
@@ -1249,12 +1249,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }}
     >
       {playbackError && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] bg-[#141416]/95 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 transition-all border border-[#E5303D]/40 pointer-events-auto">
-          <span className="w-2 h-2 rounded-full bg-[#E5303D] animate-ping shrink-0" />
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] bg-[#141416]/95 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 transition-opacity border border-[var(--accent)]/40 pointer-events-auto">
+          <span className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0" />
           <span className="max-w-[240px] sm:max-w-md truncate">{playbackError}</span>
           <button
             onClick={retryPlayback}
-            className="px-2.5 py-1 rounded-lg bg-[#E5303D] hover:bg-[#d02834] text-white font-bold transition-colors cursor-pointer shrink-0"
+            className="px-2.5 py-1 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold transition-colors cursor-pointer shrink-0"
           >
             Retry
           </button>

@@ -114,7 +114,7 @@ export function SortHeader<T extends string>({
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-12 z-30 min-w-[190px] rounded-2xl bg-[#1C1D24]/95 backdrop-blur-xl border border-white/15 shadow-2xl p-1.5 flex flex-col gap-0.5"
           >
-            <div className="px-3 py-1.5 text-[10px] font-black tracking-normal text-white/40">
+            <div className="px-3 py-1.5 text-xs font-black tracking-normal text-white/40">
               Sort by
             </div>
             {sortOptions.map((opt) => {

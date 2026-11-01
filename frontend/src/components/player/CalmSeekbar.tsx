@@ -103,7 +103,7 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
 
         {/* 12px Handle that carries the time while dragging per section 1 & 6 */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-100 flex items-center justify-center ${
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-transform duration-100 flex items-center justify-center ${
             isDragging
               ? 'px-2 py-0.5 rounded-full bg-[var(--accent)] text-white text-xs font-sans tabular-nums shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-20'
               : `w-3 h-3 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] ${

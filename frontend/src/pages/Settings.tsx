@@ -675,7 +675,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       >
                         {isSelected && <Check size={18} className="text-white" strokeWidth={3} />}
                       </div>
-                      <span className="text-[10px] font-semibold text-white/70 text-center truncate w-full">
+                      <span className="text-xs font-semibold text-white/70 text-center truncate w-full">
                         {color.name.split(' ')[0]}
                       </span>
                     </button>

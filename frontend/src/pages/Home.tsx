@@ -697,7 +697,7 @@ export const Home: React.FC<HomeProps> = ({
                     <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent-ink)]' : 'text-white'}`}>
                       {track.title}
                     </p>
-                    <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
+                    <p className="text-xs text-white/60 truncate font-medium mt-0.5">
                       {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                     </p>
                   </motion.div>
@@ -752,7 +752,7 @@ export const Home: React.FC<HomeProps> = ({
                   <p className="text-xs font-bold text-white group-hover:text-[var(--accent-ink)] truncate w-full transition-colors">
                     {artist.name}
                   </p>
-                  <span className="text-[10px] text-white/50 font-medium">Artist</span>
+                  <span className="text-xs text-white/50 font-medium">Artist</span>
                 </motion.div>
               ))}
             </div>
@@ -876,7 +876,7 @@ export const Home: React.FC<HomeProps> = ({
                           <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent-ink)]' : 'text-white'}`}>
                             {track.title}
                           </p>
-                          <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
+                          <p className="text-xs text-white/60 truncate font-medium mt-0.5">
                             {track.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                           </p>
                         </motion.div>

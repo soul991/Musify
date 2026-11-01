@@ -229,7 +229,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                   <ArrowLeft size={18} />
                 </button>
                 <div>
-                  <span className="text-[10px] font-bold text-white/70 tracking-normal block">
+                  <span className="text-xs font-bold text-white/70 tracking-normal block">
                     Active mood
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black font-display text-white">
@@ -438,7 +438,7 @@ export const Explore: React.FC<ExploreProps> = () => {
                   <p className="text-xs font-bold text-white truncate leading-tight mt-1">
                     {release.title}
                   </p>
-                  <p className="text-[11px] text-white/60 font-medium truncate">
+                  <p className="text-xs text-white/60 font-medium truncate">
                     {release.artists?.map((a) => a.name).join(', ')}
                   </p>
                 </motion.div>

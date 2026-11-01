@@ -175,14 +175,14 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                 <button
                   type="button"
                   onClick={handlePaste}
-                  className="absolute right-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-white/80 hover:text-white transition-colors tracking-normal"
+                  className="absolute right-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white/80 hover:text-white transition-colors tracking-normal"
                 >
                   Paste
                 </button>
               </div>
 
               {/* Supported Pills */}
-              <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-white/50">
+              <div className="flex items-center gap-2 flex-wrap text-xs font-semibold text-white/50">
                 <span>Supports:</span>
                 <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
                   Spotify Playlists
@@ -255,7 +255,7 @@ export const SpotifyImportModal: React.FC<SpotifyImportModalProps> = ({
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-bold truncate">{track.title}</p>
-                      <p className="text-[10px] text-white/50 truncate">
+                      <p className="text-xs text-white/50 truncate">
                         {track.artists?.map((a) => a.name).join(', ')}
                       </p>
                     </div>
