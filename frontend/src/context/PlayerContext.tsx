@@ -264,6 +264,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const stalledTimerRef = useRef<any>(null);
   const movementCheckTimerRef = useRef<any>(null);
   const isPlayingRef = useRef<boolean>(false);
+  const lastPositionStateUpdateRef = useRef<number>(0);
 
   const mapAudioErrorCode = (code?: number): string => {
     switch (code) {
@@ -665,12 +666,19 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // Update MediaSession position state
-      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && activeEl.duration) {
+      // Update MediaSession position state (throttled to avoid lock-screen jitter)
+      const now = performance.now();
+      if (
+        'mediaSession' in navigator &&
+        navigator.mediaSession.setPositionState &&
+        activeEl.duration &&
+        now - lastPositionStateUpdateRef.current >= 1500
+      ) {
+        lastPositionStateUpdateRef.current = now;
         try {
           navigator.mediaSession.setPositionState({
             duration: activeEl.duration,
-            playbackRate: activeEl.playbackRate,
+            playbackRate: activeEl.playbackRate || 1,
             position: activeEl.currentTime
           });
         } catch {}
@@ -823,7 +831,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setRemainingSleepSeconds(minutes ? minutes * 60 : null);
   };
 
-  // Setup Web Media Session API (iOS lock-screen & Dynamic Island)
+  // Setup Web Media Session API (iOS lock-screen, Android & Bluetooth controls)
   useEffect(() => {
     if (!('mediaSession' in navigator) || !currentTrack) return;
 
@@ -844,45 +852,93 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ]
     });
 
-    navigator.mediaSession.setActionHandler('play', () => {
+    const setAction = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch {}
+    };
+
+    setAction('play', () => {
       audioRef.current?.play();
       setIsPlaying(true);
     });
 
-    navigator.mediaSession.setActionHandler('pause', () => {
+    setAction('pause', () => {
       audioRef.current?.pause();
       setIsPlaying(false);
     });
 
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
+    setAction('stop', () => {
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    });
+
+    setAction('previoustrack', () => {
       prevTrackRef.current();
     });
 
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
+    setAction('nexttrack', () => {
       nextTrackRef.current();
     });
 
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
+    setAction('seekto', (details) => {
       if (details.seekTime !== undefined && audioRef.current) {
         audioRef.current.currentTime = details.seekTime;
         setCurrentTime(details.seekTime);
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: details.seekTime
+            });
+          } catch {}
+        }
       }
     });
 
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+    setAction('seekbackward', (details) => {
       if (audioRef.current) {
         const skip = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - skip);
+        const newTime = Math.max(0, audioRef.current.currentTime - skip);
+        audioRef.current.currentTime = newTime;
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: newTime
+            });
+          } catch {}
+        }
       }
     });
 
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+    setAction('seekforward', (details) => {
       if (audioRef.current) {
         const skip = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + skip);
+        const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + skip);
+        audioRef.current.currentTime = newTime;
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: newTime
+            });
+          } catch {}
+        }
       }
     });
   }, [currentTrack]);
+
+  // Sync MediaSession playbackState (lock-screen / Bluetooth controls)
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [isPlaying]);
 
   const handleTrackEnd = () => {
     if (repeatMode === 'one' && audioRef.current) {
@@ -1156,6 +1212,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!audioRef.current) return;
     audioRef.current.currentTime = seconds;
     setCurrentTime(seconds);
+    if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audioRef.current.duration) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: audioRef.current.duration,
+          playbackRate: audioRef.current.playbackRate || 1,
+          position: seconds
+        });
+      } catch {}
+    }
   };
 
   const setVolume = (val: number) => {
