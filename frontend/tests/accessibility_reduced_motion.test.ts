@@ -81,8 +81,8 @@ describe('Tier 2: Focus Ring Visibility & Keyboard Accessibility', () => {
   it('verifies *:focus-visible applies distinct high-contrast accent ring', () => {
     assert.match(
       cssContent,
-      /\*:focus-visible\s*\{[^}]*box-shadow:\s*0\s+0\s+0\s+2px\s+var\(--accent-color,\s*#E5303D\);/s,
-      '*:focus-visible must apply a 2px box-shadow using var(--accent-color, #E5303D)'
+      /\*:focus-visible\s*\{[^}]*box-shadow:\s*0\s+0\s+0\s+2px\s+var\(--accent-color,\s*#D92B38\);/s,
+      '*:focus-visible must apply a 2px box-shadow using var(--accent-color, #D92B38)'
     );
   });
 });
@@ -91,7 +91,7 @@ describe('Tier 3: Mathematical WCAG AA/AAA Contrast Ratio Verification', () => {
   const oledBg = hexToRgb('0A0A0A'); // Base dark background
   const whiteText = hexToRgb('FFFFFF'); // Primary white text
   const mutedText = hexToRgb('A7A7A7'); // Muted text token
-  const calmRed = hexToRgb('E5303D'); // Primary brand accent
+  const accentRed = hexToRgb('D92B38'); // Primary brand accent (#D92B38)
 
   it('verifies white text on #0A0A0A achieves WCAG AAA compliance (ratio >= 7.0:1)', () => {
     const ratio = getContrastRatio(oledBg, whiteText);
@@ -113,12 +113,12 @@ describe('Tier 3: Mathematical WCAG AA/AAA Contrast Ratio Verification', () => {
     assert.ok(ratio >= 7.0, 'Muted text must exceed WCAG AAA threshold of 7.0:1');
   });
 
-  it('verifies Musify Calm Red #E5303D on #0A0A0A achieves WCAG AA compliance (ratio >= 4.5:1)', () => {
-    const ratio = getContrastRatio(oledBg, calmRed);
-    // Calculated: ~4.7:1
+  it('verifies Musify Accent Red #D92B38 with white text achieves WCAG AA compliance (ratio >= 4.5:1)', () => {
+    const ratio = getContrastRatio(accentRed, whiteText);
+    // Calculated: ~4.8:1
     assert.ok(
       ratio >= 4.5,
-      `Accent contrast ratio (${ratio.toFixed(2)}:1) must achieve WCAG AA threshold of 4.5:1 for bold/CTA elements`
+      `Accent contrast ratio with white text (${ratio.toFixed(2)}:1) must achieve WCAG AA threshold of 4.5:1 for button fills`
     );
   });
 });

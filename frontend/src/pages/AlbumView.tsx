@@ -126,7 +126,7 @@ export const AlbumView: React.FC<AlbumViewProps> = ({ albumId, onBack, onSelectA
 
       {/* Track Listing Container */}
       <div className="px-4 sm:px-8 max-w-4xl mx-auto flex flex-col gap-1.5">
-        <div className="flex items-center justify-between px-3 py-2 text-xs font-extrabold uppercase tracking-widest text-white/40">
+        <div className="flex items-center justify-between px-3 py-2 text-xs font-extrabold tracking-normal text-white/40">
           <span># Track</span>
           <span>Duration</span>
         </div>

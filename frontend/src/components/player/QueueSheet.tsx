@@ -68,7 +68,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
             <Radio size={16} className="text-[var(--accent-color)]" />
           </div>
           <div>
-            <h3 className="font-bold text-sm tracking-wide">Up Next Queue</h3>
+            <h3 className="font-bold text-sm ">Up Next Queue</h3>
             <p className="text-[11px] text-white/50">
               {queue.length} songs • {formatTime(totalDuration)}
             </p>
@@ -81,7 +81,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
             onClick={() => setIsLocked(!isLocked)}
             title={isLocked ? 'Unlock queue editing' : 'Lock queue'}
             aria-label={isLocked ? 'Unlock queue editing' : 'Lock queue'}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors border ${
               isLocked
                 ? 'bg-white/20 border-white/30 text-white'
                 : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
@@ -95,7 +95,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
             <button
               onClick={clearQueue}
               aria-label="Clear queue"
-              className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 border border-white/10 transition-all active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-white/70 hover:text-white flex items-center gap-1 border border-white/10 transition-colors active:scale-95"
             >
               <Trash2 size={12} />
               <span>Clear</span>
@@ -105,7 +105,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           <button
             onClick={onClose}
             aria-label="Close queue"
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/10"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/10"
           >
             <X size={16} />
           </button>
@@ -116,7 +116,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
       <div className="flex items-center gap-1 px-4 py-2.5 border-b border-white/5 shrink-0">
         <button
           onClick={toggleShuffle}
-          className={`flex-1 h-10 rounded-l-xl flex items-center justify-center gap-2 text-xs font-semibold border transition-all ${
+          className={`flex-1 h-10 rounded-l-xl flex items-center justify-center gap-2 text-xs font-semibold border transition-colors ${
             isShuffled
               ? 'bg-white/20 border-white/30 text-white'
               : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
@@ -128,7 +128,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
 
         <button
           onClick={toggleRepeat}
-          className={`flex-1 h-10 flex items-center justify-center gap-2 text-xs font-semibold border transition-all ${
+          className={`flex-1 h-10 flex items-center justify-center gap-2 text-xs font-semibold border transition-colors ${
             repeatMode !== 'off'
               ? 'bg-white/20 border-white/30 text-white'
               : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
@@ -142,15 +142,15 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
           onClick={() => setAutoplaySimilar(!autoplaySimilar)}
           title="Autoplay similar songs when queue ends"
           aria-label="Autoplay similar songs when queue ends"
-          className={`flex-1 h-10 rounded-r-xl flex items-center justify-center gap-2 text-xs font-semibold border transition-all ${
+          className={`flex-1 h-10 rounded-r-xl flex items-center justify-center gap-2 text-xs font-semibold border transition-colors ${
             autoplaySimilar
               ? 'bg-white/20 border-white/30 text-white'
               : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
           }`}
         >
-          <Sparkles size={14} className={autoplaySimilar ? 'text-[#E5303D]' : 'text-white/40'} />
+          <Sparkles size={14} className={autoplaySimilar ? 'text-[var(--accent)]' : 'text-white/40'} />
           <span>Autoplay</span>
-          <span className={`w-1.5 h-1.5 rounded-full ${autoplaySimilar ? 'bg-[#E5303D]' : 'bg-white/20'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${autoplaySimilar ? 'bg-[var(--accent)]' : 'bg-white/20'}`} />
         </button>
       </div>
 
@@ -197,7 +197,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
                     }
                   }}
                   onClick={() => playTrack(track, queue)}
-                  className={`flex items-center justify-between p-2.5 cursor-pointer transition-all border ${shapeClass} ${
+                  className={`flex items-center justify-between p-2.5 cursor-pointer transition-colors border ${shapeClass} ${
                     isCurrent
                       ? 'bg-white/15 border-white/30 shadow-md'
                       : 'bg-white/5 border-white/5 hover:bg-white/10'
@@ -275,7 +275,7 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
       {/* Autoplay Similar Songs Indicator & Toggle */}
       <div className="mt-3 mb-6 p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between mx-4 shrink-0 select-none">
         <div className="flex items-center gap-2.5">
-          <Sparkles size={16} className={autoplaySimilar ? 'text-[#E5303D]' : 'text-white/40'} />
+          <Sparkles size={16} className={autoplaySimilar ? 'text-[var(--accent)]' : 'text-white/40'} />
           <div>
             <p className="text-xs font-bold text-white">Autoplay similar tracks</p>
             <p className="text-[10px] text-white/50">Continuously adds music to your queue</p>
@@ -283,9 +283,9 @@ export const QueueSheet: React.FC<QueueSheetProps> = ({ onClose }) => {
         </div>
         <button
           onClick={() => setAutoplaySimilar(!autoplaySimilar)}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border cursor-pointer ${
             autoplaySimilar
-              ? 'bg-[#E5303D] border-[#E5303D] text-white shadow-md shadow-[#E5303D]/25'
+              ? 'bg-[var(--accent)] border-[var(--accent)] text-white '
               : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
           }`}
         >

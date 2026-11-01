@@ -165,7 +165,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', damping: 20, stiffness: 450 }}
         onClick={onClick}
-        className={`relative flex items-center justify-center cursor-pointer select-none transition-all ${className}`}
+        className={`relative flex items-center justify-center cursor-pointer select-none transition-colors ${className}`}
         style={{
           width: size,
           height: size,
@@ -224,7 +224,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
       {/* Dynamic Scalloped Wavy Vector Path */}
       <svg
         viewBox={`0 0 ${size} ${size}`}
-        className="w-full h-full drop-shadow-md"
+        className="w-full h-full "
         style={{ overflow: 'visible' }}
       >
         <path d={pathData} fill={color} />

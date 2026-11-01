@@ -22,7 +22,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
       <div
         key={`${track.id}-${idx}`}
         onClick={() => playTrack(track, history)}
-        className={`flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer select-none transition-all border ${
+        className={`flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer select-none transition-colors border ${
           isCurrent
             ? 'bg-white/[0.14] border-white/30 shadow-md'
             : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5'
@@ -58,7 +58,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
         <div className="flex-1 min-w-0 pr-2">
           <p
             className={`text-sm font-bold truncate ${
-              isCurrent ? 'text-[#E5303D]' : 'text-white'
+              isCurrent ? 'text-[var(--accent)]' : 'text-white'
             }`}
           >
             {track.title}
@@ -91,12 +91,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
           <button
             onClick={onBack}
             aria-label="Go back"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
+            <span className="text-xs font-bold text-white/50 tracking-normal">
               RECENTLY PLAYED
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
@@ -110,14 +110,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onBack }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => playTrack(history[0], history)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-black font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-md"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-black font-bold text-xs active:scale-95 transition-colors shadow-md"
             >
               <Play size={13} className="fill-current" /> Play all
             </button>
             <button
               onClick={clearHistory}
               aria-label="Clear History"
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10 transition-all"
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10 transition-colors"
               title="Clear History"
             >
               <Trash2 size={16} />

@@ -137,7 +137,7 @@ export const SongDetailsModal: React.FC<SongDetailsModalProps> = ({
                   onStartRadio(track);
                   onClose();
                 }}
-                className="flex-1 py-3 rounded-2xl bg-[var(--accent-color)] hover:brightness-110 active:scale-98 font-bold text-xs text-white uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
+                className="flex-1 py-3 rounded-2xl bg-[var(--accent-color)] hover:brightness-110 active:scale-98 font-bold text-xs text-white tracking-normal flex items-center justify-center gap-2 transition-colors shadow-md"
               >
                 <Radio size={16} />
                 <span>Start Radio</span>
@@ -146,7 +146,7 @@ export const SongDetailsModal: React.FC<SongDetailsModalProps> = ({
 
             <button
               onClick={handleShare}
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-98 font-bold text-xs text-white uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-98 font-bold text-xs text-white tracking-normal flex items-center justify-center gap-1.5 transition-colors"
             >
               <Share2 size={16} />
               <span>Share</span>
@@ -155,7 +155,7 @@ export const SongDetailsModal: React.FC<SongDetailsModalProps> = ({
             <button
               onClick={handleCopyLink}
               title="Copy Audio Stream URL"
-              className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-98 flex items-center justify-center text-white/80 hover:text-white transition-all"
+              className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-98 flex items-center justify-center text-white/80 hover:text-white transition-colors"
             >
               {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
             </button>

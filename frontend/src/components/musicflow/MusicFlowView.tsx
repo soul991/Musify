@@ -14,7 +14,7 @@ import {
   Check,
   Radio,
   ArrowLeft
-} from 'lucide-react';
+, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
@@ -89,7 +89,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
         {onBackToHome && (
           <button
             onClick={onBackToHome}
-            className="absolute top-4 left-4 z-30 pt-safe w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10 flex items-center justify-center shadow-lg"
+            className="absolute top-4 left-4 z-30 pt-safe w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10 flex items-center justify-center shadow-lg"
             title="Back to Home"
           >
             <ArrowLeft size={20} />
@@ -127,7 +127,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
                 // ignore
               }
             }}
-            className="w-full py-3.5 px-6 rounded-full text-white font-extrabold text-sm tracking-wide shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-6 rounded-full text-white font-extrabold text-sm shadow-xl active:scale-95 transition-colors flex items-center justify-center gap-2"
             style={{ backgroundColor: colors.primary }}
           >
             <Play size={18} className="fill-white" />
@@ -137,7 +137,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           {onBackToHome && (
             <button
               onClick={onBackToHome}
-              className="w-full py-3 px-6 rounded-full bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-bold text-xs uppercase tracking-wider transition-all"
+              className="w-full py-3 px-6 rounded-full bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-bold text-xs tracking-normal transition-colors"
             >
               Back to Home
             </button>
@@ -165,7 +165,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           particleCount: 35,
           spread: 60,
           origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
-          colors: [colors.primary, '#FFFFFF', '#E5303D']
+          colors: [colors.primary, '#FFFFFF', 'var(--accent)']
         });
       }
       lastTapRef.current = 0;
@@ -235,7 +235,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             e.stopPropagation();
             onBackToHome();
           }}
-          className="absolute top-4 left-4 z-30 pt-safe w-10 h-10 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition-all shadow-xl"
+          className="absolute top-4 left-4 z-30 pt-safe w-10 h-10 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition-colors shadow-xl"
           title="Back to Home"
           aria-label="Back to Home"
         >
@@ -249,7 +249,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
       <div className="relative z-10 pt-4 px-6 max-w-xl mx-auto w-full flex flex-col items-center">
         {/* Top Header Label */}
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-white/80 mb-3 shadow-sm">
-          <Mic2 size={13} className="text-[#E5303D]" />
+          <Mic2 size={13} className="text-[var(--accent)]" />
           <span>MUSIC FLOW</span>
         </div>
 
@@ -278,9 +278,9 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-sm font-semibold text-white/50 tracking-wide"
+                className="text-sm font-semibold text-white/50"
               >
-                ♪ Enjoy the rhythm ♪
+                Enjoy the rhythm
               </motion.p>
             )}
           </AnimatePresence>
@@ -315,7 +315,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
         >
           <button
             onClick={prevTrack}
-            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all shadow-md"
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-colors shadow-md"
             title="Previous song (Swipe down)"
             aria-label="Previous song"
           >
@@ -323,7 +323,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           </button>
           <button
             onClick={nextTrack}
-            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all shadow-md"
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-colors shadow-md"
             title="Next song (Swipe up)"
             aria-label="Next song"
           >
@@ -341,7 +341,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
       >
         {/* Title, Artist, and "View Artist" Outlined Pill */}
         <div className="flex flex-col">
-          <h2 className="text-xl sm:text-2xl font-black text-white truncate drop-shadow-md leading-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-white truncate leading-tight">
             {currentTrack.title}
           </h2>
 
@@ -353,7 +353,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {primaryArtist && primaryArtist.id && (
               <button
                 onClick={() => onSelectArtist?.(primaryArtist.id!)}
-                className="shrink-0 text-[11px] font-bold text-white/80 hover:text-white border border-white/40 hover:border-white/70 rounded-full px-2.5 py-0.5 backdrop-blur-md transition-all active:scale-95"
+                className="shrink-0 text-[11px] font-bold text-white/80 hover:text-white border border-white/40 hover:border-white/70 rounded-full px-2.5 py-0.5 backdrop-blur-md transition-colors active:scale-95"
               >
                 View artist
               </button>
@@ -367,7 +367,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {/* Like */}
             <button
               onClick={() => toggleLike(currentTrack)}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
               title={liked ? 'Unlike' : 'Like'}
               aria-label={liked ? 'Unlike' : 'Like'}
             >
@@ -377,7 +377,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {/* Lyrics Sheet Toggle */}
             <button
               onClick={() => setShowFullLyricsSheet(true)}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
               title="Full Lyrics"
               aria-label="Full Lyrics"
             >
@@ -387,7 +387,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {/* Share */}
             <button
               onClick={handleShare}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all relative"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-colors relative"
               title="Share"
               aria-label="Share"
             >
@@ -403,13 +403,13 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
             {/* Download / Offline */}
             <button
               onClick={() => setDownloaded(!downloaded)}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
               title={downloaded ? 'Downloaded' : 'Download for offline'}
               aria-label={downloaded ? 'Downloaded' : 'Download for offline'}
             >
               <Download
                 size={20}
-                className={downloaded ? 'text-[#E5303D]' : 'text-white/80'}
+                className={downloaded ? 'text-[var(--accent)]' : 'text-white/80'}
               />
             </button>
 
@@ -418,7 +418,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
               onClick={() => {
                 /* Add to playlist modal */
               }}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
               title="Add to Playlist"
               aria-label="Add to Playlist"
             >
@@ -449,7 +449,7 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           </div>
           {/* Thumb */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-md pointer-events-none transition-transform group-hover:scale-125"
+            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-md pointer-events-none transition-transform"
             style={{ left: `calc(${progressRatio * 100}% - 5px)` }}
           />
         </div>
@@ -470,16 +470,14 @@ export const MusicFlowView: React.FC<MusicFlowViewProps> = ({ onSelectArtist, on
           >
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <Mic2 size={18} className="text-[#E5303D]" />
+                <Mic2 size={18} className="text-[var(--accent)]" />
                 <h3 className="text-lg font-bold text-white">Live Synced Lyrics</h3>
               </div>
               <button
                 onClick={() => setShowFullLyricsSheet(false)}
                 className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white font-bold"
                 aria-label="Close lyrics"
-              >
-                ✕
-              </button>
+              ><X size={16} /></button>
             </div>
 
             <div className="flex-1 overflow-hidden pt-4">

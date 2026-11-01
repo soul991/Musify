@@ -43,16 +43,16 @@ interface HeroSlide {
 
 // InnerTube / Echo Music home chips with emoji & gradient-backed glass pills
 const MOOD_CHIPS = [
-  { label: 'Feel good', emoji: '😌', query: 'feel good upbeat hits' },
-  { label: 'Romance', emoji: '💕', query: 'romantic hindi english songs' },
-  { label: 'Relax', emoji: '🧘', query: 'chill acoustic lo-fi relax' },
-  { label: 'Party', emoji: '🎉', query: 'dance party edm chartbusters' },
-  { label: 'Energy', emoji: '⚡', query: 'high energy workout motivational' },
-  { label: 'Focus', emoji: '🎯', query: 'deep focus study ambient instrumental' },
-  { label: 'Workout', emoji: '💪', query: 'gym workout cardio beats' },
-  { label: 'Nostalgia', emoji: '📻', query: '2000s 90s nostalgia super hits' },
-  { label: 'Commute', emoji: '🚗', query: 'road trip driving music chill' },
-  { label: 'Late Night', emoji: '🌙', query: 'late night acoustic soulful melodies' }
+  { label: 'Feel good', query: 'feel good upbeat hits' },
+  { label: 'Romance', query: 'romantic hindi english songs' },
+  { label: 'Relax', query: 'chill acoustic lo-fi relax' },
+  { label: 'Party', query: 'dance party edm chartbusters' },
+  { label: 'Energy', query: 'high energy workout motivational' },
+  { label: 'Focus', query: 'deep focus study ambient instrumental' },
+  { label: 'Workout', query: 'gym workout cardio beats' },
+  { label: 'Nostalgia', query: '2000s 90s nostalgia super hits' },
+  { label: 'Commute', query: 'road trip driving music chill' },
+  { label: 'Late night', query: 'late night acoustic soulful melodies' }
 ];
 
 // Fallback curated hits for hero carousel when backend is loading or cold
@@ -62,7 +62,7 @@ const FALLBACK_HERO_SLIDES: HeroSlide[] = [
     title: 'Khalasi',
     subtitle: 'Achint × Aditya Gadhvi • Coke Studio Bharat',
     image: 'https://i.ytimg.com/vi/thc0FnfgW9k/hqdefault.jpg',
-    badge: 'FEATURED NOW TRENDING',
+    badge: 'Featured',
     track: {
       id: 'thc0FnfgW9k',
       title: 'Khalasi',
@@ -77,7 +77,7 @@ const FALLBACK_HERO_SLIDES: HeroSlide[] = [
     title: 'Starboy',
     subtitle: 'The Weeknd ft. Daft Punk • Global Top 50',
     image: 'https://i.ytimg.com/vi/34Na4j8AVgA/hqdefault.jpg',
-    badge: 'FEATURED NOW TRENDING',
+    badge: 'Featured',
     track: {
       id: '34Na4j8AVgA',
       title: 'Starboy',
@@ -296,7 +296,7 @@ export const Home: React.FC<HomeProps> = ({
           title: item.title,
           subtitle: item.subtitle || 'Trending on Musify',
           image: item.thumbnail || '/icons/musify-icon.svg',
-          badge: 'FEATURED NOW TRENDING',
+          badge: 'Featured',
           track: itemToTrack(item)
         }));
       }
@@ -355,7 +355,7 @@ export const Home: React.FC<HomeProps> = ({
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={onOpenSearch}
-          className="flex-1 h-11 rounded-full bg-white/[0.07] hover:bg-white/[0.11] border border-white/[0.08] px-4.5 flex items-center gap-3 text-sm text-[#A7A7A7] transition-all cursor-pointer group text-left"
+          className="flex-1 h-11 rounded-full bg-white/[0.07] hover:bg-white/[0.11] border border-white/[0.08] px-4.5 flex items-center gap-3 text-sm text-[#A7A7A7] transition-colors cursor-pointer group text-left"
           title="Search songs, albums, artists"
           aria-label="Search songs, albums, artists"
         >
@@ -387,7 +387,7 @@ export const Home: React.FC<HomeProps> = ({
           )}
 
           <div
-            className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E5303D] to-[#B8222E] flex items-center justify-center font-bold text-sm text-white shadow-md shadow-[#E5303D]/25 shrink-0"
+            className="w-11 h-11 rounded-full bg-[var(--accent)] flex items-center justify-center font-medium text-sm text-white shrink-0"
             title="Musify Account"
           >
             M
@@ -414,20 +414,19 @@ export const Home: React.FC<HomeProps> = ({
               <motion.button
                 key={mood.label}
                 onClick={() => handleMoodSelect(mood)}
-                whileHover={{ scale: 1.04, y: -2 }}
+                whileHover={{}}
                 whileTap={{ scale: 0.96 }}
                 transition={{ type: 'spring', stiffness: 800, damping: 28 }}
-                className={`glass-pill px-4 py-2 flex items-center gap-2 text-xs font-semibold shrink-0 cursor-pointer select-none transition-colors border ${
+                className={`rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-medium shrink-0 cursor-pointer select-none transition-colors border border-[var(--hairline)] ${
                   isSelected
                     ? 'text-white border-white/40 shadow-lg'
                     : 'hover:bg-white/[0.08] hover:border-white/20 text-white/80 hover:text-white border-white/10'
                 }`}
                 style={{
                   backgroundColor: isSelected ? colors.primary : 'rgba(255, 255, 255, 0.05)',
-                  boxShadow: isSelected ? `0 4px 18px ${colors.primary}70` : undefined
+                  boxShadow: undefined
                 }}
               >
-                <span className="text-sm">{mood.emoji}</span>
                 <span>{mood.label}</span>
               </motion.button>
             );
@@ -476,12 +475,12 @@ export const Home: React.FC<HomeProps> = ({
               <div className="relative z-10 h-full p-6 md:p-8 flex items-end justify-between gap-6">
                 <div className="max-w-[78%] sm:max-w-[65%] flex flex-col justify-end">
                   <motion.p
-                    className="text-xs font-bold tracking-widest uppercase text-white/70 mb-2 flex items-center gap-1.5"
+                    className="text-xs font-medium text-[var(--text-3)] mb-2 flex items-center gap-1.5"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
                   >
-                    <Sparkles size={13} className="text-[#E5303D]" />
+                    <Sparkles size={13} className="text-[var(--accent-ink)]" />
                     <span>{activeHero.badge || 'FEATURED NOW TRENDING'}</span>
                   </motion.p>
                   <motion.h2
@@ -504,26 +503,26 @@ export const Home: React.FC<HomeProps> = ({
                   {/* Action Buttons Row */}
                   <div className="flex items-center gap-3 mt-5">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{}}
                       whileTap={{ scale: 0.95 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleHeroClick(activeHero);
                       }}
-                      className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-all cursor-pointer"
+                      className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 active:scale-95 text-xs sm:text-sm font-black flex items-center gap-2 shadow-[0_10px_25px_rgba(255,255,255,0.25)] transition-colors cursor-pointer"
                     >
                       <Play size={16} className="fill-current ml-0.5" />
                       <span>Play Now</span>
                     </motion.button>
                     {activeHero.track && (
                       <motion.button
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{}}
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (activeHero.track) addToQueue(activeHero.track);
                         }}
-                        className="px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-all cursor-pointer"
+                        className="px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md transition-colors cursor-pointer"
                         title="Add to queue"
                       >
                         <ListPlus size={15} />
@@ -562,7 +561,7 @@ export const Home: React.FC<HomeProps> = ({
                   {heroSlides.map((slide, idx) => (
                     <div
                       key={slide.id}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-colors duration-300 ${
                         idx === heroIndex ? 'w-7 bg-white shadow-sm' : 'w-1.5 bg-white/40'
                       }`}
                     />
@@ -585,7 +584,7 @@ export const Home: React.FC<HomeProps> = ({
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
+              <span className="text-xs font-medium text-[var(--text-3)]">
                 MOOD: {activeMood.toUpperCase()}
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
@@ -621,8 +620,7 @@ export const Home: React.FC<HomeProps> = ({
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
-                <Clock size={12} className="text-[#E5303D]" /> RECENT HISTORY
+              <span className="text-xs font-medium text-[var(--text-3)] flex items-center gap-1.5"><Clock size={12} className="text-[var(--accent-ink)]" /> Recent history
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Jump Back In
@@ -655,8 +653,7 @@ export const Home: React.FC<HomeProps> = ({
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
-                <Sparkles size={12} className="text-[#E5303D]" /> SIMILAR TO YOUR TASTE
+              <span className="text-xs font-medium text-[var(--text-3)] flex items-center gap-1.5"><Sparkles size={12} className="text-[var(--accent-ink)]" /> Similar to your taste
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Because you listened to {seedTrack.title}
@@ -678,19 +675,19 @@ export const Home: React.FC<HomeProps> = ({
                   <motion.div
                     key={track.id}
                     variants={cardVariants}
-                    whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                    whileHover={{}}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => playTrack(track, becauseListenedTracks)}
                     className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                   >
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-colors">
                       <img
                         src={track.thumbnail || '/icons/musify-icon.svg'}
                         alt={track.title}
                         loading="lazy"
                         decoding="async"
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transition-transform duration-300"
                         onError={handleImageError}
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -699,7 +696,7 @@ export const Home: React.FC<HomeProps> = ({
                         </div>
                       </div>
                     </div>
-                    <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[#E5303D]' : 'text-white'}`}>
+                    <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent-ink)]' : 'text-white'}`}>
                       {track.title}
                     </p>
                     <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
@@ -724,8 +721,7 @@ export const Home: React.FC<HomeProps> = ({
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
-                <UserIcon size={12} className="text-[#E5303D]" /> YOUR FREQUENT ROTATION
+              <span className="text-xs font-medium text-[var(--text-3)] flex items-center gap-1.5"><UserIcon size={12} className="text-[var(--accent-ink)]" /> Your frequent rotation
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
                 Your Top Artists
@@ -739,23 +735,23 @@ export const Home: React.FC<HomeProps> = ({
                 <motion.div
                   key={artist.name}
                   variants={cardVariants}
-                  whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => onSelectArtist?.(artist.name)}
                   className="flex flex-col items-center group cursor-pointer select-none w-24 sm:w-28 text-center"
                 >
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-white/10 border border-white/10 group-hover:border-white/30 transition-all shadow-md mb-2">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-white/10 border border-white/10 group-hover:border-white/30 transition-colors shadow-md mb-2">
                     <img
                       src={artist.thumbnail || '/icons/musify-icon.svg'}
                       alt={artist.name}
                       loading="lazy"
                       decoding="async"
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300"
                       onError={handleImageError}
                     />
                   </div>
-                  <p className="text-xs font-bold text-white group-hover:text-[#E5303D] truncate w-full transition-colors">
+                  <p className="text-xs font-bold text-white group-hover:text-[var(--accent-ink)] truncate w-full transition-colors">
                     {artist.name}
                   </p>
                   <span className="text-[10px] text-white/50 font-medium">Artist</span>
@@ -777,7 +773,7 @@ export const Home: React.FC<HomeProps> = ({
         >
           <motion.div variants={headerVariants} className="flex items-center justify-between mb-4">
             <div>
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest">
+              <span className="text-xs font-medium text-[var(--text-3)]">
                 SONGS YOU USED TO PLAY ON REPEAT
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
@@ -858,19 +854,19 @@ export const Home: React.FC<HomeProps> = ({
                         <motion.div
                           key={item.id}
                           variants={cardVariants}
-                          whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                          whileHover={{}}
                           whileTap={{ scale: 0.97 }}
                           onClick={() => handleFeedItemClick(item, track, playableTracks)}
                           className="w-[150px] sm:w-[170px] flex flex-col group cursor-pointer select-none"
                         >
-                          <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-all">
+                          <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/10 mb-2.5 border border-white/10 shadow-lg group-hover:border-white/25 transition-colors">
                             <img
                               src={track.thumbnail || '/icons/musify-icon.svg'}
                               alt={track.title}
                               loading="lazy"
                               decoding="async"
                               referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-full object-cover transition-transform duration-300"
                               onError={handleImageError}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -879,7 +875,7 @@ export const Home: React.FC<HomeProps> = ({
                               </div>
                             </div>
                           </div>
-                          <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[#E5303D]' : 'text-white'}`}>
+                          <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent-ink)]' : 'text-white'}`}>
                             {track.title}
                           </p>
                           <p className="text-[11px] text-white/60 truncate font-medium mt-0.5">
@@ -938,7 +934,7 @@ export const Home: React.FC<HomeProps> = ({
       <motion.div
         key={track.id}
         variants={cardVariants}
-        whileHover={{ y: -2, transition: { duration: 0.15 } }}
+        whileHover={{}}
         whileTap={{ scale: 0.97 }}
         onClick={() => {
           if (item) {
@@ -947,7 +943,7 @@ export const Home: React.FC<HomeProps> = ({
             playTrack(track, playableList);
           }
         }}
-        className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-all duration-200 border ${
+        className={`w-[290px] sm:w-[320px] h-[64px] rounded-2xl flex items-center gap-3 px-2.5 cursor-pointer select-none transition-colors duration-200 border ${
           isCurrent
             ? 'bg-white/[0.14] border-white/30 shadow-md'
             : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5'
@@ -968,15 +964,15 @@ export const Home: React.FC<HomeProps> = ({
 
           {isCurrent && isPlaying && (
             <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-0.5">
-              <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
-              <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
-              <span className="w-1 bg-[#E5303D] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
+              <span className="w-1 bg-[var(--accent)] rounded-full animate-[bounce_0.6s_ease-in-out_infinite] h-4" />
+              <span className="w-1 bg-[var(--accent)] rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite] h-6" />
+              <span className="w-1 bg-[var(--accent)] rounded-full animate-[bounce_0.5s_ease-in-out_0.4s_infinite] h-3" />
             </div>
           )}
         </div>
 
         <div className="flex-1 min-w-0 pr-1">
-          <p className={`text-sm font-bold truncate leading-tight ${isCurrent ? 'text-[#E5303D]' : 'text-white'}`}>
+          <p className={`text-sm font-bold truncate leading-tight ${isCurrent ? 'text-[var(--accent-ink)]' : 'text-white'}`}>
             {track.title}
           </p>
           <p className="text-xs text-white/60 truncate font-medium leading-tight mt-0.5">
