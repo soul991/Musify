@@ -33,10 +33,10 @@ export function ChipsRow<T extends string | null>({
           <button
             key={String(chip.id)}
             onClick={() => onSelect(chip.id)}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap flex items-center gap-1.5 select-none active:scale-95 ${
               isActive
-                ? 'bg-white text-black shadow-lg shadow-white/10 font-black'
-                : 'bg-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.14] border border-white/5'
+                ? 'bg-[var(--accent)] text-white font-medium'
+                : 'bg-[var(--bg-raised)] text-[var(--text-2)] hover:text-[var(--text-1)] border border-[var(--hairline)]'
             }`}
           >
             {chip.icon && <span className="shrink-0">{chip.icon}</span>}

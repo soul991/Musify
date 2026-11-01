@@ -1,46 +1,107 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
-  font-weight: 300 900;
+  font-family: 'Instrument Sans';
+  src: url('/fonts/InstrumentSans-Variable.woff2') format('woff2-variations'),
+       url('/fonts/InstrumentSans-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Regular.woff2') format('woff2');
+  font-weight: 400;
   font-display: swap;
   font-style: normal;
 }
 
 @theme {
-  --color-bg: #0A0A0A;
-  --color-surface: rgba(18, 18, 18, 0.72);
-  --color-surface-raised: #1A1A1A;
-  --color-stroke: rgba(255, 255, 255, 0.08);
-  --color-text: #FFFFFF;
-  --color-muted: #A7A7A7;
-  --color-accent: var(--accent-color, #E5303D);
-  --color-accent-2: #B8222E;
-  --radius-panel: 28px;
-  --radius-art: 24px;
-  --radius-card: 20px;
-  --radius-tile: 16px;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg-stage: #0B0B0C;
+  --color-bg-base: #141415;
+  --color-bg-card: #19191B;
+  --color-bg-raised: #232325;
+  --color-hairline: rgba(237, 237, 237, 0.08);
+
+  --color-text-1: #EDEDED;
+  --color-text-2: #A1A1A6;
+  --color-text-3: #85858B;
+
+  --color-accent: #D92B38;
+  --color-accent-ink: #FF5A64;
+  --color-accent-hover: #C42632;
+  --color-positive: #4CC38A;
+  --color-negative: #E5484D;
+
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-art: 16px;
+  --radius-tile: 12px;
+
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Backward compatibility aliases for Phase 1 */
+  --color-bg: #141415;
+  --color-surface: #19191B;
+  --color-surface-raised: #232325;
+  --color-stroke: rgba(237, 237, 237, 0.08);
+  --color-text: #EDEDED;
+  --color-muted: #85858B;
+  --color-accent-2: #C42632;
 }
 
 :root {
-  --bg-primary: #0A0A0A;
-  --bg-surface: rgba(18, 18, 18, 0.72);
-  --bg-surface-raised: #1A1A1A;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-stroke: rgba(255, 255, 255, 0.08);
-  --text-primary: #FFFFFF;
-  --text-muted: #A7A7A7;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --accent-color: #E5303D;
-  --accent-rgb: 229, 48, 61;
-  --accent-2: #B8222E;
-  --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Surfaces (graphite ramp, dark only) */
+  --bg-stage: #0B0B0C;
+  --bg-base: #141415;
+  --bg-card: #19191B;
+  --bg-raised: #232325;
+  --hairline: rgba(237, 237, 237, 0.08);
+
+  /* Text Roles */
+  --text-1: #EDEDED;
+  --text-2: #A1A1A6;
+  --text-3: #85858B;
+
+  /* Accent Ramp */
+  --accent: #D92B38;
+  --accent-ink: #FF5A64;
+  --accent-hover: #C42632;
+  --positive: #4CC38A;
+  --negative: #E5484D;
+
+  /* Nested Radii */
+  --radius-tag: 6px;
+  --radius-row: 8px;
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-art: 16px;
+  --radius-tile: 12px;
+
+  /* Typography */
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Backward Compatibility Aliases for Phase 1 */
+  --bg-primary: #141415;
+  --bg-surface: #19191B;
+  --bg-surface-raised: #232325;
+  --border-glass: rgba(237, 237, 237, 0.08);
+  --border-stroke: rgba(237, 237, 237, 0.08);
+  --text-primary: #EDEDED;
+  --text-muted: #85858B;
+  --text-secondary: #A1A1A6;
+  --accent-color: #D92B38;
+  --accent-rgb: 217, 43, 56;
+  --accent-2: #C42632;
 }
 
 * {
@@ -50,7 +111,7 @@
 
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--accent-color, #E5303D);
+  box-shadow: 0 0 0 2px var(--accent-color, #D92B38);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -70,9 +131,9 @@ html, body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-1);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -84,12 +145,12 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #0A0A0A;
+  background-color: var(--bg-base);
 }
 
-/* CTA Primary per musify-design-plan.md lines 308-339 */
+/* CTA Primary per Section 2 & 9 of design brief */
 .cta-primary {
-  background: #E5303D;
+  background: var(--accent);
   color: #FFFFFF;
   font-weight: 700;
   font-size: 16px;
@@ -104,28 +165,20 @@ html, body {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.3),
-    0 4px 16px -4px rgba(229, 48, 61, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.2s ease,
               background-color 0.15s ease;
 }
 
 .cta-primary:hover {
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow:
-    0 0 0 1px rgba(229, 48, 61, 0.4),
-    0 8px 24px -4px rgba(229, 48, 61, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .cta-primary:active {
   transform: scale(0.97);
 }
 
-/* Secondary ghost CTA per musify-design-plan.md lines 340-351 */
+/* Secondary ghost CTA per Section 2 & 9 */
 .cta-secondary {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
@@ -151,7 +204,7 @@ html, body {
 .cta-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  color: var(--text-1);
   transform: translateY(-1px);
 }
 

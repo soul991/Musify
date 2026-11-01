@@ -60,12 +60,12 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
           <button
             onClick={onBack}
             aria-label="Go back"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
+            <span className="text-xs font-bold text-white/50 tracking-normal">
               AUDIO PROCESSING
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
@@ -79,7 +79,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
           <button
             onClick={handleReset}
             aria-label="Reset equalizer to flat"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white transition-all border border-white/10"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white transition-colors border border-white/10"
             title="Reset to Flat"
           >
             <RotateCcw size={16} />
@@ -87,9 +87,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
 
           <button
             onClick={handleToggle}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md flex items-center gap-1.5 ${
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors border shadow-md flex items-center gap-1.5 ${
               isEnabled
-                ? 'bg-[#E5303D] text-white border-white/30'
+                ? 'bg-[var(--accent)] text-white border-white/30'
                 : 'bg-white/10 text-white/60 border-white/10'
             }`}
           >
@@ -100,7 +100,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
 
       {/* Presets Horizontal Row */}
       <section className="mb-8">
-        <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2.5">
+        <h2 className="text-xs font-bold text-white/50 tracking-normal mb-2.5">
           PRESETS
         </h2>
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 py-1">
@@ -110,7 +110,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
               <button
                 key={preset.name}
                 onClick={() => handleSelectPreset(preset)}
-                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
                   isSelected
                     ? 'text-white border-white/40 shadow-lg'
                     : 'bg-white/[0.05] hover:bg-white/[0.1] text-white/70 border-white/10'
@@ -130,8 +130,8 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
       {/* 5-Band Equalizer Sliders Container */}
       <section className="mb-10 p-6 rounded-[28px] bg-white/[0.04] backdrop-blur-3xl border border-white/15 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
-            <Sliders size={16} className="text-[#E5303D]" />
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+            <Sliders size={16} className="text-[var(--accent)]" />
             <span>5-Band Frequency Response</span>
           </h2>
           <span className="text-xs font-semibold text-white/50">±12 dB range</span>
@@ -161,16 +161,16 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
               <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
                 <defs>
                   <linearGradient id="eq-glow" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ED5564" stopOpacity="0.45" />
-                    <stop offset="100%" stopColor="#ED5564" stopOpacity="0.0" />
+                    <stop offset="0%" stopColor="var(--accent-ink)" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="var(--accent-ink)" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
                 {/* 0dB Reference Line */}
                 <line x1="30" y1={height / 2} x2="470" y2={height / 2} stroke="rgba(255,255,255,0.12)" strokeDasharray="3 3" />
                 {/* Gradient area under curve */}
-                <path d={areaPath} fill="url(#eq-glow)" className="transition-all duration-300" />
+                <path d={areaPath} fill="url(#eq-glow)" className="transition-colors duration-300" />
                 {/* Neon bezier curve */}
-                <path d={d} fill="none" stroke="#ED5564" strokeWidth="2.5" strokeLinecap="round" className="transition-all duration-300 filter drop-shadow-[0_0_8px_#ED5564]" />
+                <path d={d} fill="none" stroke="var(--accent-ink)" strokeWidth="2.5" strokeLinecap="round" className="transition-colors duration-300" />
                 {/* Nodes on each frequency band */}
                 {points.map((p, idx) => (
                   <circle
@@ -179,9 +179,9 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
                     cy={p.y}
                     r={4}
                     fill="#FFFFFF"
-                    stroke="#ED5564"
+                    stroke="var(--accent-ink)"
                     strokeWidth="2"
-                    className="transition-all duration-300"
+                    className="transition-colors duration-300"
                   />
                 ))}
               </svg>
@@ -213,7 +213,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
                     value={gain}
                     disabled={!isEnabled}
                     onChange={(e) => handleGainChange(idx, parseFloat(e.target.value))}
-                    className="h-32 w-1.5 accent-[#E5303D] appearance-none bg-white/20 rounded-full outline-none cursor-pointer [writing-mode:vertical-lr] [direction:rtl]"
+                    className="h-32 w-1.5 accent-[var(--accent)] appearance-none bg-white/20 rounded-full outline-none cursor-pointer [writing-mode:vertical-lr] [direction:rtl]"
                   />
                 </div>
 
@@ -233,7 +233,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
         <div className="p-5 rounded-[24px] bg-white/[0.04] backdrop-blur-2xl border border-white/15 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Volume2 size={18} className="text-[#E5303D]" />
+              <Volume2 size={18} className="text-[var(--accent)]" />
               <span className="text-sm font-bold text-white">Bass Boost</span>
             </div>
             <span className="text-xs font-bold text-white/70">{bassBoost}%</span>
@@ -254,7 +254,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
               const boostDb = (val / 100) * 8;
               audioEqualizer.setGain(0, (gains[0] || 0) + boostDb);
             }}
-            className="w-full accent-[#E5303D] h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
+            className="w-full accent-[var(--accent)] h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
           />
         </div>
 
@@ -262,7 +262,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
         <div className="p-5 rounded-[24px] bg-white/[0.04] backdrop-blur-2xl border border-white/15 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-violet-400" />
+              <Sparkles size={18} className="text-[var(--text-2)]" />
               <span className="text-sm font-bold text-white">Spatial Virtualizer</span>
             </div>
             <span className="text-xs font-bold text-white/70">{virtualizer}%</span>
@@ -277,7 +277,7 @@ export const EqualizerView: React.FC<EqualizerViewProps> = ({ onBack }) => {
             value={virtualizer}
             disabled={!isEnabled}
             onChange={(e) => setVirtualizer(parseInt(e.target.value))}
-            className="w-full accent-violet-400 h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
+            className="w-full accent-[var(--accent)] h-1.5 bg-white/20 rounded-full outline-none cursor-pointer"
           />
         </div>
       </section>

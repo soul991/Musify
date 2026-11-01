@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[50vh] select-none">
-          <div className="w-16 h-16 rounded-2xl bg-[#E5303D]/10 border border-[#E5303D]/20 flex items-center justify-center mb-5 text-[#E5303D]">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center mb-5 text-[var(--accent)]">
             <AlertTriangle className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">
@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </button>
             <button
               onClick={this.handleReload}
-              className="px-4 py-2 rounded-xl bg-[#E5303D] hover:bg-[#B8222E] text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-lg shadow-[#E5303D]/20"
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[#B8222E] text-white font-semibold text-xs transition-colors flex items-center gap-2 "
             >
               <Home className="w-3.5 h-3.5" />
               Reload App

@@ -23,7 +23,7 @@ interface PresetOption {
 const PRESET_OPTIONS: PresetOption[] = [
   {
     label: 'Rainy Day Chill',
-    icon: <CloudRain size={16} className="text-cyan-400" />,
+    icon: <CloudRain size={16} className="text-[var(--text-2)]" />,
     prompt: 'Melancholic acoustic indie, cozy rain jazz, warm piano',
     searchQuery: 'lofi rainy day chill acoustic indie warm piano'
   },
@@ -35,7 +35,7 @@ const PRESET_OPTIONS: PresetOption[] = [
   },
   {
     label: 'Late Night Drive',
-    icon: <Moon size={16} className="text-indigo-400" />,
+    icon: <Moon size={16} className="text-[var(--text-2)]" />,
     prompt: 'Synthwave, smooth R&B, midnight electronic lounge',
     searchQuery: 'synthwave late night drive chill electronic r&b'
   },
@@ -140,7 +140,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles size={20} className="text-[#E5303D]" />
+              <Sparkles size={20} className="text-[var(--accent)]" />
               <h3 className="text-lg font-black tracking-tight">Mood Playlists</h3>
             </div>
             <button
@@ -160,7 +160,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
             <form onSubmit={handleGenerate} className="flex flex-col gap-4">
               {/* Prompt Input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-white/50">
+                <label className="text-[11px] font-bold tracking-normal text-white/50">
                   Custom Prompt or Mood
                 </label>
                 <textarea
@@ -169,13 +169,13 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                   placeholder="e.g. Cyberpunk night drive through Tokyo in the rain, or 90s bollywood acoustic romance..."
                   rows={3}
                   disabled={status === 'generating'}
-                  className="w-full p-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:border-[#E5303D] text-xs sm:text-sm font-medium resize-none transition-colors"
+                  className="w-full p-3.5 rounded-2xl bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:border-[var(--accent)] text-xs sm:text-sm font-medium resize-none transition-colors"
                 />
               </div>
 
               {/* Atmospheric Meteorological Presets */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">
+                <span className="text-[11px] font-bold tracking-normal text-white/50">
                   Quick Atmospheric Presets
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -195,7 +195,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
 
               {/* Number of Songs */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">
+                <span className="text-[11px] font-bold tracking-normal text-white/50">
                   Target Songs: {songCount}
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -204,9 +204,9 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                       key={count}
                       type="button"
                       onClick={() => setSongCount(count)}
-                      className={`w-9 h-8 rounded-xl text-xs font-bold transition-all ${
+                      className={`w-9 h-8 rounded-xl text-xs font-bold transition-colors ${
                         songCount === count
-                          ? 'bg-[#E5303D] text-white shadow-md'
+                          ? 'bg-[var(--accent)] text-white shadow-md'
                           : 'bg-white/10 hover:bg-white/15 text-white/70'
                       }`}
                     >
@@ -219,7 +219,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
               {/* Generation Progress */}
               {status === 'generating' && (
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.05] border border-white/10">
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-[#E5303D] rounded-full animate-spin shrink-0" />
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-[var(--accent)] rounded-full animate-spin shrink-0" />
                   <span className="text-xs font-semibold text-white/80">{statusText}</span>
                 </div>
               )}
@@ -242,7 +242,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                 <button
                   type="submit"
                   disabled={status === 'generating'}
-                  className="px-5 py-2.5 rounded-xl bg-[#E5303D] hover:bg-[#B8222E] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[#B8222E] disabled:opacity-50 text-white font-black text-xs tracking-normal flex items-center gap-2 shadow-lg transition-transform active:scale-95"
                 >
                   <Sparkles size={14} />
                   <span>Generate Playlist</span>
@@ -253,7 +253,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
             /* Success Preview */
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.06] border border-white/10 text-white">
-                <CheckCircle2 size={24} className="text-[#E5303D] shrink-0" />
+                <CheckCircle2 size={24} className="text-[var(--accent)] shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm text-white">{createdPlaylist?.name}</p>
                   <p className="text-xs text-white/60 font-medium">
@@ -296,7 +296,7 @@ export const AiPlaylistModal: React.FC<AiPlaylistModalProps> = ({
                 <button
                   type="button"
                   onClick={handlePlay}
-                  className="px-5 py-2.5 rounded-xl bg-[#E5303D] hover:bg-[#B8222E] text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[#B8222E] text-white font-black text-xs tracking-normal flex items-center gap-2 shadow-lg transition-transform active:scale-95"
                 >
                   <Play size={14} className="fill-current" />
                   <span>Play Mood Playlist</span>

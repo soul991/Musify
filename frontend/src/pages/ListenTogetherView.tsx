@@ -312,12 +312,12 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
           <button
             onClick={onBack}
             aria-label="Go back"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
+            <span className="text-xs font-bold text-white/50 tracking-normal">
               Live Room Sync
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 flex-wrap">
@@ -332,7 +332,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
         {roomCode && (
           <button
             onClick={handleLeaveRoom}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold text-xs border border-red-500/30 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold text-xs border border-red-500/30 transition-colors active:scale-95"
           >
             <LogOut size={14} /> Leave Room
           </button>
@@ -402,7 +402,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
 
             <button
               onClick={handleCreateRoom}
-              className="w-full py-3.5 rounded-full font-extrabold text-sm text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-white/20"
+              className="w-full py-3.5 rounded-full font-extrabold text-sm text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-colors duration-200 border border-white/20"
               style={{
                 backgroundColor: colors.primary,
                 boxShadow: `0 8px 30px ${colors.primary}70`
@@ -423,12 +423,12 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
                 value={joinInput}
                 onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
                 maxLength={8}
-                className="flex-1 bg-white/[0.06] border border-white/15 rounded-full px-4 py-2.5 text-sm font-bold text-white uppercase placeholder:text-white/40 outline-none focus:border-white/40 transition-colors"
+                className="flex-1 bg-white/[0.06] border border-white/15 rounded-full px-4 py-2.5 text-sm font-bold text-white placeholder:text-white/40 outline-none focus:border-white/40 transition-colors"
               />
               <button
                 onClick={() => handleJoinRoom()}
                 disabled={joinInput.trim().length < 4}
-                className="px-5 py-2.5 rounded-full bg-white text-black font-extrabold text-sm disabled:opacity-40 disabled:pointer-events-none hover:scale-105 active:scale-95 transition-all shadow-md"
+                className="px-5 py-2.5 rounded-full bg-white text-black font-extrabold text-sm disabled:opacity-40 disabled:pointer-events-none active:scale-95 transition-colors shadow-md"
               >
                 Join
               </button>
@@ -442,17 +442,17 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
           <div className="p-6 rounded-[28px] bg-white/[0.05] backdrop-blur-3xl border border-white/20 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 ROOM ACTIVE {isHost ? '(HOST)' : '(LISTENER)'}
               </span>
-              <p className="text-2xl font-black text-white tracking-widest mt-1">
+              <p className="text-2xl font-black text-white tracking-normal mt-1">
                 {roomCode}
               </p>
             </div>
 
             <button
               onClick={handleCopyLink}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 font-bold text-xs text-white transition-all active:scale-95"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 font-bold text-xs text-white transition-colors active:scale-95"
             >
               {copied ? (
                 <>
@@ -479,7 +479,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
                 className="w-16 h-16 rounded-2xl object-cover shadow-md"
               />
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-white/50 tracking-normal">
                   NOW PLAYING IN ROOM
                 </span>
                 <p className="text-base font-extrabold text-white truncate leading-tight mt-0.5">
@@ -499,7 +499,7 @@ export const ListenTogetherView: React.FC<ListenTogetherViewProps> = ({ onBack, 
           {/* Active Participants List */}
           <div className="p-6 rounded-[28px] bg-white/[0.04] backdrop-blur-2xl border border-white/15">
             <h3 className="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
-              <Users size={16} className="text-violet-400" />
+              <Users size={16} className="text-[var(--text-2)]" />
               <span>Active Listeners ({participants.length})</span>
             </h3>
 

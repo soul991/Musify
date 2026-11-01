@@ -69,7 +69,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
           <button
             onClick={onBack}
             aria-label="Go back"
-            className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-all flex items-center justify-center border border-white/15 backdrop-blur-md text-white shadow-md"
+            className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-colors flex items-center justify-center border border-white/15 backdrop-blur-md text-white shadow-md"
           >
             <ArrowLeft size={20} />
           </button>
@@ -81,7 +81,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
           <button
             onClick={onOptionsClick}
             aria-label="More options"
-            className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-all flex items-center justify-center border border-white/15 backdrop-blur-md text-white shadow-md"
+            className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-colors flex items-center justify-center border border-white/15 backdrop-blur-md text-white shadow-md"
           >
             <MoreVertical size={18} />
           </button>
@@ -112,7 +112,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
         </motion.div>
 
         {/* Type pill label */}
-        <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/50 mb-1.5 select-none">
+        <span className="text-[11px] font-extrabold tracking-normal text-white/50 mb-1.5 select-none">
           {type}
         </span>
 
@@ -125,7 +125,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
         {artistAvatar && (
           <div
             onClick={artistAvatar.onClick}
-            className={`mt-2.5 flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 transition-all select-none ${
+            className={`mt-2.5 flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 transition-colors select-none ${
               artistAvatar.onClick ? 'cursor-pointer active:scale-95' : ''
             }`}
           >
@@ -164,7 +164,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
               whileTap={{ scale: 0.92 }}
               onClick={onToggleLike}
               aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
-              className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all shadow-md ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center border transition-colors shadow-md ${
                 isLiked
                   ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                   : 'bg-white/10 text-white/70 hover:text-white border-white/10 hover:bg-white/15'
@@ -179,7 +179,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={onPlayClick}
-              className="h-12 px-7 rounded-full flex items-center justify-center gap-2.5 text-white font-bold text-sm shadow-xl active:scale-95 transition-all flex-1 max-w-[200px]"
+              className="h-12 px-7 rounded-full flex items-center justify-center gap-2.5 text-white font-bold text-sm shadow-xl active:scale-95 transition-colors flex-1 max-w-[200px]"
               style={{ backgroundColor: colors.primary }}
             >
               {isCurrentItemPlaying && isPlaying ? (
@@ -203,7 +203,7 @@ export const ParallaxHeader: React.FC<ParallaxHeaderProps> = ({
               onClick={onShuffleClick}
               title="Shuffle"
               aria-label="Shuffle"
-              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-all flex items-center justify-center text-white/80 hover:text-white border border-white/10 shadow-md"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 transition-colors flex items-center justify-center text-white/80 hover:text-white border border-white/10 shadow-md"
             >
               <Shuffle size={19} />
             </motion.button>

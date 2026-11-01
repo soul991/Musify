@@ -12,7 +12,7 @@ interface CalmSeekbarProps {
 export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
   value,
   max,
-  accentColor = 'var(--accent-color, #E5303D)',
+  accentColor = 'var(--accent)',
   onSeek,
   className = '',
   showTimestamps = false
@@ -87,15 +87,13 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setIsDragging(false)}
-        className="relative w-full h-6 flex items-center cursor-pointer group"
+        className="relative w-full h-8 flex items-center cursor-pointer group"
       >
-        {/* Track Background */}
-        <div className="relative w-full h-1 group-hover:h-1.5 rounded-full bg-white/15 overflow-hidden transition-[height] duration-150">
-          {/* Active Progress Bar animated with transform: scaleX */}
+        {/* Track Background: 4px track --bg-raised, fill --accent per section 6 */}
+        <div className="relative w-full h-1 rounded-full bg-[var(--bg-raised)] overflow-hidden">
           <div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-full bg-[var(--accent)]"
             style={{
-              backgroundColor: accentColor,
               transform: `scaleX(${progressRatio})`,
               transformOrigin: 'left',
               willChange: isDragging ? 'transform' : 'auto'
@@ -103,19 +101,23 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
           />
         </div>
 
-        {/* Scrubber Knob (grows on hover / drag) */}
+        {/* 12px Handle that carries the time while dragging per section 1 & 6 */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-150 ${
-            isHovered || isDragging
-              ? 'w-3 h-3 scale-100 opacity-100'
-              : 'w-2 h-2 scale-75 opacity-0 group-hover:opacity-100 group-hover:scale-100'
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-100 flex items-center justify-center ${
+            isDragging
+              ? 'px-2 py-0.5 rounded-full bg-[var(--accent)] text-white text-xs font-sans tabular-nums shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-20'
+              : `w-3 h-3 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] ${
+                  isHovered ? 'scale-100 opacity-100' : 'scale-75 opacity-0 group-hover:opacity-100 group-hover:scale-100'
+                }`
           }`}
           style={{ left: `${progressRatio * 100}%` }}
-        />
+        >
+          {isDragging && <span>{formatTime(effectiveValue)}</span>}
+        </div>
       </div>
 
       {showTimestamps && (
-        <div className="flex justify-between items-center text-[11px] font-mono font-medium text-white/50 px-0.5 -mt-1 tabular-nums">
+        <div className="flex justify-between items-center text-xs font-sans text-[var(--text-3)] px-0.5 tabular-nums">
           <span>{formatTime(effectiveValue)}</span>
           <span>{formatTime(max)}</span>
         </div>
