@@ -26,12 +26,12 @@ import { VirtualList } from '../components/common/VirtualList';
 import { springEffects } from '../utils/motion';
 
 const BROWSE_CATEGORIES = [
-  { name: 'Pop', gradient: 'from-pink-500/80 to-rose-700/80', query: 'Pop hits' },
-  { name: 'Hindi', gradient: 'from-orange-500/80 to-amber-700/80', query: 'Hindi latest' },
-  { name: 'Rock', gradient: 'from-red-600/80 to-stone-800/80', query: 'Rock classics' },
-  { name: 'EDM', gradient: 'from-cyan-500/80 to-blue-700/80', query: 'EDM dance' },
-  { name: 'Lo-fi', gradient: 'from-emerald-500/80 to-teal-800/80', query: 'Lo-fi chill' },
-  { name: 'Classical', gradient: 'from-amber-400/80 to-yellow-800/80', query: 'Classical piano' },
+  { name: 'Pop', query: 'Pop hits' },
+  { name: 'Hindi', query: 'Hindi latest' },
+  { name: 'Rock', query: 'Rock classics' },
+  { name: 'EDM', query: 'EDM dance' },
+  { name: 'Lo-fi', query: 'Lo-fi chill' },
+  { name: 'Classical', query: 'Classical piano' }
 ];
 
 interface SearchProps {
@@ -262,7 +262,7 @@ export const Search: React.FC<SearchProps> = ({
           {onBack ? (
             <button
               onClick={onBack}
-              className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-all shrink-0 cursor-pointer"
+              className="w-9 h-9 -ml-1 mr-2 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 text-white/80 hover:text-white transition-colors shrink-0 cursor-pointer"
               title="Go back"
               aria-label="Go back"
             >
@@ -299,7 +299,7 @@ export const Search: React.FC<SearchProps> = ({
               onClick={handleVoiceSearch}
               title={isListening ? 'Listening...' : 'Voice Search'}
               aria-label={isListening ? 'Listening...' : 'Voice Search'}
-              className={`p-2 rounded-full transition-all cursor-pointer ${
+              className={`p-2 rounded-full transition-colors cursor-pointer ${
                 isListening
                   ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]'
                   : 'text-white/50 hover:text-white hover:bg-white/10'
@@ -339,7 +339,7 @@ export const Search: React.FC<SearchProps> = ({
                 if (query.trim()) executeSearch(query);
               }}
               title={searchSource === 'online' ? 'Source: YouTube Music (Online)' : 'Source: Library (Local)'}
-              className={`p-2 rounded-full border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
+              className={`p-2 rounded-full border transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
                 searchSource === 'online'
                   ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)] border-[var(--accent-color)]/30'
                   : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -376,7 +376,7 @@ export const Search: React.FC<SearchProps> = ({
             style={{ transformOrigin: 'top center' }}
             className="mb-6 rounded-3xl bg-white/[0.07] border border-white/12 p-2 shadow-2xl backdrop-blur-2xl flex flex-col gap-0.5"
           >
-            <div className="px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40">
+            <div className="px-3.5 py-1.5 text-[11px] font-bold tracking-normal text-white/40">
               Suggestions
             </div>
             {suggestions.map((sug, i) => (
@@ -420,9 +420,7 @@ export const Search: React.FC<SearchProps> = ({
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
                   <Clock size={16} className="text-[var(--accent-color)]" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-white/80">
-                    Search History
-                  </h3>
+                  <h3 className="text-sm font-medium text-[var(--text-2)]">Search history</h3>
                 </div>
                 <button
                   onClick={clearAllHistory}
@@ -500,8 +498,8 @@ export const Search: React.FC<SearchProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-3 px-1">
               <TrendingUp size={16} className="text-[var(--accent-color)]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white/80 font-display flex items-center gap-1.5">
-                <span>🔥</span> Trending Searches
+              <h3 className="text-sm font-medium text-[var(--text-2)] flex items-center gap-1.5">
+                Trending searches
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -516,7 +514,7 @@ export const Search: React.FC<SearchProps> = ({
               ].map((trend) => (
                 <motion.button
                   key={trend}
-                  whileHover={{ scale: 1.04, y: -1 }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: 'spring', stiffness: 800, damping: 28 }}
                   onClick={() => {
@@ -535,9 +533,7 @@ export const Search: React.FC<SearchProps> = ({
           <div className="mt-2">
             <div className="flex items-center gap-2 mb-3 px-1">
               <Sparkles size={16} className="text-[var(--accent-color)]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white/80 font-display">
-                Browse Categories
-              </h3>
+              <h3 className="text-sm font-medium text-[var(--text-2)]">Browse categories</h3>
             </div>
             <motion.div
               className="grid grid-cols-2 md:grid-cols-3 gap-3"
@@ -556,16 +552,15 @@ export const Search: React.FC<SearchProps> = ({
                       transition: { type: 'spring', stiffness: 420, damping: 28 }
                     }
                   }}
-                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileHover={{}}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
                     setQuery(cat.query);
                     executeSearch(cat.query);
                   }}
-                  className={`relative h-24 rounded-2xl overflow-hidden bg-gradient-to-br ${cat.gradient}
-                    flex items-end p-4 font-bold text-white text-base shadow-lg border border-white/10 cursor-pointer select-none group text-left`}
+                  className="relative h-24 rounded-2xl overflow-hidden bg-[var(--bg-card)] hover:bg-[var(--bg-raised)] border border-[var(--hairline)] p-4 flex flex-col justify-between group cursor-pointer transition-colors duration-200"
                 >
-                  <span className="font-display font-extrabold text-white text-base drop-shadow-md z-10">
+                  <span className="font-display font-extrabold text-white text-base z-10">
                     {cat.name}
                   </span>
                   <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
@@ -589,15 +584,13 @@ export const Search: React.FC<SearchProps> = ({
           {/* Top Result Feature Card if present and filter is 'all' */}
           {activeFilter === 'all' && (results.artists[0] || results.songs[0]) && (
             <div>
-              <span className="text-xs font-black uppercase tracking-widest text-[var(--accent-color)] mb-3 block">
-                Top Result
-              </span>
+              <span className="text-xs font-medium text-[var(--accent-ink)] mb-3 block">Top result</span>
               {results.artists[0] ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                  whileHover={{ y: -2 }}
+                  whileHover={{}}
                   onClick={() => onSelectArtist?.(results.artists[0].id)}
                   className="glass-card p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-colors group"
                 >
@@ -606,12 +599,12 @@ export const Search: React.FC<SearchProps> = ({
                       src={results.artists[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.artists[0].name}
                       referrerPolicy="no-referrer"
-                      className="w-18 h-18 rounded-full object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
+                      className="w-18 h-18 rounded-full object-cover shadow-lg border border-white/10 transition-transform"
                       onError={handleImageError}
                       layoutId={`search-art-${results.artists[0].id}`}
                     />
                     <div className="min-w-0">
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold text-white/60 tracking-normal">
                         Artist
                       </span>
                       <h3 className="text-lg font-black text-white truncate mt-1 font-display">
@@ -623,9 +616,9 @@ export const Search: React.FC<SearchProps> = ({
                     </div>
                   </div>
                   <motion.div
-                    whileHover={{ scale: 1.08 }}
+                    whileHover={{}}
                     whileTap={{ scale: 0.92 }}
-                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center shadow-lg shadow-[var(--accent-color)]/25 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   >
                     <User size={20} />
                   </motion.div>
@@ -635,7 +628,7 @@ export const Search: React.FC<SearchProps> = ({
                   initial={{ opacity: 0, y: 20, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                  whileHover={{ y: -2 }}
+                  whileHover={{}}
                   onClick={() => playTrack(results.songs[0], results.songs)}
                   className="glass-card p-5 rounded-3xl bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 cursor-pointer flex items-center justify-between shadow-xl transition-colors group"
                 >
@@ -644,12 +637,12 @@ export const Search: React.FC<SearchProps> = ({
                       src={results.songs[0].thumbnail || '/icons/musify-icon.svg'}
                       alt={results.songs[0].title}
                       referrerPolicy="no-referrer"
-                      className="w-18 h-18 rounded-2xl object-cover shadow-lg border border-white/10 group-hover:scale-105 transition-transform"
+                      className="w-18 h-18 rounded-2xl object-cover shadow-lg border border-white/10 transition-transform"
                       onError={handleImageError}
                       layoutId={`search-art-${results.songs[0].id}`}
                     />
                     <div className="min-w-0">
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold uppercase text-white/60 tracking-wider">
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-extrabold text-white/60 tracking-normal">
                         Song
                       </span>
                       <h3 className="text-lg font-black text-white truncate mt-1 font-display">
@@ -661,13 +654,13 @@ export const Search: React.FC<SearchProps> = ({
                     </div>
                   </div>
                   <motion.button
-                    whileHover={{ scale: 1.08 }}
+                    whileHover={{}}
                     whileTap={{ scale: 0.92 }}
                     onClick={(e) => {
                       e.stopPropagation();
                       playTrack(results.songs[0], results.songs);
                     }}
-                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center shadow-lg shadow-[var(--accent-color)]/25 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
+                    className="w-12 h-12 rounded-full bg-[var(--accent-color)] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
                   >
                     <Play size={18} className="fill-white ml-0.5 text-white" />
                   </motion.button>
@@ -733,14 +726,14 @@ export const Search: React.FC<SearchProps> = ({
                   <div
                     key={album.id}
                     onClick={() => onSelectAlbum?.(album.id)}
-                    className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-all"
+                    className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-colors"
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
                         src={album.thumbnail || '/icons/musify-icon.svg'}
                         alt={album.title}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transition-transform duration-300"
                         onError={handleImageError}
                       />
                     </div>
@@ -772,14 +765,14 @@ export const Search: React.FC<SearchProps> = ({
                   <div
                     key={artist.id}
                     onClick={() => onSelectArtist?.(artist.id)}
-                    className="p-4 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col items-center text-center gap-3 group transition-all"
+                    className="p-4 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col items-center text-center gap-3 group transition-colors"
                   >
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-white/10 shadow-xl border border-white/10">
                       <img
                         src={artist.thumbnail || '/icons/musify-icon.svg'}
                         alt={artist.name}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transition-transform duration-300"
                         onError={handleImageError}
                       />
                     </div>
@@ -811,14 +804,14 @@ export const Search: React.FC<SearchProps> = ({
                   <div
                     key={playlist.id}
                     onClick={() => onSelectPlaylist?.(playlist.id)}
-                    className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-all"
+                    className="p-3.5 rounded-3xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 cursor-pointer flex flex-col gap-3 group transition-colors"
                   >
                     <div className="aspect-square rounded-2xl overflow-hidden bg-white/10 shadow-lg border border-white/5">
                       <img
                         src={playlist.thumbnail || '/icons/musify-icon.svg'}
                         alt={playlist.title}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transition-transform duration-300"
                         onError={handleImageError}
                       />
                     </div>

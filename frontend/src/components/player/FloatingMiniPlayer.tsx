@@ -25,7 +25,7 @@ interface FloatingMiniPlayerProps {
  * - 48px circular progress ring surrounding 40px album art thumbnail
  * - Horizontal swipe gesture with spring resistance (swipeSensitivity = 0.73) to skip songs
  * - Press scale response: grows to 1.04x while pressed
- * - Liquid glass styling with specular highlight rim
+ * - Mini player styling with specular highlight rim
  */
 export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
   track,
@@ -97,7 +97,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
     >
       {/* Thin 2px progress line at top of mini player */}
       <div className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
-        <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${progressRatio * 100}%` }} />
+        <div className="h-full bg-[var(--accent)] transition-[width] duration-200" style={{ width: `${progressRatio * 100}%` }} />
       </div>
 
       {/* Left: 48px Circular Progress Ring surrounding 40px Album Art */}
@@ -126,7 +126,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
               cy={ringSize / 2}
               r={radius}
               fill="none"
-              stroke="#E5303D"
+              stroke="var(--accent)"
               strokeWidth={strokeWidth}
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -164,7 +164,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
         <div className="min-w-0 flex flex-col justify-center flex-1 pr-2">
           <motion.p
             layoutId="player-title"
-            className="text-sm font-bold text-white truncate drop-shadow-sm leading-tight"
+            className="text-sm font-bold text-white truncate  leading-tight"
           >
             {track.title}
           </motion.p>
@@ -181,7 +181,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
       >
         <button
           onClick={() => toggleLike(track)}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
           title={liked ? 'Unlike' : 'Like'}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
@@ -190,7 +190,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
 
         <button
           onClick={onPrev}
-          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
           title="Previous"
           aria-label="Previous track"
         >
@@ -200,7 +200,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
         <motion.button
           layoutId="player-play-button"
           onClick={onTogglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5303D] text-white hover:scale-105 active:scale-95 transition-all shadow-[0_4px_16px_rgba(229,48,61,0.4)] ml-0.5"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--accent)] text-white  active:scale-95 transition-colors  ml-0.5"
           title={isPlaying ? 'Pause' : 'Play'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
@@ -213,7 +213,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
 
         <button
           onClick={onNext}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
           title="Next"
           aria-label="Next track"
         >

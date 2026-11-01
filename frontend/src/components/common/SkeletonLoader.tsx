@@ -12,7 +12,7 @@ export const SkeletonShimmer: React.FC<SkeletonProps> = ({ className = '' }) => 
       className={`relative overflow-hidden bg-white/[0.04] rounded-2xl ${className}`}
     >
       <div
-        className="absolute inset-0 -translate-x-full animate-[shimmer_1.8s_infinite] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+        className="absolute inset-0 bg-[var(--bg-raised)]"
         style={{
           backgroundImage:
             'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%)'
@@ -134,7 +134,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-4 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-xs font-bold text-white border border-white/15"
+          className="mt-4 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-xs font-bold text-white border border-white/15"
         >
           {action.label}
         </button>

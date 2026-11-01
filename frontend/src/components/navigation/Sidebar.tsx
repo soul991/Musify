@@ -57,25 +57,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Logo & Identity */}
       <div className="flex items-center gap-3 px-2 py-2 mb-4">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#E5303D]/25 shrink-0 bg-[#E5303D]"
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 bg-[var(--accent)]"
         >
           <img src="/icons/musify-icon.svg" alt="Musify" className="w-6 h-6 invert" />
         </div>
         <div className="min-w-0">
           <h2 className="text-lg font-black tracking-tight leading-none">Musify</h2>
-          <span className="text-[10px] tracking-widest font-bold uppercase text-white/40 block mt-1">
-            Liquid Audio
-          </span>
+          <span className="text-xs text-[var(--text-3)] block mt-0.5">Music player</span>
         </div>
       </div>
 
       {/* Quick Search Action */}
       <button
         onClick={onOpenSearch}
-        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-white/60 hover:text-white transition-all mb-4 active:scale-98"
+        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-white/60 hover:text-white transition-colors mb-4 active:scale-[0.98]"
       >
         <Search size={16} />
-        <span className="text-xs font-semibold">Search tracks...</span>
+        <span className="text-xs font-semibold">Search</span>
       </button>
 
       {/* Core Navigation Links */}
@@ -87,26 +85,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`relative flex items-center gap-3 px-3.5 py-2 rounded-2xl transition-all duration-200 text-sm font-semibold group ${
+              className={`relative flex items-center gap-3 px-3.5 py-2 rounded-2xl transition-colors duration-200 text-sm font-semibold group ${
                 isActive
-                  ? 'bg-white/[0.12] text-white shadow-sm border border-white/15 font-bold'
-                  : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[var(--bg-raised)] text-[var(--text-1)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] border border-[var(--hairline)] font-medium'
+                  : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-raised)]'
               }`}
             >
               <span
                 className="transition-colors duration-200"
-                style={{ color: isActive ? '#E5303D' : undefined }}
+                style={{ color: isActive ? 'var(--accent)' : undefined }}
               >
                 {item.icon}
               </span>
               <span>{item.label}</span>
 
-              {/* Glowing Ruby Active Beacon */}
-              {isActive && (
-                <div
-                  className="ml-auto w-1.5 h-4 rounded-full shadow-[0_0_8px_#E5303D] bg-[#E5303D]"
-                />
-              )}
+              
             </button>
           );
         })}
@@ -115,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenListenTogether && (
           <button
             onClick={onOpenListenTogether}
-            className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-white/60 hover:text-white hover:bg-white/[0.04] transition-all duration-200 text-sm font-semibold group"
+            className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-white/60 hover:text-white hover:bg-[var(--bg-raised)] transition-colors duration-200 text-sm font-medium group"
             title="Listen Together - Cross-device sync"
           >
             <span className="text-white/60 group-hover:text-white shrink-0">
@@ -123,12 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
             <div className="flex flex-col text-left leading-tight">
               <span>Listen Together</span>
-              <span className="text-[10px] text-amber-400 font-bold">Live Room</span>
+              <span className="text-[10px] text-[var(--text-3)] font-normal">Live room</span>
             </div>
-            <span className="ml-auto flex h-2 w-2 relative shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E5303D] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E5303D]"></span>
-            </span>
+            <span className="ml-auto w-2 h-2 rounded-full bg-[var(--accent)] shrink-0" />
           </button>
         )}
       </div>
@@ -136,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Playlists & Collections */}
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 pt-3 border-t border-white/10">
         <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">My Music</span>
+          <span className="text-xs font-medium text-[var(--text-3)]">My music</span>
           <button
             onClick={handleCreatePlaylist}
             className="text-white/50 hover:text-white transition-colors p-1"
@@ -147,17 +137,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Liked Songs Shortcut */}
+        {/* Liked songs Shortcut */}
         <button
           onClick={() => onTabChange('library')}
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white transition-all"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white transition-colors"
         >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shrink-0 shadow-sm">
-            <Heart size={13} className="fill-white text-white" />
+          <div className="w-7 h-7 rounded-lg bg-[var(--bg-raised)] border border-[var(--hairline)] flex items-center justify-center shrink-0">
+            <Heart size={13} className="fill-[var(--accent)] text-[var(--accent)]" />
           </div>
           <div className="truncate">
-            <p className="truncate text-xs font-bold">Liked Songs</p>
-            <p className="text-[10px] text-white/40">{likedSongs.length} tracks</p>
+            <p className="truncate text-xs font-bold">Liked songs</p>
+            <p className="text-[10px] text-[var(--text-3)]">{likedSongs.length} tracks</p>
           </div>
         </button>
 
@@ -166,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             key={pl.id}
             onClick={() => onTabChange('library')}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all truncate"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors truncate"
           >
             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
               <span className="text-xs font-bold text-white/60">{pl.name.charAt(0).toUpperCase()}</span>
@@ -181,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenEqualizer && (
           <button
             onClick={onOpenEqualizer}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs font-semibold"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
           >
             <Sliders size={16} />
             <span>Equalizer</span>
@@ -191,16 +181,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onOpenStats && (
           <button
             onClick={onOpenStats}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs font-semibold"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
           >
             <BarChart2 size={16} />
-            <span>Listening Stats</span>
+            <span>Listening stats</span>
           </button>
         )}
 
         <button
           onClick={onOpenSettings}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs font-semibold"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
         >
           <Settings size={16} />
           <span>Settings</span>
