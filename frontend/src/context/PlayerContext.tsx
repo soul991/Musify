@@ -858,9 +858,72 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (repeatMode === 'one' && audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play();
-    } else {
-      nextTrack();
+      return;
     }
+
+    const curQ = queueRef.current;
+    let nextIdx = queueIndexRef.current + 1;
+    if (nextIdx >= curQ.length) {
+      if (repeatModeRef.current === 'all') {
+        nextIdx = 0;
+      } else {
+        setIsPlaying(false);
+        return;
+      }
+    }
+
+    const nextItem = curQ[nextIdx];
+    const sec = secondaryAudioRef.current;
+
+    // Check if secondary element is already preloaded with next item and ready for instant playback
+    if (
+      nextItem &&
+      sec &&
+      preloadedTrackIdRef.current === nextItem.id &&
+      sec.src &&
+      sec.readyState >= 2 // HAVE_CURRENT_DATA or higher
+    ) {
+      const tEnded = performance.now();
+      // Swap primary and secondary audio elements with NO await in between
+      const prevEl = audioRef.current;
+      audioRef.current = sec;
+      secondaryAudioRef.current = prevEl;
+
+      // Start playback immediately on swapped element
+      audioRef.current.play().then(() => {
+        const gap = Math.round(performance.now() - tEnded);
+        console.log(`[PERF] Gapless track swap gap: ${gap}ms for track: "${nextItem.title}"`);
+        setIsPlaying(true);
+        setPlaybackError(null);
+        consecutiveFailuresRef.current = 0;
+      }).catch((err) => {
+        if (err?.name !== 'AbortError') {
+          handlePlaybackFailure(nextItem, err?.message || 'Gapless playback failed');
+        }
+      });
+
+      // Update player state synchronously
+      setCurrentTrack(nextItem);
+      setQueueIndex(nextIdx);
+      setCurrentTime(0);
+      setDuration(nextItem.duration || (audioRef.current.duration || 0));
+      hasPrefetchedNextHalfwayRef.current = false;
+      preloadedTrackIdRef.current = null;
+
+      // Clean up previous audio element and prepare it for subsequent preloading
+      if (prevEl) {
+        prevEl.pause();
+        prevEl.removeAttribute('src');
+        prevEl.load();
+      }
+
+      extractColorsRef.current(nextItem.thumbnail);
+      addToHistoryRef.current(nextItem);
+      return;
+    }
+
+    // Fallback: standard queue transition if not preloaded
+    nextTrack();
   };
 
   const playTrack = async (track: Track, newQueue?: Track[]) => {
