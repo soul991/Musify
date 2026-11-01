@@ -9,17 +9,12 @@ interface PlayerSyncedLyricsViewProps {
   className?: string;
 }
 
-/**
- * Compact 1-line synchronized lyrics component matching
- * echo-repo/app/src/main/kotlin/com/music/echo/ui/player/PlayerSyncedLyricsView.kt
- */
 export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
   lines,
   currentTime,
   onOpenLyrics,
   className = ''
 }) => {
-  // Find currently active line
   const activeLine = useMemo(() => {
     if (!lines || lines.length === 0) return null;
     let current: LyricLine | null = null;
@@ -37,24 +32,23 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
     return null;
   }
 
-  // If before first line (intro), show first line dimmed
   const displayLine = activeLine || lines[0];
   const isIntro = !activeLine;
 
   return (
     <div
       onClick={onOpenLyrics}
-      className={`w-full px-6 py-2 cursor-pointer flex items-center justify-center min-h-[36px] overflow-hidden ${className}`}
+      className={`w-full px-6 py-2 cursor-pointer flex items-center justify-center min-h-[44px] overflow-hidden ${className}`}
     >
       <AnimatePresence mode="wait">
         <motion.p
           key={displayLine.time}
-          initial={{ y: 14, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: isIntro ? 0.45 : 1 }}
-          exit={{ y: -14, opacity: 0 }}
-          transition={{ duration: 0.28, ease: 'easeOut' }}
-          className={`text-center font-bold text-base sm:text-lg  truncate max-w-full ${
-            isIntro ? 'text-white/50 italic' : 'text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]'
+          exit={{ y: -8, opacity: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className={`text-center font-display text-lg sm:text-xl truncate max-w-full ${
+            isIntro ? 'text-[var(--text-3)]' : 'text-[var(--text-1)]'
           }`}
         >
           {isIntro ? `... ${displayLine.text}` : displayLine.text}
