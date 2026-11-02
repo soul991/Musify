@@ -460,7 +460,7 @@ export const FullPlayer: React.FC = () => {
                 <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px] flex items-center justify-center select-none">
                   {/* Vinyl Record Disc */}
                   <motion.div
-                    animate={{ rotate: isPlaying ? 360 : 0 }}
+                    animate={{ rotate: isPlaying && !shouldReduceMotion ? 360 : 0 }}
                     transition={{ duration: 12, repeat: isPlaying && !shouldReduceMotion ? Infinity : 0, ease: 'linear' }}
                     onClick={() => setIsRotatingThumbnail(false)}
                     className="relative w-[280px] h-[280px] sm:w-[330px] sm:h-[330px] lg:w-[390px] lg:h-[390px] rounded-full cursor-pointer shadow-[0_25px_60px_rgba(0,0,0,0.9)] border-2 border-white/10 flex items-center justify-center overflow-hidden"
@@ -497,7 +497,7 @@ export const FullPlayer: React.FC = () => {
                   <motion.div
                     initial={{ rotate: -5 }}
                     animate={{ rotate: isPlaying ? 24 : -5 }}
-                    transition={{ type: 'spring', damping: 22, stiffness: 140 }}
+                    transition={shouldReduceMotion ? playerReducedMotionTransition : { type: 'spring', damping: 22, stiffness: 140 }}
                     style={{ transformOrigin: 'top right' }}
                     className="absolute top-2 right-4 w-[120px] sm:w-[150px] lg:w-[170px] h-[160px] sm:h-[200px] lg:h-[220px] pointer-events-none z-20"
                   >
@@ -526,14 +526,14 @@ export const FullPlayer: React.FC = () => {
                 <motion.div
                   layoutId="player-artwork"
                   transition={activeSharedTransition}
-                  animate={{ scale: isPlaying ? 1.03 : 1.0 }}
+                  animate={{ scale: isPlaying && !shouldReduceMotion ? 1.03 : 1.0 }}
                   onClick={() => setIsRotatingThumbnail(true)}
-                  onMouseMove={handleArtMouseMove}
-                  onMouseLeave={handleArtMouseLeave}
+                  onMouseMove={shouldReduceMotion ? undefined : handleArtMouseMove}
+                  onMouseLeave={shouldReduceMotion ? undefined : handleArtMouseLeave}
                   className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] aspect-square cursor-pointer drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] rounded-[28px] overflow-hidden border border-white/20 group"
                   style={{
-                    transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-                    transition: 'transform 0.15s ease-out',
+                    transform: shouldReduceMotion ? undefined : `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                    transition: shouldReduceMotion ? undefined : 'transform 0.15s ease-out',
                     boxShadow: `0 32px 80px -12px ${accentColor || colors.primary || "#E5303D"}80, 0 16px 32px -8px rgba(0,0,0,0.8)`
                   }}
                 >
@@ -984,10 +984,10 @@ export const FullPlayer: React.FC = () => {
           <AnimatePresence>
             {activeSheet === 'lyrics' && (
               <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
+                exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                transition={shouldReduceMotion ? playerReducedMotionTransition : { type: 'spring', damping: 28, stiffness: 280 }}
                 className="absolute inset-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-3xl flex flex-col"
               >
                 <SyncedLyricsView onClose={() => setActiveSheet('none')} />
@@ -996,10 +996,10 @@ export const FullPlayer: React.FC = () => {
 
             {activeSheet === 'queue' && (
               <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
+                exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                transition={shouldReduceMotion ? playerReducedMotionTransition : { type: 'spring', damping: 28, stiffness: 280 }}
                 className="absolute inset-x-0 bottom-0 top-16 z-40 bg-[#121212]/95 backdrop-blur-3xl rounded-t-[32px] border-t border-white/10 flex flex-col shadow-2xl"
               >
                 <QueueSheet onClose={() => setActiveSheet('none')} />

@@ -89,10 +89,10 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
           className={`fixed bottom-5 inset-x-0 z-40 hidden md:flex justify-center px-6 pointer-events-none ${className}`}
         >
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { y: 50, opacity: 0 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { y: 50, opacity: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { type: 'spring', damping: 28, stiffness: 350 }}
             className="relative w-full max-w-[1200px] h-[78px] rounded-full backdrop-blur-3xl backdrop-saturate-[1.6] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center px-6 gap-6 pointer-events-auto select-none overflow-hidden"
             style={{
               background: colors.primary
@@ -111,9 +111,16 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
               />
             )}
 
-            {/* Thin 2px progress line at top of dock */}
+            {/* Thin 2px progress line at top of dock — GPU transform: scaleX without layout reflow */}
             <div className="absolute top-0 inset-x-8 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
-              <div className="h-full bg-[#E5303D] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+              <div
+                className="h-full bg-[#E5303D] origin-left"
+                style={{
+                  width: '100%',
+                  transform: `scaleX(${duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0})`,
+                  transformOrigin: 'left center'
+                }}
+              />
             </div>
 
             {/* Left Section: Track Info & Room Status */}
@@ -132,7 +139,7 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
                     (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
                   }}
                   className={`w-full h-full object-cover rounded-full ${
-                    isPlaying ? 'animate-spin-vinyl' : 'animate-spin-vinyl-paused'
+                    isPlaying && !shouldReduceMotion ? 'animate-spin-vinyl' : ''
                   }`}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity">
@@ -264,8 +271,8 @@ export const DesktopDockPlayer: React.FC<DesktopDockPlayerProps> = ({
 
         {/* Right Section: Visualizer, Volume, Toggles */}
         <div className="flex items-center gap-3.5 w-64 lg:w-72 justify-end shrink-0">
-          {/* Live Equalizer Animation Bars */}
-          {isPlaying && (
+          {/* Live Equalizer Animation Bars (eliminated when paused or reduced motion) */}
+          {isPlaying && !shouldReduceMotion && (
             <div className="flex items-end gap-1 h-5 px-2">
               <span className="w-1 bg-[#E5303D] rounded-full h-3 animate-[bounce_0.6s_ease-in-out_infinite]" />
               <span className="w-1 bg-[#E5303D] rounded-full h-5 animate-[bounce_0.8s_ease-in-out_0.2s_infinite]" />

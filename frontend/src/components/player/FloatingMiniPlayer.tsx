@@ -95,8 +95,8 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
 
   return (
     <motion.div
-      animate={{ scale: isPressed ? 1.03 : 1.0 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+      animate={{ scale: isPressed && !shouldReduceMotion ? 1.03 : 1.0 }}
+      transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { type: 'spring', stiffness: 350, damping: 25 }}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerCancel={() => setIsPressed(false)}
@@ -151,7 +151,7 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              className="transition-[stroke-dashoffset] duration-150 ease-linear"
+              className={shouldReduceMotion ? '' : 'transition-[stroke-dashoffset] duration-150 ease-linear'}
             />
           </svg>
 

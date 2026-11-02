@@ -90,7 +90,7 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
         className="relative w-full h-6 flex items-center cursor-pointer group"
       >
         {/* Track Background */}
-        <div className="relative w-full h-1 group-hover:h-1.5 rounded-full bg-white/15 overflow-hidden transition-[height] duration-150">
+        <div className="relative w-full h-1 group-hover:h-1.5 rounded-full bg-white/15 overflow-hidden">
           {/* Active Progress Bar animated with transform: scaleX */}
           <div
             className="absolute inset-0 rounded-full"
@@ -105,7 +105,7 @@ export const CalmSeekbar: React.FC<CalmSeekbarProps> = ({
 
         {/* Scrubber Knob (grows on hover / drag) */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-150 ${
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-colors duration-150 ${
             isHovered || isDragging
               ? 'w-3 h-3 scale-100 opacity-100'
               : 'w-2 h-2 scale-75 opacity-0 group-hover:opacity-100 group-hover:scale-100'

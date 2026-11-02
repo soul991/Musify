@@ -5,6 +5,7 @@ import { usePlayer } from '../../context/PlayerContext';
 import { FlowerPlayButton } from '../player/FlowerPlayButton';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
+import { getButtonPressFeedback } from '../../utils/motion';
 import {
   processLyrics,
   calculateWordProgress,
@@ -129,6 +130,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false
   );
+  const buttonFeedback = getButtonPressFeedback(prefersReducedMotion);
 
   const [lineOffsets, setLineOffsets] = useState<number[]>([]);
   const [containerHeight, setContainerHeight] = useState<number>(600);
@@ -300,20 +302,26 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
+            type="button"
+            whileTap={buttonFeedback.whileTap}
+            transition={buttonFeedback.transition}
             onClick={toggleFullscreen}
             aria-label={isFullscreen ? 'Exit Fullscreen Lyrics' : 'Fullscreen Lyrics'}
-            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 shadow-md text-white"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-150 flex items-center justify-center border border-white/15 shadow-md text-white"
           >
             {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            type="button"
+            whileTap={buttonFeedback.whileTap}
+            transition={buttonFeedback.transition}
             onClick={onClose}
             aria-label="Close Lyrics"
-            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/15 shadow-md"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-150 flex items-center justify-center border border-white/15 shadow-md text-white"
           >
             <ChevronDown size={22} />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -326,7 +334,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
       >
         {loadingLyrics ? (
           <div className="h-full flex flex-col items-center justify-center gap-3 text-white/40 my-auto">
-            <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <div className={`w-8 h-8 border-2 border-white/20 border-t-white rounded-full ${prefersReducedMotion ? '' : 'animate-spin'}`} />
             <p className="text-xs font-semibold tracking-wider uppercase">Loading Synced Lyrics...</p>
           </div>
         ) : !lyrics.lines || lyrics.lines.length === 0 ? (
@@ -345,7 +353,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             }}
             transition={
               prefersReducedMotion
-                ? { duration: 0 }
+                ? { duration: 0.1, ease: 'linear' }
                 : { type: 'spring', stiffness: 380, damping: 40, mass: 1 }
             }
             style={{
@@ -392,6 +400,7 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
                     opacity: targetOpacity,
                     transform: prefersReducedMotion ? undefined : `scale(${scale})`,
                     transformOrigin: 'left center',
+                    transition: prefersReducedMotion ? 'opacity 100ms linear' : 'opacity 200ms ease, transform 200ms ease'
                   }}
                 >
                   <p
@@ -447,13 +456,16 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
             transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.2 }}
             className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 pointer-events-auto"
           >
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={reEnableAutoScroll}
-              className="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/25 text-white text-xs font-bold tracking-wider flex items-center gap-2 shadow-2xl transition-colors active:scale-95"
+              className="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/25 text-white text-xs font-bold tracking-wider flex items-center gap-2 shadow-2xl transition-colors duration-150"
             >
-              <RefreshCw size={13} className="animate-spin text-[var(--accent-color,#E5303D)]" />
+              <RefreshCw size={13} className={`${prefersReducedMotion ? '' : 'animate-spin'} text-[var(--accent-color,#E5303D)]`} />
               <span>SYNC WITH PLAYBACK</span>
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -500,23 +512,30 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
               const percent = Math.max(0, Math.min(1, clickX / rect.width));
               seek(percent * duration);
             }}
-            className="w-full h-1.5 rounded-full bg-white/20 hover:h-2 transition-[height] duration-150 cursor-pointer overflow-hidden"
+            className="w-full h-1.5 rounded-full bg-white/20 cursor-pointer overflow-hidden"
           >
             <div
-              className="h-full bg-white rounded-full transition-[width] duration-100"
-              style={{ width: `${progressPercent}%` }}
+              className="h-full bg-white rounded-full origin-left"
+              style={{
+                width: '100%',
+                transform: `scaleX(${progressPercent / 100})`,
+                transformOrigin: 'left center'
+              }}
             />
           </div>
 
           {/* Controls: Prev, Center Flower Play, Next */}
           <div className="flex items-center justify-center gap-5 pt-1">
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={prevTrack}
               aria-label="Previous track"
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center text-white"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-150 flex items-center justify-center text-white"
             >
               <SkipBack size={18} className="fill-current" />
-            </button>
+            </motion.button>
 
             <FlowerPlayButton
               isPlaying={isPlaying}
@@ -526,13 +545,16 @@ export const SyncedLyricsView: React.FC<SyncedLyricsViewProps> = ({ onClose }) =
               iconColor="#000000"
             />
 
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={nextTrack}
               aria-label="Next track"
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center text-white"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-150 flex items-center justify-center text-white"
             >
               <SkipForward size={18} className="fill-current" />
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

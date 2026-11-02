@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { LyricLine } from '../../types';
 
 interface PlayerSyncedLyricsViewProps {
@@ -19,6 +19,8 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
   onOpenLyrics,
   className = ''
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   // Find currently active line
   const activeLine = useMemo(() => {
     if (!lines || lines.length === 0) return null;
@@ -49,10 +51,10 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
       <AnimatePresence mode="wait">
         <motion.p
           key={displayLine.time}
-          initial={{ y: 14, opacity: 0 }}
-          animate={{ y: 0, opacity: isIntro ? 0.45 : 1 }}
-          exit={{ y: -14, opacity: 0 }}
-          transition={{ duration: 0.28, ease: 'easeOut' }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: 14, opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: isIntro ? 0.45 : 1 } : { y: 0, opacity: isIntro ? 0.45 : 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: -14, opacity: 0 }}
+          transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { duration: 0.28, ease: 'easeOut' }}
           className={`text-center font-bold text-base sm:text-lg tracking-wide truncate max-w-full ${
             isIntro ? 'text-white/50 italic' : 'text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]'
           }`}

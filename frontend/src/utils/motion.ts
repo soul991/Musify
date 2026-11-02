@@ -1,4 +1,6 @@
-import { Transition, Variants } from 'framer-motion';
+import { Transition, Variants, useReducedMotion } from 'framer-motion';
+
+export { useReducedMotion };
 
 /**
  * Musify Redesign Motion Tokens (Phase 3)
@@ -153,6 +155,60 @@ export function getButtonPressFeedback(shouldReduceMotion?: boolean | null) {
     return buttonReducedPressFeedback;
   }
   return buttonPressFeedback;
+}
+
+/**
+ * R6 Reduced Motion Tokens & Guardrails
+ * Under prefers-reduced-motion: reduce, eliminate waveforms, springs, and scroll animations;
+ * state changes use 100ms linear opacity transitions.
+ */
+export const REDUCED_MOTION_DURATION_SECONDS = 0.1 as const; // 100ms per R6
+export const REDUCED_MOTION_DURATION_MS = 100 as const;
+
+export const reducedMotionTransition: Transition = {
+  duration: REDUCED_MOTION_DURATION_SECONDS,
+  ease: 'linear'
+};
+
+export const reducedMotionOpacityVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: reducedMotionTransition
+  },
+  exit: {
+    opacity: 0,
+    transition: reducedMotionTransition
+  }
+};
+
+/**
+ * Resolver for player expand/collapse shared transition
+ */
+export function getPlayerExpandTransition(shouldReduceMotion?: boolean | null): Transition {
+  return shouldReduceMotion ? reducedMotionTransition : springPlayerExpand;
+}
+
+/**
+ * Resolver for artwork crossfade transition (320ms crossfade vs 100ms linear opacity)
+ */
+export function getArtworkCrossfadeTransition(shouldReduceMotion?: boolean | null): Transition {
+  return shouldReduceMotion
+    ? reducedMotionTransition
+    : { duration: 0.32, ease: [0.4, 0.0, 0.2, 1] };
+}
+
+/**
+ * Resolver for artwork opacity variants
+ */
+export function getArtworkOpacityVariants(shouldReduceMotion?: boolean | null): Variants {
+  return shouldReduceMotion
+    ? reducedMotionOpacityVariants
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1, transition: { duration: 0.32, ease: [0.4, 0.0, 0.2, 1] } },
+        exit: { opacity: 0, transition: { duration: 0.32, ease: [0.4, 0.0, 0.2, 1] } }
+      };
 }
 
 /**

@@ -54,18 +54,19 @@ export function calculateAmplitudeEase(
 /**
  * Detect prefers-reduced-motion
  */
-function checkPrefersReducedMotion(): boolean {
+export function checkPrefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 /**
- * Kinetic Waveform Seek Bar (R1)
+ * Kinetic Waveform Seek Bar (R1 & R6)
  *
  * Requirements:
  * - 2px amplitude wave (lambda = 24px) while playing
  * - Eases smoothly between playing 2px wave and flat line (amplitude = 0) when paused over 320ms
  * - Drives rAF canvas animation loop ONLY while playing AND visible (document.visibilityState === 'visible')
+ * - When prefers-reduced-motion: reduce is requested, eliminate waveform loop, render flat line with 100ms opacity transition
  * - Registers visibilitychange listener to stop rAF when tab is hidden, resuming when visible
  * - Stops the loop completely when paused and eased
  * - Eliminates synchronous layout reads (getBoundingClientRect) inside rAF loop by caching bounds
@@ -84,6 +85,9 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragValue, setDragValue] = useState(value);
+  const [prefersReduced, setPrefersReduced] = useState(checkPrefersReducedMotion);
+  const prefersReducedRef = useRef(prefersReduced);
+  prefersReducedRef.current = prefersReduced;
 
   // Layout cache to eliminate layout reads (getBoundingClientRect) inside rAF loop
   const boundsRef = useRef({ width: 0, height: 0, left: 0, top: 0 });
@@ -286,13 +290,31 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
    */
   const startLoop = useCallback(() => {
     if (rafIdRef.current !== null) return;
+    if (prefersReducedRef.current || checkPrefersReducedMotion()) {
+      currentAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+      targetAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+      isEasingRef.current = false;
+      stopLoop();
+      drawFrame();
+      return;
+    }
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
 
     lastTimeRef.current = performance.now();
 
     const tick = (now: number) => {
-      // Visibility gating: stop loop when tab is hidden
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+      // Visibility gating: stop loop when tab is hidden or reduced motion is active
+      if (
+        (typeof document !== 'undefined' && document.visibilityState !== 'visible') ||
+        prefersReducedRef.current ||
+        checkPrefersReducedMotion()
+      ) {
+        if (prefersReducedRef.current || checkPrefersReducedMotion()) {
+          currentAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+          targetAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+          isEasingRef.current = false;
+          drawFrame();
+        }
         rafIdRef.current = null;
         return;
       }
@@ -335,12 +357,21 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
     };
 
     rafIdRef.current = requestAnimationFrame(tick);
-  }, [drawFrame]);
+  }, [drawFrame, stopLoop]);
 
   // Handle play/pause state change and trigger 320ms smooth ease
   useEffect(() => {
-    const reduced = checkPrefersReducedMotion();
-    const newTarget = isPlaying && !reduced ? WAVE_CONSTANTS.AMPLITUDE_PLAYING : WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+    const reduced = prefersReducedRef.current || checkPrefersReducedMotion();
+    if (reduced) {
+      currentAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+      targetAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+      isEasingRef.current = false;
+      stopLoop();
+      drawFrame();
+      return;
+    }
+
+    const newTarget = isPlaying ? WAVE_CONSTANTS.AMPLITUDE_PLAYING : WAVE_CONSTANTS.AMPLITUDE_PAUSED;
 
     if (newTarget !== targetAmpRef.current) {
       targetAmpRef.current = newTarget;
@@ -352,7 +383,28 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
         startLoop();
       }
     }
-  }, [isPlaying, startLoop]);
+  }, [isPlaying, startLoop, stopLoop, drawFrame]);
+
+  // Handle prefers-reduced-motion media query listener
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+      setPrefersReduced(e.matches);
+      if (e.matches) {
+        currentAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+        targetAmpRef.current = WAVE_CONSTANTS.AMPLITUDE_PAUSED;
+        isEasingRef.current = false;
+        stopLoop();
+        drawFrame();
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleReducedMotionChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleReducedMotionChange);
+    };
+  }, [stopLoop, drawFrame]);
 
   // Handle visibilitychange listener
   useEffect(() => {
@@ -497,9 +549,9 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
         aria-valuemax={max}
         aria-valuenow={currentValue}
         aria-valuetext={formatTime(currentValue)}
-        className="relative w-full h-12 flex items-center cursor-pointer group"
+        className="relative w-full h-12 flex items-center cursor-pointer group transition-opacity duration-100 ease-linear"
       >
-        <canvas ref={canvasRef} className="w-full h-full block pointer-events-none" />
+        <canvas ref={canvasRef} className="w-full h-full block pointer-events-none transition-opacity duration-100 ease-linear" />
 
         {/* Live Formatted Timestamp Badge while Dragging (R1) */}
         {isDragging && (
