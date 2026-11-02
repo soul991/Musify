@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { LyricLine } from '../../types';
 
 interface PlayerSyncedLyricsViewProps {
@@ -15,6 +15,8 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
   onOpenLyrics,
   className = ''
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   const activeLine = useMemo(() => {
     if (!lines || lines.length === 0) return null;
     let current: LyricLine | null = null;
@@ -43,10 +45,10 @@ export const PlayerSyncedLyricsView: React.FC<PlayerSyncedLyricsViewProps> = ({
       <AnimatePresence mode="wait">
         <motion.p
           key={displayLine.time}
-          initial={{ y: 8, opacity: 0 }}
-          animate={{ y: 0, opacity: isIntro ? 0.45 : 1 }}
-          exit={{ y: -8, opacity: 0 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: 8, opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: isIntro ? 0.45 : 1 } : { y: 0, opacity: isIntro ? 0.45 : 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: -8, opacity: 0 }}
+          transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className={`text-center font-display text-lg sm:text-xl truncate max-w-full ${
             isIntro ? 'text-[var(--text-3)]' : 'text-[var(--text-1)]'
           }`}

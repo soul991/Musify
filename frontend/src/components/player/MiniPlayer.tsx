@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { SkipBack, SkipForward } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
@@ -18,6 +18,7 @@ export const MiniPlayer: React.FC = () => {
     setIsPlayerOpen
   } = usePlayer();
   const { isLiked, toggleLike } = useLibrary();
+  const shouldReduceMotion = useReducedMotion();
 
   const dragX = useMotionValue(0);
   const smoothX = useSpring(dragX, { stiffness: 450, damping: 32 });
@@ -73,7 +74,7 @@ export const MiniPlayer: React.FC = () => {
         style={{ x: smoothX }}
         onTap={() => setIsPlayerOpen(true)}
         onClick={() => setIsPlayerOpen(true)}
-        className="w-full max-w-[360px] md:max-w-[480px] h-[64px] rounded-full bg-[#16171E]/90 backdrop-blur-3xl border border-white/20 shadow-[0_16px_36px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-between px-3 cursor-pointer pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99]"
+        className="w-full max-w-[360px] md:max-w-[480px] h-[64px] rounded-full bg-[#16171E]/90 backdrop-blur-3xl border border-white/20 shadow-[0_16px_36px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-between px-3 cursor-pointer pointer-events-auto transition-colors hover:border-white/30"
       >
         {/* Left: 48px Circular Progress Ring surrounding 40px Disc Thumbnail */}
         <div className="flex items-center gap-3 min-w-0 pr-1 flex-1">
@@ -103,7 +104,7 @@ export const MiniPlayer: React.FC = () => {
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                className="transition-colors duration-150"
+                className={shouldReduceMotion ? '' : 'transition-[stroke-dashoffset] duration-150 ease-linear'}
               />
             </svg>
 
@@ -147,7 +148,7 @@ export const MiniPlayer: React.FC = () => {
           {/* Previous Track: 32px button, 20px icon */}
           <button
             onClick={prevTrack}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors duration-150"
           >
             <SkipBack size={18} className="fill-current" />
           </button>
@@ -164,7 +165,7 @@ export const MiniPlayer: React.FC = () => {
           {/* Next Track: 32px button, 20px icon */}
           <button
             onClick={nextTrack}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors duration-150"
           >
             <SkipForward size={18} className="fill-current" />
           </button>

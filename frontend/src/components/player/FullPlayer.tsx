@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, Variants, Transition } from 'framer-motion';
 import {
   ChevronDown,
   Shuffle,
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { useLibrary } from '../../context/LibraryContext';
-import { CalmSeekbar } from './CalmSeekbar';
+import { AdaptiveSeekbar } from './AdaptiveSeekbar';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { PlayerSyncedLyricsView } from './PlayerSyncedLyricsView';
 import { SyncedLyricsView } from '../lyrics/SyncedLyricsView';
@@ -27,6 +27,95 @@ import { QueueSheet } from './QueueSheet';
 import { AudioOutputModal } from './AudioOutputModal';
 import { api } from '../../services/api';
 import { LyricsData } from '../../types';
+import { springPlayerExpand, getButtonPressFeedback } from '../../utils/motion';
+import { ArtworkCrossfade } from './ArtworkCrossfade';
+
+/**
+              * Shared-element Player Expand & Collapse Physics (R3)
+              * Calibrated: stiffness: 380, damping: 40, mass: 1 (zeta ~= 1.026 critically damped)
+              */
+export const PLAYER_EXPAND_PHYSICS = {
+  stiffness: 380,
+  damping: 40,
+  mass: 1,
+  zeta: 40 / (2 * Math.sqrt(380 * 1))
+} as const;
+
+export const CONTENT_FADE_DELAY_SECONDS = 0.08; // 80ms delay
+export const CONTENT_FADE_DELAY_MS = 80;
+export const REDUCED_MOTION_DURATION_SECONDS = 0.1; // 100ms
+export const REDUCED_MOTION_DURATION_MS = 100;
+
+export const SHARED_LAYOUT_IDS = {
+  ARTWORK: 'player-artwork',
+  TITLE: 'player-title',
+  PLAY_BUTTON: 'player-play-button'
+} as const;
+
+export const ALLOWED_ANIMATED_PROPERTIES = [
+  'transform',
+  'opacity',
+  'y',
+  'scale',
+  'scaleX',
+  'scaleY',
+  'rotate'
+] as const;
+
+export const PROHIBITED_ANIMATED_PROPERTIES = [
+  'top',
+  'bottom',
+  'left',
+  'right',
+  'width',
+  'height',
+  'margin',
+  'padding'
+] as const;
+
+export const playerContainerSpring: Transition = springPlayerExpand;
+
+export const playerReducedMotionTransition: Transition = {
+  duration: REDUCED_MOTION_DURATION_SECONDS,
+  ease: 'linear'
+};
+
+export const interiorContentFadeVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      delay: CONTENT_FADE_DELAY_SECONDS,
+      duration: 0.24,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  }
+};
+
+export const interiorContentReducedVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: REDUCED_MOTION_DURATION_SECONDS,
+      ease: 'linear'
+    }
+  }
+};
 
 export const FullPlayer: React.FC = () => {
   const {
@@ -53,6 +142,23 @@ export const FullPlayer: React.FC = () => {
   } = usePlayer();
 
   const { isLiked, toggleLike } = useLibrary();
+
+  const shouldReduceMotion = useReducedMotion();
+  const activeSharedTransition = shouldReduceMotion ? playerReducedMotionTransition : playerContainerSpring;
+  const activeInteriorVariants = shouldReduceMotion ? interiorContentReducedVariants : interiorContentFadeVariants;
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
+
+  // Only one stage is mounted at a time so each shared layoutId exists once in the tree.
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 768px)').matches
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const [showOutputModal, setShowOutputModal] = useState(false);
   const [activeSheet, setActiveSheet] = useState<'none' | 'lyrics' | 'queue'>('none');
@@ -125,10 +231,10 @@ export const FullPlayer: React.FC = () => {
     <AnimatePresence>
       {isPlayerOpen && (
         <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', stiffness: 380, damping: 40, mass: 1 }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+          transition={shouldReduceMotion ? playerReducedMotionTransition : playerContainerSpring}
           drag="y"
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={{ top: 0.05, bottom: 0.7 }}
@@ -137,36 +243,43 @@ export const FullPlayer: React.FC = () => {
               setIsPlayerOpen(false);
             }
           }}
+          data-testid="full-player-container"
           className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--bg-stage)] text-[var(--text-1)] select-none"
         >
           {/* Top Bar Navigation */}
-          <div className="relative z-20 flex items-center justify-between px-6 pt-4 pb-2 shrink-0">
+          <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-header" className="relative z-20 flex items-center justify-between px-6 pt-4 pb-2 shrink-0">
             {/* Collapse button: touch target >= 44px */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
               onClick={() => setIsPlayerOpen(false)}
-              className="w-11 h-11 rounded-full bg-[var(--bg-raised)] hover:bg-[#2c2c2f] active:scale-[0.97] transition-colors flex items-center justify-center border border-[var(--hairline)]"
+              className="w-11 h-11 rounded-full bg-[var(--bg-raised)] hover:bg-[#2c2c2f] transition-colors duration-150 flex items-center justify-center border border-[var(--hairline)]"
               aria-label="Collapse player"
             >
               <ChevronDown size={22} className="text-[var(--text-1)]" />
-            </button>
+            </motion.button>
 
             {/* Mobile Sheet Drag Indicator */}
             <div className="w-10 h-1 rounded-full bg-[var(--hairline)] md:hidden" />
 
             {/* Right actions: Sleep timer & devices */}
             <div className="relative flex items-center gap-2">
-              <button
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={() => setShowSleepMenu(!showSleepMenu)}
                 title={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
                 aria-label={remainingSleepSeconds ? `Sleep timer: ${formatSleepTime(remainingSleepSeconds)}` : 'Sleep timer'}
-                className={`w-11 h-11 rounded-full transition-colors flex items-center justify-center border border-[var(--hairline)] active:scale-[0.97] ${
+                className={`w-11 h-11 rounded-full transition-colors duration-150 flex items-center justify-center border border-[var(--hairline)] ${
                   remainingSleepSeconds
                     ? 'bg-[var(--accent)] text-white'
                     : 'bg-[var(--bg-raised)] hover:bg-[#2c2c2f] text-[var(--text-2)] hover:text-[var(--text-1)]'
                 }`}
               >
                 <Moon size={18} />
-              </button>
+              </motion.button>
 
               {/* Sleep Menu Popup */}
               {showSleepMenu && (
@@ -181,72 +294,77 @@ export const FullPlayer: React.FC = () => {
                     { label: '45 minutes', val: 45 },
                     { label: '60 minutes', val: 60 }
                   ].map((item, idx) => (
-                    <button
+                    <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                       key={idx}
                       onClick={() => {
                         setSleepTimer(item.val);
                         setShowSleepMenu(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-[var(--bg-raised)] text-[var(--text-1)] flex items-center justify-between transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-[var(--bg-raised)] text-[var(--text-1)] flex items-center justify-between transition-colors duration-150"
                     >
                       <span>{item.label}</span>
                       {sleepTimerMinutes === item.val && (
                         <CheckCircle2 size={14} className="text-[var(--accent)]" />
                       )}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* ========================================================= */}
           {/* DESKTOP STAGE (1440x900) - Section 6 */}
           {/* Left: Artwork (>= 380px square, 16px radius, neutral shadow). Below it: title (Instrument Serif 32-36), artist, like heart */}
           {/* Right: Lyrics column in Instrument Serif; active line 36px --text-1, neighbours 28px --text-3, rest fade by opacity only */}
           {/* ========================================================= */}
+{isDesktop && (
           <div className="hidden md:flex flex-1 items-center justify-between max-w-6xl w-full mx-auto px-12 gap-16 min-h-0 py-4 overflow-hidden">
             {/* Left Column: Artwork + Metadata */}
             <div className="w-[380px] lg:w-[420px] shrink-0 flex flex-col justify-center">
               {/* Artwork: at least 380px square, 16px radius, neutral shadow, real art colors inside only */}
-              <div className="w-[380px] h-[380px] lg:w-[420px] lg:h-[420px] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-[var(--hairline)] bg-[var(--bg-card)] shrink-0">
-                <img
-                  src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
-                  alt={currentTrack.title}
-                  width={420}
-                  height={420}
-                  loading="eager"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                  }}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <motion.div
+              layoutId="player-artwork"
+              transition={activeSharedTransition}
+              className="w-[380px] h-[380px] lg:w-[420px] lg:h-[420px] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-[var(--hairline)] bg-[var(--bg-card)] shrink-0 aspect-square">
+<ArtworkCrossfade
+              trackId={currentTrack.id}
+              artworkUrl={currentTrack.thumbnail}
+              title={currentTrack.title}
+              artist={currentTrack.artists?.map((a) => a.name).join(', ')}
+              reducedMotion={shouldReduceMotion ?? false}
+              className="w-full h-full aspect-square"
+              />
+</motion.div>
 
               {/* Title & Artist Row */}
               <div className="mt-5 min-w-0">
-                <h1 className="font-display text-[34px] leading-tight text-[var(--text-1)] truncate">
+                <motion.h1 layoutId="player-title" transition={activeSharedTransition} className="font-display text-[34px] leading-tight text-[var(--text-1)] truncate">
                   {currentTrack.title}
-                </h1>
+                </motion.h1>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-base text-[var(--text-2)] truncate pr-4">
                     {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                   </p>
-                  <button
+                  <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                     onClick={() => toggleLike(currentTrack)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-2)] hover:text-white transition-colors shrink-0 active:scale-[0.97]"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-2)] hover:text-white transition-colors duration-150 shrink-0"
                     aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
                   >
                     <HeartBurstIcon isLiked={liked} size={22} />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
 
             {/* Right Column: Lyrics in Instrument Serif */}
-            <div className="flex-1 h-full max-h-[480px] flex flex-col justify-center overflow-hidden">
+            <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-lyrics" className="flex-1 h-full max-h-[480px] flex flex-col justify-center overflow-hidden">
               <div
                 ref={desktopLyricsContainerRef}
                 className="flex-1 overflow-y-auto no-scrollbar mask-gradient py-8 space-y-6 select-none"
@@ -280,82 +398,101 @@ export const FullPlayer: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
+)}
 
           {/* ========================================================= */}
           {/* MOBILE STAGE (390x844) - Section 6 */}
           {/* Stacked order: Artwork, Title, Artist, Seek, Transport, Lyrics as second screen */}
           {/* ========================================================= */}
+{!isDesktop && (
           <div className="md:hidden flex flex-col justify-between flex-1 px-6 pt-2 pb-6 min-h-0 overflow-y-auto no-scrollbar">
             {/* Artwork: full width minus 24px margins, 16px radius, neutral shadow */}
-            <div className="w-full max-w-[342px] aspect-square rounded-2xl mx-auto shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-[var(--hairline)] overflow-hidden shrink-0 bg-[var(--bg-card)]">
-              <img
-                src={currentTrack.thumbnail || '/icons/musify-icon.svg'}
-                alt={currentTrack.title}
-                loading="eager"
-                decoding="async"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/icons/musify-icon.svg';
-                }}
-                className="w-full h-full object-cover"
+            <motion.div
+              layoutId="player-artwork"
+              transition={activeSharedTransition}
+              className="w-full max-w-[342px] aspect-square rounded-2xl mx-auto shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-[var(--hairline)] overflow-hidden shrink-0 bg-[var(--bg-card)]">
+<ArtworkCrossfade
+              trackId={currentTrack.id}
+              artworkUrl={currentTrack.thumbnail}
+              title={currentTrack.title}
+              artist={currentTrack.artists?.map((a) => a.name).join(', ')}
+              reducedMotion={shouldReduceMotion ?? false}
+              className="w-full h-full aspect-square"
               />
-            </div>
+</motion.div>
 
             {/* Title & Artist */}
             <div className="mt-3">
-              <h1 className="font-display text-[28px] leading-tight text-[var(--text-1)] truncate">
+              <motion.h1 layoutId="player-title" transition={activeSharedTransition} className="font-display text-[28px] leading-tight text-[var(--text-1)] truncate">
                 {currentTrack.title}
-              </h1>
+              </motion.h1>
               <div className="flex items-center justify-between mt-0.5">
                 <p className="text-sm text-[var(--text-2)] truncate pr-2">
                   {currentTrack.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
                 </p>
-                <button
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={() => toggleLike(currentTrack)}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-[var(--text-2)] hover:text-white transition-colors shrink-0 active:scale-[0.97]"
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-[var(--text-2)] hover:text-white transition-colors duration-150 shrink-0"
                   aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
                 >
                   <HeartBurstIcon isLiked={liked} size={20} />
-                </button>
+                </motion.button>
               </div>
             </div>
 
             {/* Compact lyrics line banner (tap opens lyrics sheet) */}
             {lyricsData?.synced && lyricsData.lines.length > 0 && (
-              <PlayerSyncedLyricsView
+              <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-lyrics-banner">
+<PlayerSyncedLyricsView
                 lines={lyricsData.lines}
                 currentTime={currentTime}
                 onOpenLyrics={() => setActiveSheet('lyrics')}
               />
+</motion.div>
             )}
 
             {/* Seekbar */}
-            <div className="pt-2">
-              <CalmSeekbar
+            <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-seekbar" className="pt-2">
+              <AdaptiveSeekbar
                 value={currentTime}
                 max={duration}
+                isPlaying={isPlaying}
                 accentColor="var(--accent)"
                 onSeek={seek}
                 showTimestamps={true}
               />
-            </div>
+            </motion.div>
 
             {/* Mobile Transport Row */}
-            <div className="flex items-center justify-center gap-6 py-2">
-              <button
+            <div className="flex items-center justify-center gap-6 py-2" data-testid="player-interior-controls">
+              <motion.button
+              variants={activeInteriorVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={prevTrack}
-                className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] active:scale-[0.97] transition-colors"
+                className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors duration-150"
                 aria-label="Previous track"
               >
                 <SkipBack size={26} className="fill-current" />
-              </button>
+              </motion.button>
 
               {/* Play button: 56px, --accent, white icon, no glow per section 6 */}
-              <button
-                onClick={togglePlay}
-                className="w-14 h-14 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white flex items-center justify-center transition-colors active:scale-[0.97] shadow-none"
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
+                layoutId="player-play-button"
+              onClick={togglePlay}
+                className="w-14 h-14 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white flex items-center justify-center transition-colors duration-150 shadow-none"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -363,116 +500,160 @@ export const FullPlayer: React.FC = () => {
                 ) : (
                   <Play size={24} className="fill-current text-white ml-0.5" />
                 )}
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+              variants={activeInteriorVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={nextTrack}
-                className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] active:scale-[0.97] transition-colors"
+                className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors duration-150"
                 aria-label="Next track"
               >
                 <SkipForward size={26} className="fill-current" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Mobile Secondary Action Row: All >= 44px hit areas */}
-            <div className="flex items-center justify-between px-2 pt-1 pb-safe">
-              <button
+            <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-triggers" className="flex items-center justify-between px-2 pt-1 pb-safe">
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={toggleShuffle}
                 aria-label="Shuffle"
-                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors active:scale-[0.97] ${
+                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors duration-150 ${
                   isShuffled ? 'text-[var(--accent-ink)]' : 'text-[var(--text-3)] hover:text-[var(--text-1)]'
                 }`}
               >
                 <Shuffle size={18} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={() => setShowOutputModal(true)}
                 aria-label="Audio devices"
-                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors active:scale-[0.97]"
+                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
               >
                 <Headphones size={18} className={audioOutputDeviceId !== 'default' ? 'text-[var(--accent-ink)]' : ''} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={() => setActiveSheet('lyrics')}
                 aria-label="Synced lyrics"
-                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors active:scale-[0.97]"
+                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
               >
                 <Mic2 size={18} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={() => setActiveSheet('queue')}
                 aria-label="Queue"
-                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors active:scale-[0.97]"
+                className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
               >
                 <ListMusic size={18} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                 onClick={toggleRepeat}
                 aria-label={`Repeat mode: ${repeatMode}`}
-                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors active:scale-[0.97] ${
+                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors duration-150 ${
                   repeatMode !== 'off' ? 'text-[var(--accent-ink)]' : 'text-[var(--text-3)] hover:text-[var(--text-1)]'
                 }`}
               >
                 {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </div>
+)}
 
           {/* ========================================================= */}
           {/* DESKTOP BOTTOM BAR (Seekbar & Transport) */}
           {/* Bottom: seek bar (4px track --bg-raised, fill --accent, 12px handle), transport: previous, play (56px, --accent, white icon), next; queue, devices, sleep timer as quiet icon buttons */}
           {/* ========================================================= */}
+{isDesktop && (
           <div className="hidden md:flex flex-col w-full max-w-6xl mx-auto px-12 pb-8 pt-2 shrink-0">
             {/* Seekbar */}
-            <CalmSeekbar
+            <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-seekbar">
+<AdaptiveSeekbar
               value={currentTime}
               max={duration}
+              isPlaying={isPlaying}
               accentColor="var(--accent)"
               onSeek={seek}
               showTimestamps={true}
             />
+</motion.div>
 
             {/* Transport & Action Bar */}
             <div className="flex items-center justify-between pt-3">
               {/* Left Secondary Controls */}
-              <div className="flex items-center gap-2 w-48">
-                <button
+              <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-triggers" className="flex items-center gap-2 w-48">
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={toggleShuffle}
                   aria-label="Shuffle"
-                  className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors active:scale-[0.97] ${
+                  className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors duration-150 ${
                     isShuffled ? 'text-[var(--accent-ink)]' : 'text-[var(--text-3)] hover:text-[var(--text-1)]'
                   }`}
                 >
                   <Shuffle size={18} />
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={toggleRepeat}
                   aria-label={`Repeat mode: ${repeatMode}`}
-                  className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors active:scale-[0.97] ${
+                  className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors duration-150 ${
                     repeatMode !== 'off' ? 'text-[var(--accent-ink)]' : 'text-[var(--text-3)] hover:text-[var(--text-1)]'
                   }`}
                 >
                   {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
               {/* Center Transport: Previous, Play (56px, --accent, white icon, no glow), Next */}
-              <div className="flex items-center gap-6">
-                <button
+              <div className="flex items-center gap-6" data-testid="player-interior-controls">
+                <motion.button
+              variants={activeInteriorVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={prevTrack}
-                  className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] active:scale-[0.97] transition-colors"
+                  className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors duration-150"
                   aria-label="Previous track"
                 >
                   <SkipBack size={26} className="fill-current" />
-                </button>
+                </motion.button>
 
-                <button
-                  onClick={togglePlay}
-                  className="w-14 h-14 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white flex items-center justify-center transition-colors active:scale-[0.97] shadow-none"
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
+                  layoutId="player-play-button"
+              onClick={togglePlay}
+                  className="w-14 h-14 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white flex items-center justify-center transition-colors duration-150 shadow-none"
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isPlaying ? (
@@ -480,44 +661,60 @@ export const FullPlayer: React.FC = () => {
                   ) : (
                     <Play size={24} className="fill-current text-white ml-0.5" />
                   )}
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
+              variants={activeInteriorVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={nextTrack}
-                  className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] active:scale-[0.97] transition-colors"
+                  className="w-11 h-11 flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors duration-150"
                   aria-label="Next track"
                 >
                   <SkipForward size={26} className="fill-current" />
-                </button>
+                </motion.button>
               </div>
 
               {/* Right Quiet Icon Buttons: Queue, Devices, Volume */}
-              <div className="flex items-center justify-end gap-2 w-48">
-                <button
+              <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-triggers" className="flex items-center justify-end gap-2 w-48">
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={() => setShowOutputModal(true)}
                   aria-label="Audio devices"
-                  className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors active:scale-[0.97]"
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
                 >
                   <Headphones size={18} className={audioOutputDeviceId !== 'default' ? 'text-[var(--accent-ink)]' : ''} />
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                   onClick={() => setActiveSheet('queue')}
                   aria-label="Queue"
-                  className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors active:scale-[0.97]"
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
                 >
                   <ListMusic size={18} />
-                </button>
+                </motion.button>
 
                 {/* Volume slider */}
-                <div className="flex items-center gap-2 pl-2">
-                  <button
+                <motion.div variants={activeInteriorVariants} initial="initial" animate="animate" exit="exit" data-testid="player-interior-volume" className="flex items-center gap-2 pl-2">
+                  <motion.button
+              type="button"
+              whileTap={buttonFeedback.whileTap}
+              transition={buttonFeedback.transition}
                     onClick={() => setVolume && setVolume(volume > 0 ? 0 : 1)}
-                    className="text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors"
+                    className="text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors duration-150"
                     aria-label={volume === 0 ? 'Unmute' : 'Mute'}
                   >
                     {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  </button>
+                  </motion.button>
                   <div
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
@@ -528,23 +725,24 @@ export const FullPlayer: React.FC = () => {
                     className="w-20 h-1 rounded-full bg-[var(--bg-raised)] cursor-pointer overflow-hidden relative"
                   >
                     <div
-                      className="h-full bg-[var(--text-2)] hover:bg-[var(--text-1)] transition-colors rounded-full"
+                      className="h-full bg-[var(--text-2)] hover:bg-[var(--text-1)] transition-colors duration-150 rounded-full"
                       style={{ width: `${(volume || 1) * 100}%` }}
                     />
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
+)}
 
           {/* Sub-Sheets: Full Lyrics & Queue */}
           <AnimatePresence>
             {activeSheet === 'lyrics' && (
               <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', stiffness: 380, damping: 40, mass: 1 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
+                exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                transition={activeSharedTransition}
                 className="absolute inset-0 z-40 bg-[var(--bg-stage)] flex flex-col"
               >
                 <SyncedLyricsView onClose={() => setActiveSheet('none')} />
@@ -553,10 +751,10 @@ export const FullPlayer: React.FC = () => {
 
             {activeSheet === 'queue' && (
               <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', stiffness: 380, damping: 40, mass: 1 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
+                exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
+                transition={activeSharedTransition}
                 className="absolute inset-x-0 bottom-0 top-16 z-40 bg-[var(--bg-card)] rounded-t-[20px] border-t border-[var(--hairline)] flex flex-col shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
               >
                 <QueueSheet onClose={() => setActiveSheet('none')} />

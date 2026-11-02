@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
 import { Track } from '../../types';
 import { HeartBurstIcon } from './HeartBurstIcon';
 import { useLibrary } from '../../context/LibraryContext';
 import { useTheme } from '../../context/ThemeContext';
+import { springPlayerExpand, getButtonPressFeedback } from '../../utils/motion';
+
+export const MINI_PLAYER_SHARED_LAYOUT_IDS = {
+  ARTWORK: 'player-artwork',
+  TITLE: 'player-title',
+  PLAY_BUTTON: 'player-play-button'
+} as const;
 
 interface FloatingMiniPlayerProps {
   track: Track;
@@ -41,6 +48,12 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
 }) => {
   const { isLiked, toggleLike } = useLibrary();
   const { colors } = useTheme();
+  const shouldReduceMotion = useReducedMotion();
+  const sharedTransition = shouldReduceMotion
+    ? { duration: 0.1, ease: 'linear' as const }
+    : springPlayerExpand;
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
+
   const [isPressed, setIsPressed] = useState(false);
   const dragX = useMotionValue(0);
   const smoothX = useSpring(dragX, { stiffness: 450, damping: 32 });
@@ -82,8 +95,8 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
 
   return (
     <motion.div
-      animate={{ scale: isPressed ? 1.03 : 1.0 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+      animate={{ scale: isPressed && !shouldReduceMotion ? 1.03 : 1.0 }}
+      transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { type: 'spring', stiffness: 350, damping: 25 }}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerCancel={() => setIsPressed(false)}
@@ -93,11 +106,18 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
       onDragEnd={handleDragEnd}
       style={{ x: smoothX }}
       onClick={onClick}
-      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 active:scale-[0.99] ${className}`}
+      className={`relative w-full max-w-[390px] md:max-w-[480px] h-[58px] rounded-full bg-[#121212]/85 backdrop-blur-3xl backdrop-saturate-[1.8] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(255,255,255,0.05)] flex items-center justify-between px-3 cursor-pointer select-none pointer-events-auto transition-colors hover:border-white/30 ${className}`}
     >
-      {/* Thin 2px progress line at top of mini player */}
+      {/* Thin 2px progress line at top of mini player — GPU transform: scaleX without layout reflow */}
       <div className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-white/10 overflow-hidden pointer-events-none">
-        <div className="h-full bg-[var(--accent)] transition-[width] duration-200" style={{ width: `${progressRatio * 100}%` }} />
+        <div
+          className="h-full bg-[var(--accent)] origin-left"
+          style={{
+            width: '100%',
+            transform: `scaleX(${progressRatio})`,
+            transformOrigin: 'left center'
+          }}
+        />
       </div>
 
       {/* Left: 48px Circular Progress Ring surrounding 40px Album Art */}
@@ -131,13 +151,14 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              className="transition-[stroke-dashoffset] duration-150 ease-linear"
+              className={shouldReduceMotion ? '' : 'transition-[stroke-dashoffset] duration-150 ease-linear'}
             />
           </svg>
 
           {/* Album Art Thumbnail inside Ring */}
           <motion.div
             layoutId="player-artwork"
+            transition={sharedTransition}
             className="relative rounded-full overflow-hidden shadow-inner bg-black/40 flex items-center justify-center"
             style={{ width: artSize, height: artSize }}
           >
@@ -164,7 +185,8 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
         <div className="min-w-0 flex flex-col justify-center flex-1 pr-2">
           <motion.p
             layoutId="player-title"
-            className="text-sm font-bold text-white truncate  leading-tight"
+            transition={sharedTransition}
+            className="text-sm font-bold text-white truncate leading-tight"
           >
             {track.title}
           </motion.p>
@@ -179,28 +201,37 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
         className="flex items-center gap-0.5 sm:gap-1 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={() => toggleLike(track)}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title={liked ? 'Unlike' : 'Like'}
           aria-label={liked ? 'Unlike' : 'Like'}
         >
           <HeartBurstIcon isLiked={liked} size={18} />
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={onPrev}
-          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title="Previous"
           aria-label="Previous track"
         >
           <SkipBack size={18} className="fill-current" />
-        </button>
+        </motion.button>
 
         <motion.button
+          type="button"
           layoutId="player-play-button"
+          transition={sharedTransition}
+          whileTap={buttonFeedback.whileTap}
           onClick={onTogglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--accent)] text-white  active:scale-95 transition-colors  ml-0.5"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--accent)] hover:opacity-90 text-white transition-colors duration-150 ml-0.5"
           title={isPlaying ? 'Pause' : 'Play'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
@@ -211,14 +242,17 @@ export const FloatingMiniPlayer: React.FC<FloatingMiniPlayerProps> = ({
           )}
         </motion.button>
 
-        <button
+        <motion.button
+          type="button"
+          whileTap={buttonFeedback.whileTap}
+          transition={buttonFeedback.transition}
           onClick={onNext}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors duration-150"
           title="Next"
           aria-label="Next track"
         >
           <SkipForward size={18} className="fill-current" />
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

@@ -183,7 +183,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
 
               <button
                 onClick={onClose}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/70 hover:text-white transition-colors duration-150"
                 aria-label="Close output menu"
               >
                 <X size={18} />
@@ -240,7 +240,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
                     key={device.deviceId}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelectDevice(device.deviceId)}
-                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left transition-colors duration-200 border ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left transition-colors duration-150 border ${
                       isSelected
                         ? 'bg-white/[0.12] border-white/20 text-white shadow-lg'
                         : 'bg-white/[0.04] border-white/5 text-white/70 hover:bg-white/[0.08] hover:text-white'
@@ -278,7 +278,7 @@ export const AudioOutputModal: React.FC<AudioOutputModalProps> = ({ isOpen, onCl
             <div className="pt-4 mt-3 border-t border-white/10 flex items-center gap-3">
               <button
                 onClick={handleCastClick}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:scale-98 border border-white/10 text-white text-xs font-bold transition-colors shadow-md group"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-bold transition-colors duration-150 shadow-md group"
               >
                 <Cast size={16} className={`transition-colors ${castActive ? 'text-[var(--accent-ink)]' : 'text-white/80 group-hover:text-white'}`} />
                 <span>{castActive ? 'Connecting Cast...' : 'AirPlay & Chromecast'}</span>
