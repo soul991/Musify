@@ -88,13 +88,17 @@ Exhaustive specification table detailing:
 
 ## 3. High-Resolution Screen Exports (`design/figma-exports/`)
 
-All 49 screens have been exported at native viewport scale into `design/figma-exports/`:
-- **Tokens & Components Spec:**
+All 103 screens have been exported at native viewport scale into `design/figma-exports/`:
+- **Tokens & Components Spec (3):**
   - `page-1-tokens-spec.png`
   - `page-4-components-8-states.png`
   - `page-6-motion-spec-table.png`
-- **Variant A "Quiet" (Desktop 1440×900):** 17 screens (`variant-a-desktop-*`)
-- **Variant A "Quiet" (Mobile 390×844):** 17 screens (`variant-a-mobile-*`)
-- **Variant B "Artwork colour" (Warm):** 4 screens (`variant-b-warm-*`)
-- **Variant B "Artwork colour" (Cool):** 4 screens (`variant-b-cool-*`)
-- **Variant B "Artwork colour" (Monochrome):** 4 screens (`variant-b-monochrome-*`)
+- **Variant A "Quiet" (Desktop 1440×900, 17 screens):** (`variant-a-desktop-*`)
+- **Variant A "Quiet" (Mobile 390×844, 17 screens):** (`variant-a-mobile-*`)
+- **Variant B "Artwork colour" - Warm Palette (Desktop & Mobile, 22 screens):** (`variant-b-warm-*`)
+  - 11 Desktop views: Now Playing (Playing / Paused), Lyrics (Upcoming, Singing, Sung), Mini Player (Docked, Expanded), Crossfade, Home, Search, Library.
+  - 11 Mobile views: Counterpart views formatted for 390×844.
+- **Variant B "Artwork colour" - Cool Palette (Desktop & Mobile, 22 screens):** (`variant-b-cool-*`)
+  - 11 Desktop views & 11 Mobile views.
+- **Variant B "Artwork colour" - Monochrome Palette (Desktop & Mobile, 22 screens):** (`variant-b-monochrome-*`)
+  - 11 Desktop views & 11 Mobile views.

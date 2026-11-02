@@ -83,6 +83,7 @@ describe('Milestone 1 (R1): Kinetic Waveform Seek Bar & Motion Physics', () => {
     });
 
     it('maintains continuous zero derivative (smooth acceleration & deceleration) at boundaries', () => {
+      // Discrete derivative approximation: (f(t + dt) - f(t)) / dt
       const dt = 1;
       const dStart = (calculateAmplitudeEase(2, 0, dt, 320) - calculateAmplitudeEase(2, 0, 0, 320)) / dt;
       const dEnd = (calculateAmplitudeEase(2, 0, 320, 320) - calculateAmplitudeEase(2, 0, 320 - dt, 320)) / dt;
@@ -92,7 +93,9 @@ describe('Milestone 1 (R1): Kinetic Waveform Seek Bar & Motion Physics', () => {
     });
 
     it('handles interrupted mid-flight state transitions smoothly', () => {
+      // User pauses, then unpauses at t = 100ms when amplitude is ~1.5
       const currentAmp = calculateAmplitudeEase(2, 0, 100, 320);
+      // New ease towards 2 starts from currentAmp
       const resumeAmp0 = calculateAmplitudeEase(currentAmp, 2, 0, 320);
       assert.strictEqual(resumeAmp0, currentAmp, 'Resumed ease must start from current in-flight amplitude');
 
@@ -190,6 +193,7 @@ describe('Milestone 1 (R1): Kinetic Waveform Seek Bar & Motion Physics', () => {
     });
 
     it('ensures getBoundingClientRect is NEVER called inside drawFrame or tick loop', () => {
+      // Extract drawFrame function body
       const drawFrameMatch = squigglySliderSource.match(/const\s+drawFrame\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*,\s*\[\s*\]\s*\);/);
       assert.ok(drawFrameMatch, 'drawFrame function must exist');
       const drawFrameBody = drawFrameMatch[1];
@@ -204,6 +208,7 @@ describe('Milestone 1 (R1): Kinetic Waveform Seek Bar & Motion Physics', () => {
         'drawFrame must NOT access layout geometry properties'
       );
 
+      // Extract tick function inside startLoop
       const tickMatch = squigglySliderSource.match(/const\s+tick\s*=\s*\((?:now)?\s*:\s*number\)\s*=>\s*\{([\s\S]*?)\}\s*;/);
       assert.ok(tickMatch, 'tick loop function must exist');
       const tickBody = tickMatch[1];
