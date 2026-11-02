@@ -21,8 +21,9 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- Preload Satoshi Variable Font (Self-Hosted) -->
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/Satoshi-Variable.woff2">
+    <!-- Preload Self-Hosted Instrument Fonts (Instrument Sans & Instrument Serif) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/InstrumentSans-Variable.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/InstrumentSerif-Regular.woff2">
 
     <!-- Preconnect to image CDNs and Stream Backend for instant audio start -->
     <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
@@ -31,11 +32,6 @@
     <link rel="dns-prefetch" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
     <link rel="dns-prefetch" href="https://yt3.googleusercontent.com">
-
-    <!-- Google Fonts Inter & Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Neutralize Netlify Injected Badge & HUD Script -->
     <script>
@@ -63,7 +59,7 @@
       })();
     </script>
   </head>
-  <body class="bg-[#0B0B0C] text-white selection:bg-[#ED5564] selection:text-white">
+  <body class="bg-[#141415] text-[#EDEDED] selection:bg-[#D92B38] selection:text-[#EDEDED]">
     <!-- Sentinel elements that force Netlify HUD to early-exit without rendering -->
     <div id="nl-badge-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>
     <div id="nl-hud-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>

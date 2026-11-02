@@ -284,7 +284,7 @@ export const SquigglySlider: React.FC<SquigglySliderProps> = ({
       </div>
 
       {/* Timestamps */}
-      <div className="flex justify-between items-center text-xs font-semibold text-white/55 px-1 tracking-wider">
+      <div className="flex justify-between items-center text-xs font-semibold text-white/55 px-1 ">
         <span>{formatTime(isDragging ? dragValue : value)}</span>
         <span>{max > 0 ? `-${formatTime(max - (isDragging ? dragValue : value))}` : '0:00'}</span>
       </div>
