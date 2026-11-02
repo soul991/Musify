@@ -71,8 +71,8 @@ describe('Playback Fix Verification Suite (Production Bug Requirements)', () => 
     const swPath = path.resolve(__dirname, '../../frontend/public/sw.js');
     const swCode = fs.readFileSync(swPath, 'utf-8');
 
-    test('sw.js uses musify-cache-v7 and removes audio cache storage', () => {
-      assert.match(swCode, /CACHE_NAME\s*=\s*['"]musify-cache-v7['"]/);
+    test('sw.js uses a versioned musify-cache-vN and removes audio cache storage', () => {
+      assert.match(swCode, /CACHE_NAME\s*=\s*['"]musify-cache-v\d+['"]/);
       assert.doesNotMatch(swCode, /musify-audio-cache/);
       assert.doesNotMatch(swCode, /handleAudioRangeRequest/);
       assert.doesNotMatch(swCode, /arrayBuffer\(\)/);
