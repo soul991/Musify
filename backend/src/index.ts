@@ -8,7 +8,7 @@ import streamRouter from './routes/stream.js';
 import lyricsRouter from './routes/lyrics.js';
 import roomRouter from './routes/room.js';
 import { getInnertube, getHomeFeed } from './services/innertube.js';
-import { handleDebugStream, handlePrefetchStream } from './services/stream.js';
+import { handleDebugStream } from './services/stream.js';
 import { isOriginAllowed } from './utils/cors.js';
 
 dotenv.config();
@@ -91,9 +91,6 @@ app.get('/api/warm', async (_req, res) => {
 
 // Diagnostic stream endpoint: GET /api/debug/stream/:videoId
 app.get('/api/debug/stream/:videoId', handleDebugStream);
-
-// Alias route: GET /api/resolve/:videoId -> prefetch/warm stream
-app.get('/api/resolve/:videoId', handlePrefetchStream);
 
 // Register rate limits
 app.use('/api', apiLimiter);

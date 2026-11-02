@@ -342,8 +342,8 @@ export async function resolveStreamUrl(
 
             const decipheredUrl = await selectedFormat.decipher(yt.session.player);
             if (decipheredUrl) {
-
-
+              // No blocking pre-flight probe: the stream proxy purges the cache and falls back
+              // to yt-dlp when upstream rejects the URL, which keeps first-byte latency low.
               const result: CachedStream = {
                 url: decipheredUrl,
                 mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',
