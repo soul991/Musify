@@ -1,4 +1,4 @@
-const CACHE_NAME = 'musify-cache-v8';
+const CACHE_NAME = 'musify-cache-v7';
 
 const STATIC_ASSETS = [
   '/',

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Track } from '../types';
+import { offlineStorage } from '../services/offlineStorage';
 
 export interface UserPlaylist {
   id: string;
@@ -116,8 +117,10 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLikedSongs((prev) => {
       const exists = prev.some((s) => s.id === track.id);
       if (exists) {
+        offlineStorage.setTrackLiked(track, false).catch(() => {});
         return prev.filter((s) => s.id !== track.id);
       } else {
+        offlineStorage.setTrackLiked(track, true).catch(() => {});
         return [track, ...prev];
       }
     });

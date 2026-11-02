@@ -5,6 +5,7 @@ import { useTheme } from './ThemeContext';
 import { useLibrary } from './LibraryContext';
 import { audioEqualizer } from '../services/audioEqualizer';
 import { fisherYatesShuffle } from '../utils/shuffle';
+import { offlineStorage } from '../services/offlineStorage';
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -51,6 +52,23 @@ interface PlayerContextType {
   castAudio: () => void;
   isCasting: boolean;
   castAvailable: boolean;
+}
+
+export function isAudioVolumeWritable(): boolean {
+  if (typeof window === 'undefined') return false;
+  // iOS / iPadOS check (Safari, Chrome on iOS, etc. use WebKit where audio.volume is strictly read-only)
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) return false;
+
+  try {
+    const a = new Audio();
+    a.volume = 0.5;
+    return Math.abs(a.volume - 0.5) < 0.05;
+  } catch {
+    return false;
+  }
 }
 
 const getInitialPersistedPlayer = () => {
@@ -235,6 +253,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Performance & prefetch refs
   const hasPrefetchedNextHalfwayRef = useRef<boolean>(false);
+  const preloadedTrackIdRef = useRef<string | null>(null);
   const isFetchingRadioRef = useRef<boolean>(false);
   const radioFetchedTrackIdsRef = useRef<Set<string>>(new Set());
   const playedHistoryIdsRef = useRef<string[]>([]);
@@ -245,6 +264,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const stalledTimerRef = useRef<any>(null);
   const movementCheckTimerRef = useRef<any>(null);
   const isPlayingRef = useRef<boolean>(false);
+  const lastPositionStateUpdateRef = useRef<number>(0);
 
   const mapAudioErrorCode = (code?: number): string => {
     switch (code) {
@@ -292,6 +312,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (videoId) {
       api.prefetchStream(videoId);
     }
+  };
+
+  const cancelPreload = () => {
+    if (secondaryAudioRef.current && !isCrossfadingRef.current) {
+      try {
+        secondaryAudioRef.current.pause();
+        secondaryAudioRef.current.removeAttribute('src');
+        secondaryAudioRef.current.load();
+      } catch {}
+    }
+    preloadedTrackIdRef.current = null;
+    hasPrefetchedNextHalfwayRef.current = false;
   };
 
   // Determine current network audio quality
@@ -444,10 +476,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     audioEqualizer.attachElement(audio);
 
     const secAudio = new Audio();
-    const isCrossfadeInitial = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
-    secAudio.preload = isCrossfadeInitial ? 'auto' : 'metadata';
+    secAudio.preload = 'auto';
     secAudio.crossOrigin = 'anonymous';
     secondaryAudioRef.current = secAudio;
+    audioEqualizer.attachElement(secAudio);
 
     const savedSink = typeof window !== 'undefined' ? localStorage.getItem('musify_audio_output_sink') : null;
     if (savedSink && typeof (audio as any).setSinkId === 'function') {
@@ -493,21 +525,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // 50% Track Playback: Preload and ranged-fetch next track's first 256 KB
+      // 50% Track Playback: Preload next track via resolve/prefetch endpoint and warm second audio element
       if (!hasPrefetchedNextHalfwayRef.current && activeEl.duration && activeEl.currentTime >= activeEl.duration * 0.5) {
         hasPrefetchedNextHalfwayRef.current = true;
         const nextIdx = queueIndexRef.current + 1;
         const currentQ = queueRef.current;
         const nextItem = currentQ[nextIdx] || (repeatModeRef.current === 'all' ? currentQ[0] : null);
-        if (nextItem) {
+        if (nextItem && nextItem.id) {
           const q = getEffectiveAudioQuality();
-          const nextUrl = api.getStreamUrl(nextItem.id, q);
-          // Ranged prefetch of first 256 KB
-          fetch(nextUrl, { method: 'GET', headers: { Range: 'bytes=0-262143' } }).catch(() => {});
-          // Preload into secondary audio element for seamless gapless transition
+          // Call the existing resolve/prefetch endpoint for the next queue item
+          api.prefetchStream(nextItem.id, q);
+          // Warm the audio on a second <audio preload="auto"> element, not shared with playing one
           if (secondaryAudioRef.current) {
-            const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
-            secondaryAudioRef.current.preload = isCrossfade ? 'auto' : 'metadata';
+            preloadedTrackIdRef.current = nextItem.id;
+            const cachedUrl = offlineStorage.getCachedBlobUrlSync(nextItem.id);
+            const nextUrl = cachedUrl || api.getStreamUrl(nextItem.id, q);
+            secondaryAudioRef.current.preload = 'auto';
             secondaryAudioRef.current.src = nextUrl;
             secondaryAudioRef.current.load();
           }
@@ -560,8 +593,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
       }
 
-      // Crossfade Transition
-      const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+      // Crossfade Transition: ONLY where audio.volume is writable (desktop and Android)
+      const isCrossfade = typeof window !== 'undefined' &&
+        localStorage.getItem('musify_crossfade_enabled') === 'true' &&
+        isAudioVolumeWritable();
       const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
       if (isCrossfade && crossfadeSecs > 0 && activeEl.duration && activeEl.duration > crossfadeSecs * 2) {
         const timeLeft = activeEl.duration - activeEl.currentTime;
@@ -573,10 +608,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isCrossfadingRef.current = true;
             const q = getEffectiveAudioQuality();
             const sec = secondaryAudioRef.current;
-            sec.src = api.getStreamUrl(nextItem.id, q);
+            const cachedUrl = offlineStorage.getCachedBlobUrlSync(nextItem.id);
+            const targetUrl = cachedUrl || api.getStreamUrl(nextItem.id, q);
+
+            // If secondary element is not already preloaded with this track, load it
+            if (preloadedTrackIdRef.current !== nextItem.id || !sec.src) {
+              sec.src = targetUrl;
+              sec.load();
+            }
             sec.volume = 0;
             sec.currentTime = 0;
-            sec.load();
             sec.play().then(() => {
               if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current);
               const startTime = Date.now();
@@ -611,6 +652,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   extractColorsRef.current(nextItem.thumbnail);
                   addToHistoryRef.current(nextItem);
                   hasPrefetchedNextHalfwayRef.current = false;
+                  preloadedTrackIdRef.current = null;
+                  offlineStorage.onTrackPlayed(nextItem);
                   if (audioRef.current) {
                     audioRef.current.volume = targetVol;
                   }
@@ -623,12 +666,19 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // Update MediaSession position state
-      if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && activeEl.duration) {
+      // Update MediaSession position state (throttled to avoid lock-screen jitter)
+      const now = performance.now();
+      if (
+        'mediaSession' in navigator &&
+        navigator.mediaSession.setPositionState &&
+        activeEl.duration &&
+        now - lastPositionStateUpdateRef.current >= 1500
+      ) {
+        lastPositionStateUpdateRef.current = now;
         try {
           navigator.mediaSession.setPositionState({
             duration: activeEl.duration,
-            playbackRate: activeEl.playbackRate,
+            playbackRate: activeEl.playbackRate || 1,
             position: activeEl.currentTime
           });
         } catch {}
@@ -781,7 +831,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setRemainingSleepSeconds(minutes ? minutes * 60 : null);
   };
 
-  // Setup Web Media Session API (iOS lock-screen & Dynamic Island)
+  // Setup Web Media Session API (iOS lock-screen, Android & Bluetooth controls)
   useEffect(() => {
     if (!('mediaSession' in navigator) || !currentTrack) return;
 
@@ -802,53 +852,165 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ]
     });
 
-    navigator.mediaSession.setActionHandler('play', () => {
+    const setAction = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch {}
+    };
+
+    setAction('play', () => {
       audioRef.current?.play();
       setIsPlaying(true);
     });
 
-    navigator.mediaSession.setActionHandler('pause', () => {
+    setAction('pause', () => {
       audioRef.current?.pause();
       setIsPlaying(false);
     });
 
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
+    setAction('stop', () => {
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    });
+
+    setAction('previoustrack', () => {
       prevTrackRef.current();
     });
 
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
+    setAction('nexttrack', () => {
       nextTrackRef.current();
     });
 
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
+    setAction('seekto', (details) => {
       if (details.seekTime !== undefined && audioRef.current) {
         audioRef.current.currentTime = details.seekTime;
         setCurrentTime(details.seekTime);
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: details.seekTime
+            });
+          } catch {}
+        }
       }
     });
 
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+    setAction('seekbackward', (details) => {
       if (audioRef.current) {
         const skip = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - skip);
+        const newTime = Math.max(0, audioRef.current.currentTime - skip);
+        audioRef.current.currentTime = newTime;
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: newTime
+            });
+          } catch {}
+        }
       }
     });
 
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+    setAction('seekforward', (details) => {
       if (audioRef.current) {
         const skip = details.seekOffset || 10;
-        audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + skip);
+        const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + skip);
+        audioRef.current.currentTime = newTime;
+        if (navigator.mediaSession.setPositionState && audioRef.current.duration) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: newTime
+            });
+          } catch {}
+        }
       }
     });
   }, [currentTrack]);
+
+  // Sync MediaSession playbackState (lock-screen / Bluetooth controls)
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [isPlaying]);
 
   const handleTrackEnd = () => {
     if (repeatMode === 'one' && audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play();
-    } else {
-      nextTrack();
+      return;
     }
+
+    const curQ = queueRef.current;
+    let nextIdx = queueIndexRef.current + 1;
+    if (nextIdx >= curQ.length) {
+      if (repeatModeRef.current === 'all') {
+        nextIdx = 0;
+      } else {
+        setIsPlaying(false);
+        return;
+      }
+    }
+
+    const nextItem = curQ[nextIdx];
+    const sec = secondaryAudioRef.current;
+
+    // Check if secondary element is already preloaded with next item and ready for instant playback
+    if (
+      nextItem &&
+      sec &&
+      preloadedTrackIdRef.current === nextItem.id &&
+      sec.src &&
+      sec.readyState >= 2 // HAVE_CURRENT_DATA or higher
+    ) {
+      const tEnded = performance.now();
+      // Swap primary and secondary audio elements with NO await in between
+      const prevEl = audioRef.current;
+      audioRef.current = sec;
+      secondaryAudioRef.current = prevEl;
+
+      // Start playback immediately on swapped element
+      audioRef.current.play().then(() => {
+        const gap = Math.round(performance.now() - tEnded);
+        console.log(`[PERF] Gapless track swap gap: ${gap}ms for track: "${nextItem.title}"`);
+        setIsPlaying(true);
+        setPlaybackError(null);
+        consecutiveFailuresRef.current = 0;
+      }).catch((err) => {
+        if (err?.name !== 'AbortError') {
+          handlePlaybackFailure(nextItem, err?.message || 'Gapless playback failed');
+        }
+      });
+
+      // Update player state synchronously
+      setCurrentTrack(nextItem);
+      setQueueIndex(nextIdx);
+      setCurrentTime(0);
+      setDuration(nextItem.duration || (audioRef.current.duration || 0));
+      hasPrefetchedNextHalfwayRef.current = false;
+      preloadedTrackIdRef.current = null;
+
+      // Clean up previous audio element and prepare it for subsequent preloading
+      if (prevEl) {
+        prevEl.pause();
+        prevEl.removeAttribute('src');
+        prevEl.load();
+      }
+
+      extractColorsRef.current(nextItem.thumbnail);
+      addToHistoryRef.current(nextItem);
+      offlineStorage.onTrackPlayed(nextItem);
+      return;
+    }
+
+    // Fallback: standard queue transition if not preloaded
+    nextTrack();
   };
 
   const playTrack = async (track: Track, newQueue?: Track[]) => {
@@ -856,6 +1018,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     playStartTimeRef.current = performance.now();
     hasPrefetchedNextHalfwayRef.current = false;
+    cancelPreload();
 
     // Reset stalled and movement check timers
     if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
@@ -918,10 +1081,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // 3. Start audio stream resolution and playback in the immediate tick
     const quality = getEffectiveAudioQuality();
-    const streamUrl = api.getStreamUrl(track.id, quality);
+    const cachedUrl = offlineStorage.getCachedBlobUrlSync(track.id);
+    const streamUrl = cachedUrl || api.getStreamUrl(track.id, quality);
     audioRef.current.src = streamUrl;
 
-    const isCrossfade = typeof window !== 'undefined' && localStorage.getItem('musify_crossfade_enabled') === 'true';
+    if (!cachedUrl) {
+      // Warm memory cache asynchronously for subsequent plays without resetting active playback
+      offlineStorage.getTrackAudioBlobUrl(track.id).catch(() => {});
+    }
+
+    const isCrossfade = typeof window !== 'undefined' &&
+      localStorage.getItem('musify_crossfade_enabled') === 'true' &&
+      isAudioVolumeWritable();
     const crossfadeSecs = typeof window !== 'undefined' ? Number(localStorage.getItem('musify_crossfade_secs')) || 4 : 4;
 
     if (isCrossfade) {
@@ -937,11 +1108,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audioEqualizer.ensureContextRunning();
     }
 
-    try {
-      await audioRef.current.play();
+    // Invoke play() immediately without unnecessary await, preserving all error handling
+    audioRef.current.play().then(() => {
       setIsPlaying(true);
       setPlaybackError(null);
       consecutiveFailuresRef.current = 0;
+      offlineStorage.onTrackPlayed(track);
 
       // If play() resolves but currentTime hasn't moved after 3s, treat it as stalled too
       if (movementCheckTimerRef.current) clearTimeout(movementCheckTimerRef.current);
@@ -981,7 +1153,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }, intervalMs);
       }
-    } catch (err: any) {
+    }).catch((err: any) => {
       if (err?.name === 'NotAllowedError') {
         // Browser autoplay policy: leave track paused with clear button to tap
         setIsPlaying(false);
@@ -993,7 +1165,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         setIsPlaying(false);
       }
-    }
+    });
 
     // 4. Run non-blocking background tasks after audio starts
     setTimeout(() => {
@@ -1040,6 +1212,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!audioRef.current) return;
     audioRef.current.currentTime = seconds;
     setCurrentTime(seconds);
+    if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audioRef.current.duration) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: audioRef.current.duration,
+          playbackRate: audioRef.current.playbackRate || 1,
+          position: seconds
+        });
+      } catch {}
+    }
   };
 
   const setVolume = (val: number) => {
@@ -1111,6 +1292,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const toggleShuffle = () => {
+    cancelPreload();
     if (!isShuffled) {
       const current = currentTrack;
       const rest = queue.filter((t) => t.id !== current?.id);
@@ -1134,17 +1316,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const addToQueue = (track: Track) => {
-    setQueue((prev) => [...prev, track]);
+    setQueue((prev) => {
+      const updated = [...prev, track];
+      const nextIdx = queueIndexRef.current + 1;
+      const nextItem = updated[nextIdx];
+      if (preloadedTrackIdRef.current && (!nextItem || nextItem.id !== preloadedTrackIdRef.current)) {
+        cancelPreload();
+      }
+      queueRef.current = updated;
+      return updated;
+    });
     originalQueueRef.current = [...originalQueueRef.current, track];
     // Warm intent
     api.prefetchStream(track.id);
   };
 
   const playNextInQueue = (track: Track) => {
+    cancelPreload();
     setQueue((prev) => {
       const nextIdx = queueIndex + 1;
       const newQ = [...prev];
       newQ.splice(nextIdx, 0, track);
+      queueRef.current = newQ;
       return newQ;
     });
     // Warm intent
@@ -1152,11 +1345,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const clearQueue = () => {
+    cancelPreload();
     if (currentTrack) {
+      queueRef.current = [currentTrack];
       setQueue([currentTrack]);
       originalQueueRef.current = [currentTrack];
       setQueueIndex(0);
     } else {
+      queueRef.current = [];
       setQueue([]);
       originalQueueRef.current = [];
       setQueueIndex(-1);
@@ -1164,6 +1360,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const reorderQueue = (newQueue: Track[]) => {
+    const nextIdx = queueIndexRef.current + 1;
+    const nextItem = newQueue[nextIdx];
+    if (preloadedTrackIdRef.current && (!nextItem || nextItem.id !== preloadedTrackIdRef.current)) {
+      cancelPreload();
+    }
+    queueRef.current = newQueue;
     setQueue(newQueue);
     const idx = newQueue.findIndex((t) => t.id === currentTrack?.id);
     setQueueIndex(idx !== -1 ? idx : 0);
