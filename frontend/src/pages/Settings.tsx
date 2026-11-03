@@ -74,7 +74,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     return localStorage.getItem('musify_skip_silence') === 'true';
   });
   const [seekbarStyle, setSeekbarStyle] = useState<'calm' | 'squiggly'>(() => {
-    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'calm';
+    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'squiggly';
   });
 
   const presetColors = CALM_ACCENT_PRESETS;

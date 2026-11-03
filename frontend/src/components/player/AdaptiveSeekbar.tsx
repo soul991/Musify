@@ -22,16 +22,21 @@ export const AdaptiveSeekbar: React.FC<AdaptiveSeekbarProps> = ({
   showTimestamps = false
 }) => {
   const [style, setStyle] = useState<'calm' | 'squiggly'>(() => {
-    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'calm';
+    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'squiggly';
   });
 
   useEffect(() => {
     const handleStorage = () => {
-      const current = (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'calm';
+      const current = (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'squiggly';
       setStyle(current);
     };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    // Settings dispatches this same-tab event; 'storage' only fires in other tabs.
+    window.addEventListener('musify_seekbar_style_change', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('musify_seekbar_style_change', handleStorage);
+    };
   }, []);
 
   if (style === 'squiggly') {

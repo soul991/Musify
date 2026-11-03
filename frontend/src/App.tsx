@@ -296,7 +296,7 @@ const MusifyMain: React.FC = () => {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#0A0A0A] p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 relative text-white select-none transition-colors duration-700 min-h-0">
-      /* Background Ambient Base */
+      {/* Background ambient base */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 bg-[var(--bg-base)]" />
 
       {/* 1. Left Desktop Navigation Sidebar */}
