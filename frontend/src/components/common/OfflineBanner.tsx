@@ -53,7 +53,7 @@ export const OfflineBanner: React.FC = () => {
             </>
           ) : (
             <>
-              <WifiOff size={14} className="text-[#E5303D]" />
+              <WifiOff size={14} className="text-[#D92B38]" />
               <span>You're offline. Playing cached songs from your library.</span>
             </>
           )}

@@ -203,7 +203,7 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
               style={
                 isSearchActive
                   ? {
-                      backgroundColor: '#E5303D'
+                      backgroundColor: '#D92B38'
                     }
                   : undefined
               }

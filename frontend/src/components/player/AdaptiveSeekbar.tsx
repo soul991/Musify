@@ -16,7 +16,7 @@ export const AdaptiveSeekbar: React.FC<AdaptiveSeekbarProps> = ({
   value,
   max,
   isPlaying,
-  accentColor = 'var(--accent-color, #E5303D)',
+  accentColor = 'var(--accent-color, #D92B38)',
   onSeek,
   className = '',
   showTimestamps = false

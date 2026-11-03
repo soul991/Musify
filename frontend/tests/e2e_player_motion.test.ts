@@ -632,7 +632,9 @@ describe('Tier 1: Feature Coverage (R1 to R6)', () => {
       assert.strictEqual(fallback, '/icons/musify-icon.svg');
       const fullPlayerPath = path.join(frontendRoot, 'src', 'components', 'player', 'FullPlayer.tsx');
       const fullContent = fs.readFileSync(fullPlayerPath, 'utf8');
-      assert.match(fullContent, /musify-icon\.svg/, 'FullPlayer must specify /icons/musify-icon.svg onError fallback');
+      const crossfadeContent = fs.readFileSync(path.join(frontendRoot, 'src', 'components', 'player', 'ArtworkCrossfade.tsx'), 'utf8');
+      assert.match(crossfadeContent, /musify-icon\.svg/, 'ArtworkCrossfade (used by FullPlayer) must specify the /icons/musify-icon.svg fallback');
+      assert.match(fullContent, /<ArtworkCrossfade/, 'FullPlayer must render artwork through ArtworkCrossfade');
       // FullPlayer artwork enforces 1:1 aspect ratio via equal width and height (e.g. w-[280px] h-[280px] or width={330} height={330})
       assert.match(fullContent, /w-\[(\d+)px\]\s+h-\[\1px\]|width=\{330\}\s+height=\{330\}|aspect-square/, 'FullPlayer artwork must enforce 1:1 square aspect ratio');
     });
@@ -952,7 +954,9 @@ describe('Tier 2: Boundary & Corner Cases (R1 to R6)', () => {
     it('T2_R4_05: Non-square artwork aspect ratio is constrained to 1:1 square via object-cover', () => {
       const fullPlayerPath = path.join(frontendRoot, 'src', 'components', 'player', 'FullPlayer.tsx');
       const fullContent = fs.readFileSync(fullPlayerPath, 'utf8');
-      assert.match(fullContent, /object-cover/, 'Artwork image must specify object-cover');
+      const crossfadeContent = fs.readFileSync(path.join(frontendRoot, 'src', 'components', 'player', 'ArtworkCrossfade.tsx'), 'utf8');
+      assert.match(crossfadeContent, /object-cover/, 'Artwork image must specify object-cover');
+      assert.match(fullContent, /<ArtworkCrossfade/, 'FullPlayer must render artwork through ArtworkCrossfade');
     });
 
     it('T2_R4_06: High resolution album artwork processes through low-chroma extraction without memory leak', () => {
@@ -1069,8 +1073,23 @@ describe('Tier 2: Boundary & Corner Cases (R1 to R6)', () => {
     it('T2_R6_06: High-contrast accessibility mode maintains >= 4.5:1 text/surface contrast ratio', () => {
       const cssPath = path.join(frontendRoot, 'src', 'index.css');
       const cssContent = fs.readFileSync(cssPath, 'utf8');
-      assert.match(cssContent, /--accent-color:\s*#E5303D/, 'Calm red accent token must be #E5303D');
-      assert.match(cssContent, /--bg-primary:\s*#0A0A0A/, 'Canvas primary background must be #0A0A0A');
+      // Contrast is computed from the real tokens (WCAG 2.1 relative luminance) instead of pinning hex values.
+      const hexOf = (name: string) => {
+        const m = cssContent.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})`));
+        assert.ok(m, `${name} must be defined as a 6-digit hex token`);
+        return m![1];
+      };
+      const lum = (hex: string) => {
+        const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+          .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      };
+      const ratio = (a: string, b: string) => {
+        const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+        return (hi + 0.05) / (lo + 0.05);
+      };
+      assert.ok(ratio('#FFFFFF', hexOf('--accent-color')) >= 4.5, 'White text on the accent token must be >= 4.5:1');
+      assert.ok(ratio(hexOf('--text-1'), hexOf('--bg-base')) >= 4.5, 'Primary text on the base surface must be >= 4.5:1');
     });
   });
 });
@@ -1387,6 +1406,8 @@ describe('Tier 4: Real-World Application Scenarios', () => {
     // FullPlayer.tsx specifies onError handler
     const fullPlayerPath = path.join(frontendRoot, 'src', 'components', 'player', 'FullPlayer.tsx');
     const fullContent = fs.readFileSync(fullPlayerPath, 'utf8');
-    assert.match(fullContent, /onError/, 'FullPlayer must specify image onError handler');
+    const crossfadeContent = fs.readFileSync(path.join(frontendRoot, 'src', 'components', 'player', 'ArtworkCrossfade.tsx'), 'utf8');
+    assert.match(fullContent, /<ArtworkCrossfade/, 'FullPlayer must render artwork through ArtworkCrossfade');
+    assert.match(crossfadeContent, /onError/, 'ArtworkCrossfade must specify image onError handler');
   });
 });

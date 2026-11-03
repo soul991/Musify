@@ -264,8 +264,8 @@ describe('Milestone 4 (R4): Artwork Transition & Accent Hue System', () => {
   // Suite 4: Low-Chroma Accent Extraction & In-Memory Caching (R4)
   // =========================================================================
   describe('4. Low-Chroma Accent Extraction & In-Memory Caching (R4)', () => {
-    it('defines DEFAULT_ACCENT_COLOR as Musify brand calm red #E5303D', () => {
-      assert.strictEqual(DEFAULT_ACCENT_COLOR, '#E5303D');
+    it('defines DEFAULT_ACCENT_COLOR as the design-brief accent #D92B38', () => {
+      assert.strictEqual(DEFAULT_ACCENT_COLOR, '#D92B38');
       assert.strictEqual(DEFAULT_SECONDARY_COLOR, '#281418');
     });
 

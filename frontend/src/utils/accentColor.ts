@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 
-export const DEFAULT_ACCENT_COLOR = '#E5303D'; // Musify brand calm red
+export const DEFAULT_ACCENT_COLOR = '#D92B38'; // Musify accent (design brief)
 export const DEFAULT_SECONDARY_COLOR = '#281418'; // Soothing deep dark red
 
 /**
