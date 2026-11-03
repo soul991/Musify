@@ -52,7 +52,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ) : toast.type === 'error' ? (
                 <AlertCircle size={16} className="text-rose-400 shrink-0" />
               ) : (
-                <Info size={16} className="text-[var(--accent-color,#E5303D)] shrink-0" />
+                <Info size={16} className="text-[var(--accent-color,#D92B38)] shrink-0" />
               )}
               <span className="truncate">{toast.message}</span>
               <button

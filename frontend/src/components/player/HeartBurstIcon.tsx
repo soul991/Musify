@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Heart } from 'lucide-react';
 
 interface HeartBurstIconProps {
   isLiked: boolean;
   onToggle?: () => void;
   size?: number; // default 24
-  likedColor?: string; // default #E5303D
+  likedColor?: string; // default #D92B38
   unlikedColor?: string; // default currentColor
   className?: string;
 }
@@ -15,22 +15,25 @@ export const HeartBurstIcon: React.FC<HeartBurstIconProps> = ({
   isLiked,
   onToggle,
   size = 24,
-  likedColor = '#E5303D',
+  likedColor = '#D92B38',
   unlikedColor = 'rgba(255, 255, 255, 0.7)',
   className = ''
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const [animating, setAnimating] = useState(false);
   const prevLikedRef = useRef(isLiked);
 
   useEffect(() => {
     if (isLiked && !prevLikedRef.current) {
-      setAnimating(true);
-      const timer = setTimeout(() => setAnimating(false), 550);
-      prevLikedRef.current = isLiked;
-      return () => clearTimeout(timer);
+      if (!shouldReduceMotion) {
+        setAnimating(true);
+        const timer = setTimeout(() => setAnimating(false), 550);
+        prevLikedRef.current = isLiked;
+        return () => clearTimeout(timer);
+      }
     }
     prevLikedRef.current = isLiked;
-  }, [isLiked]);
+  }, [isLiked, shouldReduceMotion]);
 
   const particleCount = 6;
   const particleAngles = Array.from({ length: particleCount }, (_, i) => (i * 360) / particleCount);
@@ -43,7 +46,7 @@ export const HeartBurstIcon: React.FC<HeartBurstIconProps> = ({
     >
       {/* 6 Bursting Heart Particles shooting outward */}
       <AnimatePresence>
-        {animating && (
+        {animating && !shouldReduceMotion && (
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {particleAngles.map((angle, index) => {
               const rad = (angle * Math.PI) / 180;
@@ -75,13 +78,13 @@ export const HeartBurstIcon: React.FC<HeartBurstIconProps> = ({
       {/* Main Heart with Elastic Scale Pop */}
       <motion.div
         animate={{
-          scale: animating ? [1, 1.35, 0.95, 1.05, 1] : 1
+          scale: animating && !shouldReduceMotion ? [1, 1.35, 0.95, 1.05, 1] : 1
         }}
-        transition={{ duration: 0.45, ease: 'easeOut' }}
+        transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { duration: 0.45, ease: 'easeOut' }}
       >
         <Heart
           size={size}
-          className="transition-colors duration-200"
+          className={`transition-colors ${shouldReduceMotion ? 'duration-100' : 'duration-200'}`}
           style={{
             fill: isLiked ? likedColor : 'transparent',
             color: isLiked ? likedColor : unlikedColor

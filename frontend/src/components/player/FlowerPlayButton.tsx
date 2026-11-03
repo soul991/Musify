@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Play } from 'lucide-react';
+import { getButtonPressFeedback } from '../../utils/motion';
 
 export type FlowerPlayStyle = 'wavy' | 'scallop8' | 'apple_squircle' | 'circle';
 
@@ -95,13 +96,20 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
   iconSize,
   layoutId
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const buttonFeedback = getButtonPressFeedback(shouldReduceMotion);
   const [indent, setIndent] = useState<number>(isPlaying ? 0.08 : 0);
   const [rotation, setRotation] = useState<number>(0);
   const indentRef = useRef(indent);
   indentRef.current = indent;
 
-  // Animate indent (0.0 to 0.08 over 300ms)
+  // Animate indent (0.0 to 0.08 over 300ms, or instant on reduced motion)
   useEffect(() => {
+    if (shouldReduceMotion) {
+      setIndent(isPlaying ? 0.08 : 0);
+      return;
+    }
+
     let animId: number;
     const startVal = indentRef.current;
     const targetVal = isPlaying ? 0.08 : 0;
@@ -119,11 +127,11 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
 
     animId = requestAnimationFrame(animateIndent);
     return () => cancelAnimationFrame(animId);
-  }, [isPlaying]);
+  }, [isPlaying, shouldReduceMotion]);
 
-  // Continuous 8000ms rotation when playing
+  // Continuous 8000ms rotation when playing (stopped when paused or reduced motion)
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || shouldReduceMotion) {
       setRotation(0);
       return;
     }
@@ -141,7 +149,7 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
 
     animId = requestAnimationFrame(rotateLoop);
     return () => cancelAnimationFrame(animId);
-  }, [isPlaying]);
+  }, [isPlaying, shouldReduceMotion]);
 
   // Calculate SVG path based on shape type
   const pathData = useMemo(() => {
@@ -162,16 +170,16 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
         aria-label={isPlaying ? 'Pause' : 'Play'}
         title={isPlaying ? 'Pause' : 'Play'}
         layoutId={layoutId}
-        whileTap={{ scale: 0.92 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 450 }}
+        whileTap={buttonFeedback.whileTap}
+        transition={buttonFeedback.transition}
         onClick={onClick}
-        className={`relative flex items-center justify-center cursor-pointer select-none transition-all ${className}`}
+        className={`relative flex items-center justify-center cursor-pointer select-none transition-colors duration-150 ${className}`}
         style={{
           width: size,
           height: size,
           borderRadius: isPlaying ? '24px' : '36px',
           backgroundColor: color,
-          transition: 'border-radius 90ms linear'
+          transition: shouldReduceMotion ? undefined : 'border-radius 90ms linear'
         }}
       >
         <div className="flex items-center justify-center" style={{ color: iconColor }}>
@@ -212,19 +220,22 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
       aria-label={isPlaying ? 'Pause' : 'Play'}
       title={isPlaying ? 'Pause' : 'Play'}
       layoutId={layoutId}
-      whileTap={{ scale: 0.90 }}
-      transition={{ type: 'spring', damping: 15, stiffness: 500 }}
+      whileTap={buttonFeedback.whileTap}
+      transition={buttonFeedback.transition}
       onClick={onClick}
       className={`relative flex items-center justify-center cursor-pointer select-none ${className}`}
       style={{ width: size, height: size }}
     >
-{isLoading && (
-        <span className="absolute inset-[-5px] rounded-full border-2 border-transparent border-t-[#E5303D] border-r-[#E5303D]/40 animate-spin pointer-events-none" />
+      {isLoading && !shouldReduceMotion && (
+        <span className="absolute inset-[-5px] rounded-full border-2 border-transparent border-t-[var(--accent)] border-r-[var(--accent)]/40 animate-spin pointer-events-none" />
+      )}
+      {isLoading && shouldReduceMotion && (
+        <span className="absolute inset-[-5px] rounded-full border-2 border-[var(--accent)]/60 pointer-events-none" />
       )}
       {/* Dynamic Scalloped Wavy Vector Path */}
       <svg
         viewBox={`0 0 ${size} ${size}`}
-        className="w-full h-full drop-shadow-md"
+        className="w-full h-full "
         style={{ overflow: 'visible' }}
       >
         <path d={pathData} fill={color} />
@@ -236,10 +247,10 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
           {isPlaying ? (
             <motion.div
               key="pause"
-              initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
-              animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { rotate: -90, opacity: 0, scale: 0.8 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { rotate: 0, opacity: 1, scale: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { rotate: 90, opacity: 0, scale: 0.8 }}
+              transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
               className="flex items-center gap-1.5"
             >
               <span
@@ -262,10 +273,10 @@ export const FlowerPlayButton: React.FC<FlowerPlayButtonProps> = ({
           ) : (
             <motion.div
               key="play"
-              initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
-              animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { rotate: 90, opacity: 0, scale: 0.8 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { rotate: 0, opacity: 1, scale: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { rotate: -90, opacity: 0, scale: 0.8 }}
+              transition={shouldReduceMotion ? { duration: 0.1, ease: 'linear' } : { duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             >
               <Play
                 size={finalIconSize}

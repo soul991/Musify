@@ -20,11 +20,11 @@ interface ThemeContextType {
   extractColorsFromImage: (imageUrl: string) => void;
 }
 
-export const DEFAULT_ACCENT = '#E5303D'; // Musify Calm Red Accent
+export const DEFAULT_ACCENT = '#D92B38'; // Musify Calm Red Accent
 export const DEFAULT_SECONDARY = '#B8222E'; // Restrained Accent 2
 
 export const CALM_ACCENT_PRESETS = [
-  { name: 'Musify Red (Default)', hex: '#E5303D' },
+  { name: 'Musify Red (Default)', hex: '#D92B38' },
   { name: 'Sage Olive', hex: '#5E7A68' },
   { name: 'Dusk Slate', hex: '#4F6382' },
   { name: 'Warm Clay', hex: '#A86542' },
@@ -131,7 +131,7 @@ function hexToRgb(hex: string): string {
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [accentColor, setAccentColorState] = useState<string>(() => {
     const saved = safeGetStorage('musify_accent_color');
-    // If old pink/coral #ED5564 was saved, reset to #E5303D
+    // If old pink/coral #ED5564 was saved, reset to #D92B38
     if (saved && saved.toUpperCase() === '#ED5564') {
       return DEFAULT_ACCENT;
     }

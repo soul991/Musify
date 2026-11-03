@@ -25,7 +25,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {canGoBack && onGoBack ? (
           <button
             onClick={onGoBack}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/10"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/10"
             aria-label="Go back"
           >
             <ArrowLeft size={18} />
@@ -48,7 +48,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="flex items-center gap-2">
         <button
           onClick={onOpenSearch}
-          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/10 text-white/80 hover:text-white"
+          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/10 text-white/80 hover:text-white"
           title="Search"
           aria-label="Search"
         >
@@ -57,7 +57,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         <button
           onClick={onOpenSettings}
-          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center border border-white/10 text-white/80 hover:text-white"
+          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-colors flex items-center justify-center border border-white/10 text-white/80 hover:text-white"
           title="Settings"
           aria-label="Settings"
         >

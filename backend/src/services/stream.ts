@@ -342,21 +342,8 @@ export async function resolveStreamUrl(
 
             const decipheredUrl = await selectedFormat.decipher(yt.session.player);
             if (decipheredUrl) {
-              // Probe URL with 0-0 byte range to verify YouTube doesn't reject with 403
-              const probeRes = await fetch(decipheredUrl, {
-                headers: {
-                  Range: 'bytes=0-0',
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                  'Origin': 'https://music.youtube.com',
-                  'Referer': 'https://music.youtube.com/'
-                },
-                signal: AbortSignal.timeout(2500)
-              }).catch(() => null);
-
-              if (!probeRes || (!probeRes.ok && probeRes.status !== 206)) {
-                throw new Error(`Innertube stream URL probe returned status ${probeRes?.status || 'failed'}`);
-              }
-
+              // No blocking pre-flight probe: the stream proxy purges the cache and falls back
+              // to yt-dlp when upstream rejects the URL, which keeps first-byte latency low.
               const result: CachedStream = {
                 url: decipheredUrl,
                 mimeType: selectedFormat.mime_type?.split(';')[0] || 'audio/mp4',

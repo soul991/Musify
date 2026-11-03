@@ -78,12 +78,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
         <button
           onClick={onBack}
           aria-label="Go back"
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <span className="text-xs font-bold text-white/50 tracking-wider uppercase">
+          <span className="text-xs font-bold text-white/50 tracking-normal">
             ANALYTICS & ACTIVITY
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
@@ -100,7 +100,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
             <button
               key={p.id}
               onClick={() => setSelectedPeriod(p.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all border whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold  transition-colors border whitespace-nowrap ${
                 isSelected
                   ? 'text-white border-white/40 shadow-lg'
                   : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/70 border-white/10'
@@ -148,8 +148,8 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
 
         {/* Unique Artists */}
         <div className="p-4 rounded-3xl bg-white/[0.05] backdrop-blur-2xl border border-white/15 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center shadow-inner">
-            <Users size={24} className="text-violet-400" />
+          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-raised)] border border-[var(--hairline)] flex items-center justify-center shadow-inner">
+            <Users size={24} className="text-[var(--text-2)]" />
           </div>
           <div>
             <p className="text-xs font-semibold text-white/60">Unique Artists</p>
@@ -179,7 +179,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
                 <div
                   key={stat.track.id}
                   onClick={() => playTrack(stat.track, topSongs.map((s) => s.track))}
-                  className={`flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer select-none transition-all border ${
+                  className={`flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer select-none transition-colors border ${
                     isCurrent
                       ? 'bg-white/[0.14] border-white/30'
                       : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5'
@@ -217,7 +217,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
                   <div className="flex-1 min-w-0 pr-2">
                     <p
                       className={`text-sm font-bold truncate ${
-                        isCurrent ? 'text-[#E5303D]' : 'text-white'
+                        isCurrent ? 'text-[var(--accent)]' : 'text-white'
                       }`}
                     >
                       {stat.track.title}
@@ -246,7 +246,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ onBack, onSelectArtist }) 
             {topArtists.slice(0, 8).map((artist, idx) => (
               <div
                 key={artist.name}
-                className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col items-center text-center hover:bg-white/[0.08] transition-all"
+                className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col items-center text-center hover:bg-white/[0.08] transition-colors"
               >
                 <div
                   className="w-14 h-14 rounded-full flex items-center justify-center font-black text-lg text-white mb-2 shadow-inner"

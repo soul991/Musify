@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Palette,
   Moon,
@@ -9,6 +9,7 @@ import {
   Radio,
   Clock,
   Trash2,
+  HardDrive,
   Info,
   Check,
   ChevronRight,
@@ -20,10 +21,11 @@ import {
   Upload
 } from 'lucide-react';
 import { useTheme, CALM_ACCENT_PRESETS } from '../context/ThemeContext';
-import { usePlayer } from '../context/PlayerContext';
+import { usePlayer, isAudioVolumeWritable } from '../context/PlayerContext';
 import { useLibrary } from '../context/LibraryContext';
 import { useToast } from '../context/ToastContext';
 import { audioEqualizer } from '../services/audioEqualizer';
+import { offlineStorage, StorageUsage } from '../services/offlineStorage';
 import { Material3SettingsGroup } from '../components/views/Material3SettingsGroup';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -72,7 +74,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     return localStorage.getItem('musify_skip_silence') === 'true';
   });
   const [seekbarStyle, setSeekbarStyle] = useState<'calm' | 'squiggly'>(() => {
-    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'calm';
+    return (localStorage.getItem('musify_seekbar_style') as 'calm' | 'squiggly') || 'squiggly';
   });
 
   const presetColors = CALM_ACCENT_PRESETS;
@@ -142,7 +144,13 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     audioEqualizer.setNormalization(next);
   };
 
+  const volumeWritable = isAudioVolumeWritable();
+
   const handleToggleCrossfade = () => {
+    if (!volumeWritable) {
+      showToast('Crossfade is not supported on iOS Safari (volume is read-only). Using gapless playback.', 'info');
+      return;
+    }
     const next = !crossfadeEnabled;
     setCrossfadeEnabled(next);
     localStorage.setItem('musify_crossfade_enabled', String(next));
@@ -154,10 +162,31 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     localStorage.setItem('musify_crossfade_secs', String(val));
   };
 
-  const handleClearCache = () => {
-    if (confirm('Clear local audio cache and temporary images?')) {
-      alert('Audio cache cleared successfully!');
-    }
+  const [storageUsage, setStorageUsage] = useState<StorageUsage>({
+    usedBytes: 0,
+    sizeCapBytes: 500 * 1024 * 1024,
+    trackCount: 0,
+    formattedUsed: '0.0 MB',
+    formattedCap: '500 MB'
+  });
+  const [sizeCapMB, setSizeCapMB] = useState<number>(() => offlineStorage.getSizeCapMB());
+
+  useEffect(() => {
+    offlineStorage.getStorageUsage().then(setStorageUsage);
+  }, []);
+
+  const handleSizeCapChange = (capMB: number) => {
+    setSizeCapMB(capMB);
+    offlineStorage.setSizeCapMB(capMB);
+    offlineStorage.getStorageUsage().then(setStorageUsage);
+    showToast(`Offline audio cache limit set to ${capMB >= 1000 ? (capMB / 1000) + ' GB' : capMB + ' MB'}`, 'info');
+  };
+
+  const handleClearCache = async () => {
+    await offlineStorage.clearOfflineCache();
+    const usage = await offlineStorage.getStorageUsage();
+    setStorageUsage(usage);
+    showToast('Offline audio cache cleared successfully', 'success');
   };
 
   const qualityLabels: Record<AudioQualityLevel, { title: string; desc: string }> = {
@@ -179,7 +208,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         {onClose && (
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10 shrink-0 shadow-md"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-95 transition-colors text-white border border-white/10 shrink-0 shadow-md"
             title="Go back"
             aria-label="Go back"
           >
@@ -235,7 +264,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 description: 'Custom seed hue for ripples, playback controls, and sliders',
                 trailingContent: (
                   <div
-                    className="w-7 h-7 rounded-full shadow-md border-2 border-white/30 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                    className="w-7 h-7 rounded-full shadow-md border-2 border-white/30 cursor-pointer  active:scale-95 transition-transform"
                     style={{ backgroundColor: accentColor }}
                   />
                 ),
@@ -278,7 +307,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         setPlayerStyle('apple');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         playerStyle === 'apple'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -291,7 +320,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         setPlayerStyle('material');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         playerStyle === 'material'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -303,8 +332,8 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 )
               },
               {
-                icon: <Sliders size={20} className="text-cyan-400" />,
-                title: 'Liquid Glass Blur Effect',
+                icon: <Sliders size={20} className="text-[var(--text-2)]" />,
+                title: 'Glass blur effect',
                 description: 'Translucent refraction and specular highlight on floating navigation bars',
                 trailingContent: (
                   <div className="text-xs font-bold text-emerald-400">
@@ -336,7 +365,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         handleToggleSeekbarStyle('calm');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         seekbarStyle === 'calm'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -349,7 +378,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         e.stopPropagation();
                         handleToggleSeekbarStyle('squiggly');
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                         seekbarStyle === 'squiggly'
                           ? 'bg-white text-black shadow-md'
                           : 'text-white/60 hover:text-white'
@@ -419,7 +448,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             title="Playback & Audio Processing"
             items={[
               {
-                icon: <Volume2 size={20} className="text-purple-400" />,
+                icon: <Volume2 size={20} className="text-[var(--text-2)]" />,
                 title: 'Volume leveler',
                 description: 'Off by default. Balances track volume, but may affect lock-screen playback on iPhone',
                 trailingContent: (
@@ -444,9 +473,11 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               {
                 icon: <Sliders size={20} className="text-pink-400" />,
                 title: 'Crossfade Songs',
-                description: crossfadeEnabled
-                  ? `Enabled • ${crossfadeSeconds}s smooth transition between tracks`
-                  : 'Disabled • Gapless track playback',
+                description: !volumeWritable
+                  ? 'Not available on iOS Safari (volume is read-only) • Gapless playback active'
+                  : crossfadeEnabled
+                    ? `Enabled • ${crossfadeSeconds}s smooth transition between tracks`
+                    : 'Disabled • Gapless track playback',
                 trailingContent: (
                   <div
                     onClick={(e) => {
@@ -454,19 +485,19 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       handleToggleCrossfade();
                     }}
                     className={`w-12 h-6 rounded-full p-0.5 cursor-pointer transition-colors duration-200 ${
-                      crossfadeEnabled ? 'bg-[var(--accent-color)]' : 'bg-white/20'
+                      crossfadeEnabled && volumeWritable ? 'bg-[var(--accent-color)]' : 'bg-white/20'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                        crossfadeEnabled ? 'translate-x-6' : 'translate-x-0'
+                        crossfadeEnabled && volumeWritable ? 'translate-x-6' : 'translate-x-0'
                       }`}
                     />
                   </div>
                 ),
                 onClick: handleToggleCrossfade
               },
-              ...(crossfadeEnabled
+              ...(crossfadeEnabled && volumeWritable
                 ? [
                     {
                       title: 'Crossfade Duration',
@@ -514,7 +545,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 )
               },
               {
-                icon: <Radio size={20} className="text-cyan-400" />,
+                icon: <Radio size={20} className="text-[var(--text-2)]" />,
                 title: 'Skip Silence',
                 description: skipSilence
                   ? 'Active • Automatically jumps over silent sections'
@@ -543,26 +574,47 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         )}
 
         {/* Group 4: Storage & Offline Cache */}
-        {(matchesSearch('storage') || matchesSearch('cache') || matchesSearch('clear')) && (
+        {(matchesSearch('storage') || matchesSearch('cache') || matchesSearch('clear') || matchesSearch('offline')) && (
           <Material3SettingsGroup
             title="Storage & Offline Cache"
             items={[
               {
                 icon: <Trash2 size={20} className="text-rose-400" />,
-                title: 'Clear Audio Cache',
-                description: 'Remove cached audio streams to free device storage (~142 MB)',
+                title: 'Offline Audio Cache',
+                description: `${storageUsage.formattedUsed} used of ${storageUsage.formattedCap} • ${storageUsage.trackCount} track${storageUsage.trackCount === 1 ? '' : 's'} cached for offline playback`,
                 trailingContent: (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleClearCache();
                     }}
-                    className="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-all"
+                    className="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-colors"
                   >
                     Clear
                   </button>
                 ),
                 onClick: handleClearCache
+              },
+              {
+                icon: <HardDrive size={20} className="text-emerald-400" />,
+                title: 'Cache Size Limit',
+                description: 'Maximum local device storage allocated for liked & recent songs before LRU eviction',
+                trailingContent: (
+                  <select
+                    value={sizeCapMB}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleSizeCapChange(Number(e.target.value));
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-white/10 text-white rounded-xl text-xs font-bold px-2.5 py-1.5 border border-white/10 focus:outline-none"
+                  >
+                    <option value="250" className="bg-[#1C1D24]">250 MB</option>
+                    <option value="500" className="bg-[#1C1D24]">500 MB (Default)</option>
+                    <option value="1000" className="bg-[#1C1D24]">1 GB</option>
+                    <option value="2000" className="bg-[#1C1D24]">2 GB</option>
+                  </select>
+                )
               }
             ]}
           />
@@ -587,7 +639,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                       e.stopPropagation();
                       handleExportLibrary();
                     }}
-                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 active:scale-95"
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors flex items-center gap-1.5 active:scale-95"
                   >
                     <Download size={14} />
                     <span>Export</span>
@@ -602,7 +654,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 trailingContent: (
                   <label
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
                   >
                     <Upload size={14} />
                     <span>Import</span>
@@ -625,7 +677,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             title="About & Engine"
             items={[
               {
-                icon: <Info size={20} className="text-cyan-400" />,
+                icon: <Info size={20} className="text-[var(--text-2)]" />,
                 title: 'Musify Web Engine',
                 description: 'Echo Music Jetpack Compose architecture replicated in React & Tailwind',
                 trailingContent: (
@@ -667,15 +719,15 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         setAccentColor(color.hex);
                         setShowColorPickerModal(false);
                       }}
-                      className="flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-all"
+                      className="flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors"
                     >
                       <div
-                        className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105"
+                        className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-transform "
                         style={{ backgroundColor: color.hex }}
                       >
                         {isSelected && <Check size={18} className="text-white" strokeWidth={3} />}
                       </div>
-                      <span className="text-[10px] font-semibold text-white/70 text-center truncate w-full">
+                      <span className="text-xs font-semibold text-white/70 text-center truncate w-full">
                         {color.name.split(' ')[0]}
                       </span>
                     </button>
@@ -725,7 +777,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                           ? handleWifiQualityChange(level)
                           : handleCellularQualityChange(level)
                       }
-                      className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all ${
+                      className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-white/15 border border-white/20 text-white shadow-md'
                           : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/70'

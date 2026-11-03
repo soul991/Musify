@@ -131,9 +131,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       onTouchCancel={handleTouchEnd}
       onPointerDown={handleIntentWarm}
       onMouseEnter={handleIntentWarm}
-      className={`relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl glass-card cursor-pointer group transition-all duration-200 select-none ${
-        isCurrent ? 'bg-white/15 border-white/25 shadow-md' : 'hover:bg-white/[0.08]'
-      } ${className}`}
+      className={`relative flex items-center justify-between h-[56px] min-h-[56px] px-3 rounded-xl cursor-pointer group transition-colors duration-150 select-none border ${isCurrent ? 'bg-[var(--bg-raised)] border-[var(--hairline)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]' : 'border-transparent hover:bg-[var(--bg-raised)] active:scale-[0.98]'} ${className}`}
       onClick={handleRowClick}
     >
       <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -141,10 +139,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         {showIndex && (
           <div className="w-6 text-center shrink-0">
             {isCurrent && isPlaying ? (
-              <div className="flex items-end justify-center gap-0.5 h-4 w-4 mx-auto">
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-3" />
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-4 [animation-delay:0.15s]" />
-                <span className="w-1 bg-[var(--accent-color)] rounded-full animate-bounce h-2 [animation-delay:0.3s]" />
+              <div className="flex items-center justify-center h-4 w-4 mx-auto">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               </div>
             ) : (
               <span
@@ -168,7 +164,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               height={48}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover transition-transform duration-300"
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
                 if (target.src.includes('maxresdefault.jpg')) {
@@ -179,12 +175,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               }}
             />
             {isCurrent && isPlaying && !showIndex && (
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
-                <div className="flex items-end gap-0.5 h-3.5">
-                  <span className="w-1 bg-white rounded-full animate-pulse h-2.5" />
-                  <span className="w-1 bg-white rounded-full animate-pulse h-3.5 [animation-delay:0.2s]" />
-                  <span className="w-1 bg-white rounded-full animate-pulse h-2 [animation-delay:0.4s]" />
-                </div>
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="w-2 h-2 rounded-full bg-white" />
               </div>
             )}
           </div>
@@ -201,7 +193,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               {track.title}
             </p>
             {track.explicit && (
-              <span className="px-1 py-0.2 rounded bg-white/20 text-white/70 text-[9px] font-black uppercase tracking-wider shrink-0">
+              <span className="px-1 py-0.2 rounded bg-white/20 text-white/70 text-xs font-semibold tracking-normal shrink-0">
                 E
               </span>
             )}
@@ -223,11 +215,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           aria-label={liked ? 'Unlike' : 'Like'}
           className={`p-1.5 rounded-full transition-colors ${
             liked
-              ? 'text-[#E5303D] opacity-100'
+              ? 'text-[var(--accent)] opacity-100'
               : 'text-white/30 hover:text-white opacity-0 group-hover:opacity-100'
           }`}
         >
-          <Heart size={16} className={liked ? 'fill-[#E5303D]' : ''} />
+          <Heart size={16} className={liked ? 'fill-[var(--accent)]' : ''} />
         </button>
 
         {/* Duration */}
@@ -243,7 +235,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               setMenuOpen(!menuOpen);
             }}
             aria-label="More options"
-            className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+            className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 active:scale-95 transition-colors"
           >
             <MoreVertical size={16} />
           </button>
@@ -314,13 +306,13 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   <Plus size={15} />
                   <span>Add to Playlist</span>
                 </div>
-                <span className="text-[10px] text-white/40">›</span>
+                <span className="text-xs text-white/40">›</span>
               </button>
 
               {playlistSubmenuOpen && (
                 <div className="mt-1 p-1 rounded-xl bg-white/10 flex flex-col gap-0.5 max-h-36 overflow-y-auto no-scrollbar">
                   {playlists.length === 0 ? (
-                    <span className="px-2 py-1 text-[11px] text-white/40 italic">
+                    <span className="px-2 py-1 text-xs text-white/40 italic">
                       No playlists created
                     </span>
                   ) : (
@@ -332,7 +324,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                           setMenuOpen(false);
                           setPlaylistSubmenuOpen(false);
                         }}
-                        className="px-2.5 py-1.5 rounded-lg text-left text-[11px] font-semibold text-white/90 hover:bg-white/15 truncate"
+                        className="px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold text-white/90 hover:bg-white/15 truncate"
                       >
                         {pl.name}
                       </button>
@@ -360,7 +352,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               }}
               className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
             >
-              <Heart size={15} className={liked ? 'fill-[#E5303D] text-[#E5303D]' : ''} />
+              <Heart size={15} className={liked ? 'fill-[var(--accent)] text-[var(--accent)]' : ''} />
               <span>{liked ? 'Remove from Favorites' : 'Add to Favorites'}</span>
             </button>
 

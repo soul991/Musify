@@ -34,7 +34,7 @@ function pumpResolveQueue() {
     resolvedSet.add(next.videoId);
 
     const base = STREAM_BASE;
-    const url = `${base}/resolve/${next.videoId}${next.quality ? `?quality=${encodeURIComponent(next.quality)}` : ''}`;
+    const url = `${base}/stream/prefetch/${next.videoId}${next.quality ? `?quality=${encodeURIComponent(next.quality)}` : ''}`;
     fetch(url, { method: 'GET', keepalive: true })
       .finally(() => {
         activeResolves.delete(next.videoId);

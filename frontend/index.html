@@ -19,13 +19,9 @@
     <link rel="icon" type="image/svg+xml" href="/icons/musify-icon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <!-- Preload Satoshi Variable Font (Self-Hosted) -->
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/Satoshi-Variable.woff2">
-
-    <!-- Google Fonts Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Preload Self-Hosted Instrument Fonts (Instrument Sans & Instrument Serif) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/InstrumentSans-Variable.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/InstrumentSerif-Regular.woff2">
     
     <!-- Neutralize Netlify Injected Badge & HUD Script -->
     <script>
@@ -53,7 +49,7 @@
       })();
     </script>
   </head>
-  <body class="bg-[#0A0A0A] text-white selection:bg-[#E5303D] selection:text-white antialiased">
+  <body class="bg-[#141415] text-[#EDEDED] selection:bg-[#D92B38] selection:text-[#EDEDED] antialiased">
     <!-- Sentinel elements that force Netlify HUD to early-exit without rendering -->
     <div id="nl-badge-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>
     <div id="nl-hud-frame" style="display:none!important;position:absolute!important;width:0!important;height:0!important;pointer-events:none!important;opacity:0!important;" aria-hidden="true"></div>
